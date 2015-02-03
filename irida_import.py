@@ -1,22 +1,9 @@
-# import cookielib
-import json
 import optparse
-import os
-# import urllib
-# import urllib2
-# import urlparse
-import sys
-# import optparse
-
+import logging
 from bioblend import galaxy
-# from bioblend.galaxy.libraries import LibraryClient
-# import galaxy.model # need to import model before sniff to resolve a
-# circular import dependency
-# from galaxy.datatypes import sniff
-# from galaxy.datatypes.registry import Registry
 
 
-def writeMessage(fileString, messageString):
+def write_message(fileString, messageString):
     outf = open(fileString, 'w')
     outf.write('\n'.join(messageString))
     outf.write('\n')
@@ -33,21 +20,18 @@ def irida_import(json_parameter_file, irida_info):
     returnDict = lib.create_library("bob",
                                     "description for the library named bob")
 
-    print(json.dumps(returnDict))
-    print(os.getcwd())
-
     gi.libraries.upload_from_galaxy_filesystem(
         returnDict['id'],
         '/home/jthiessen/lib_imp_dir/test/test.fastq',
         link_data_only='link_to_files')
 
-    sys.stdout.write("Hello Galaxy!\n")
-    sys.stdout.write(json.dumps(json_parameter_file))
-
     return True
 
 if __name__ == '__main__':
-    # Parse Command Line
+    logging.basicConfig(filename="irida_import.log", level=logging.DEBUG,
+                        filemode="w")
+
+    logging.info("Parsing the Command Line")
     parser = optparse.OptionParser()
     parser.add_option(
         '-p', '--json_parameter_file', dest='json_parameter_file',
