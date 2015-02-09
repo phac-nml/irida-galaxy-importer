@@ -1,48 +1,185 @@
 import optparse
 import logging
+import sys
+from bioblend.galaxy.objects import *
 from bioblend import galaxy
 
-
-def write_message(fileString, messageString):
-    outf = open(fileString, 'w')
-    outf.write('\n'.join(messageString))
-    outf.write('\n')
-    outf.close
+import json
+from sample import Sample
+from sample_file import SampleFile
 
 
-def irida_import(json_parameter_file, irida_info):
+class IridaImport:
 
-    gi = galaxy.GalaxyInstance(url="http://localhost:8888/",
-                               key="09008eb345c9d5a166b0d8f301b1e72c")
+    ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
+    GALAXY_URL = "http://localhost:8888/"
+    ILLUMINA_PATH = '/illumina_reads'
+    REFERENCE_PATH = '/references'
 
-    lib = galaxy.libraries.LibraryClient(gi)
+    def get_samples(self, irida_info_dict):
+        # TODO: choose/use a suitable library for interpreting IRIDA output json
 
-    returnDict = lib.create_library("bob",
-                                    "description for the library named bob")
+        samples = []
 
-    gi.libraries.upload_from_galaxy_filesystem(
-        returnDict['id'],
-        '/home/jthiessen/lib_imp_dir/test/test.fastq',
-        link_data_only='link_to_files')
+        for sample_input in irida_info_dict['_embedded']['samples']:
+            sample_name = sample_input['sample_name']
+            sample_path = sample_input['_links']['self']['href']
 
-    return True
+            sample = Sample(sample_name, sample_path)
+
+            for sample_file_input in sample_input['_embedded']['sample_files']:
+                sample_file_path = sample_file_input['_links']['self']['href']
+                sample.sample_files.append(SampleFile(sample_file_path))
+
+            samples.append(sample)
+
+        logging.debug(samples)
+        return samples
+
+    def get_first_or_make_lib(self, desired_lib_name):
+        libs = self.gi.libraries.list(name=desired_lib_name)
+        if len(libs) > 0:
+            lib = libs[0]
+        else:
+            lib = self.gi.libraries.create(desired_lib_name)
+        return lib
+
+    def create_folder_if_nec(self, folder_path):
+
+        folder_name = folder_path.rsplit("/", 1)[1]
+        base_folder_path = folder_path.rsplit("/", 1)[0]
+        logging.debug(
+            "If neccessary, making a folder named \"%s\" on base folder path"
+            "\"%s\" from folder path \"%s\"" %
+            (folder_name, base_folder_path, folder_path))
+
+        if not self.exists_in_lib('folder', 'name', folder_path):
+
+            base_folder_list = self.reg_gi.libraries.get_folders(
+                self.library.id,
+                name=base_folder_path)
+
+            if len(base_folder_list) > 0:
+                base_folder = self.library.get_folder(base_folder_list[0]['id'])
+                self.library.create_folder(folder_name, base_folder=base_folder)
+            else:
+                self.library.create_folder(folder_name)
+
+    # Could'nt find a bioblend API method!
+    def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
+        ans = False
+        # check for an object of the desired type with the desired attribute
+        for con_inf in self.library.content_infos:
+            if con_inf.type == item_type:
+                attr = getattr(con_inf, item_attr_name)
+                if attr == desired_attr_value:
+                    ans = True
+                    break
+        return ans
+
+    def upload_sample_if_nec(self, sample):
+        for sample_file in sample.sample_files:
+            sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
+            galaxy_sample_file_name = sample_folder_path+'/'+sample_file.name
+            logging.debug(
+                "Doing a basic check for already existing sample file at: " +
+                galaxy_sample_file_name)
+            logging.debug(
+                "Sample name:" +
+                sample.name +
+                " Sample file name:" +
+                sample_file.name)
+            if not self.exists_in_lib('file', 'name', galaxy_sample_file_name):
+                logging.debug(
+                    "  Sample file does not exist so uploading/linking it")
+                self.upload_or_link(sample_file, sample_folder_path)
+            else:
+                logging.debug("  Sample file already exists!")
+        return True
+
+    def upload_or_link(self, sample_file, sample_folder_path):
+        # TODO: use urllib.request.URLopener
+
+        logging.debug('      Attempting to upload or link a file')
+        prefix = sample_file.path.split(':/')[0]
+        logger.info(
+            "       Sample file's path's prefix is \"%s\" and path is \"%s\"" %
+            (prefix, sample_file.path))
+        if prefix == 'file':
+
+            file_path = "/" + sample_file.path.split('/', 3)[3]
+            logger.info("File path is"+file_path)
+
+            logging.debug(
+                "we're getting the id of this folder" +
+                sample_folder_path)
+            folder_id = self.reg_gi.libraries.get_folders(
+                self.library.id,
+                name=sample_folder_path)[0]['id']
+
+            self.reg_gi.libraries.upload_from_galaxy_filesystem(
+                self.library.id,
+                file_path,
+                folder_id=folder_id,
+                link_data_only='link_to_files')
+
+    def assign_ownership_if_nec(self, sample):
+
+        return True
+
+    def import_to_galaxy(self, json_parameter_file, irida_info):
+        irida_info_dict = json.loads(irida_info)
+
+        user_email = irida_info_dict['user_email']
+        desired_lib_name = irida_info_dict['library_name']
+
+        self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
+
+        # This is necessary for uploads from arbitary local paths
+        # that require setting the "link_to_files" flag:
+        self.reg_gi = galaxy.GalaxyInstance(
+            url=self.GALAXY_URL,
+            key=self.ADMIN_KEY)
+
+        # Each sample contains a list of sample files
+        samples = self.get_samples(irida_info_dict)
+        # Set up the library
+        self.library = self.get_first_or_make_lib(desired_lib_name)
+        self.create_folder_if_nec(self.ILLUMINA_PATH)
+        self.create_folder_if_nec(self.REFERENCE_PATH)
+
+        # Add each sample's files to the library
+        for sample in samples:
+            logging.debug("sample name is" + sample.name)
+            self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
+            self.upload_sample_if_nec(sample)
+            self.assign_ownership_if_nec(sample)
+
 
 if __name__ == '__main__':
-    logging.basicConfig(filename="irida_import.log", level=logging.DEBUG,
+    logging.basicConfig(filename="log_irida_import", level=logging.INFO,
                         filemode="w")
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(logging.DEBUG)
+    logger = logging.getLogger()
+    logger.addHandler(stream_handler)
 
-    logging.info("Parsing the Command Line")
+    logging.debug("Parsing the Command Line")
     parser = optparse.OptionParser()
     parser.add_option(
         '-p', '--json_parameter_file', dest='json_parameter_file',
         action='store', type="string", default=None,
         help='json_parameter_file')
-
     parser.add_option(
         '-s', '--irida_info', dest='irida_info',
         action='store', type="string", default=None,
         help='irida_info')
-
     (options, args) = parser.parse_args()
 
-    irida_import(options.json_parameter_file, options.irida_info)
+    logging.debug("Opening a test json file")
+    test_json_file = open(
+        '/home/jthiessen/galaxy-dist/tools/irida_import/prelim_json.json')
+    test_json = test_json_file.read()
+
+    importer = IridaImport()
+    importer.import_to_galaxy(options.json_parameter_file, test_json)
