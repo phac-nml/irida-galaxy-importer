@@ -102,17 +102,14 @@ class IridaImport:
 
         logging.debug('      Attempting to upload or link a file')
         prefix = sample_file.path.split(':/')[0]
-        logger.info(
+        logging.debug(
             "       Sample file's path's prefix is \"%s\" and path is \"%s\"" %
             (prefix, sample_file.path))
         if prefix == 'file':
 
             file_path = "/" + sample_file.path.split('/', 3)[3]
-            logger.info("File path is"+file_path)
+            logging.debug("File path is"+file_path)
 
-            logging.debug(
-                "we're getting the id of this folder" +
-                sample_folder_path)
             folder_id = self.reg_gi.libraries.get_folders(
                 self.library.id,
                 name=sample_folder_path)[0]['id']
@@ -155,9 +152,10 @@ class IridaImport:
             self.upload_sample_if_nec(sample)
             self.assign_ownership_if_nec(sample)
 
+        return True
 
 if __name__ == '__main__':
-    logging.basicConfig(filename="log_irida_import", level=logging.INFO,
+    logging.basicConfig(filename="log_irida_import", level=logging.DEBUG,
                         filemode="w")
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setLevel(logging.DEBUG)
@@ -182,4 +180,4 @@ if __name__ == '__main__':
     test_json = test_json_file.read()
 
     importer = IridaImport()
-    importer.import_to_galaxy(options.json_parameter_file, test_json)
+    # importer.import_to_galaxy(options.json_parameter_file, test_json)
