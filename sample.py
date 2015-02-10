@@ -1,5 +1,5 @@
 class Sample:
-"""A representation of a sample obtained from IRIDA"""
+    """A representation of a sample obtained from IRIDA"""
 
     def __init__(self, name, path):
         """
