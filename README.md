@@ -1,8 +1,12 @@
-<h1>A tool to import data from IRIDA to Galaxy is being implemented here.</h1>
+IRIDA import tool for Galaxy
+============================
 
-<h2>Install Instructions:</h2>
+A tool to import data from IRIDA to Galaxy is being implemented here.
 
-Place all the files in the irida_import directory in the Galaxy tools directory
+Install Instructions:
+---------------------
+
+Place all the files in the irida_import directory in the Galaxy tools directory.
 
 Add an entry for irida_import.xml to tool_conf.xml:
 ```
@@ -17,7 +21,7 @@ library_import_dir = /
 allow_library_path_paste = True
 ```
 
-To run the tests, pytest is required
+To run the tests, pytest is required.
 It can be installed by:
 
 ```
