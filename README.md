@@ -6,7 +6,7 @@ A tool to import data from IRIDA to Galaxy is being implemented here.
 Install Instructions:
 ---------------------
 
-###Initial Installation:
+### Initial Installation:
 
 Place all the files in the irida_import directory in the Galaxy tools directory.
 
@@ -25,10 +25,10 @@ library_import_dir = /
 allow_library_path_paste = True
 ```
 
-###Setting up the HTML stub uploader:
+### Setting up the HTML stub uploader:
 
 To use the tool from within Galaxy, right now, by default, the tool looks for a HTML page at `http://localhost:80`
-The HTML page must be set to `POST` to an address consisting of the Galaxy instance's domain + `/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute` This address is passed by Galaxy to the HTML page as the parameter `GALAXY_URL`
+The HTML page must be configured to `POST` to an address consisting of the Galaxy instance's domain + `/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute` The full address is passed by Galaxy to the HTML page as the parameter `GALAXY_URL`
 
 An example HTML file is included. Place it in your webserver's root directory, or set the tool to look for the HTML page at a custom address by modifying the `action` key's value in `irida_import/irida_import.xml`:
 
@@ -36,10 +36,10 @@ An example HTML file is included. Place it in your webserver's root directory, o
 <inputs action="http://localhost:80" check_values="False" method="post">
 ```
 
-If your Galaxy instance supports CORs it will automatically use jQuery to `POST`, otherwise just click the button to send via the `action` of a HTML form.
+If your Galaxy instance supports CORS it will automatically use jQuery to `POST`, otherwise just click the button to send via the `action` of a HTML form.
 
 
-###Running the tests:
+### Running the tests:
 
 To run the tests, pytest is required.
 It can be installed by:
