@@ -6,7 +6,19 @@ A tool to import data from IRIDA to Galaxy is being implemented here.
 Install Instructions:
 ---------------------
 
-### Initial Installation:
+
+#### Prerequisites:
+
+This tool requires bioblend 0.5.2. It can be installed by:
+
+```
+pip install bioblend
+```
+
+To invoke the import tool from within Galaxy, currently the HTML stub uploader must be used. It requires a webserver.
+
+
+#### Initial Installation:
 
 Place all the files in the irida_import directory in the Galaxy tools directory.
 
@@ -25,7 +37,8 @@ library_import_dir = /
 allow_library_path_paste = True
 ```
 
-### Setting up the HTML stub uploader:
+
+#### Setting up the HTML Stub Uploader:
 
 To use the tool from within Galaxy, right now, by default, the tool looks for a HTML page at `http://localhost:80`
 The HTML page must be configured to `POST` to an address consisting of the Galaxy instance's domain + `/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute` The full address is passed by Galaxy to the HTML page as the parameter `GALAXY_URL`
@@ -39,7 +52,14 @@ An example HTML file is included. Place it in your webserver's root directory, o
 If your Galaxy instance supports CORS it will automatically use jQuery to `POST`, otherwise just click the button to send via the `action` of a HTML form.
 
 
-### Running the tests:
+#### Final Configuration:
+
+The administrator API key, and Galaxy URL must be configured. In `irida_import/irida_import.py`, change the values for `ADMIN_KEY` and `GALAXY_URL` appropriately. Instructions for obtaining an API key can be found in the Galaxy documentation.
+
+It is a good idea to configure CORS for the Galaxy instance: this is planned to become a requirement soon.
+Configuration instructions for 
+
+#### Running the Tests:
 
 To run the tests, pytest is required.
 It can be installed by:

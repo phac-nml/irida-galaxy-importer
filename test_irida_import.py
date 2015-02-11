@@ -45,8 +45,8 @@ class TestIridaImport:
         lib_to_make.deleted = Mock()
         lib_to_make.deleted = False
 
-        imp.gi = Mock()
-        imp.gi.libraries = Mock()
+        imp.gi = mock.create_autospec(GalaxyInstance)
+        imp.gi.libraries = mock.create_autospec(client.ObjLibraryClient)
 
         imp.gi.libraries.create = Mock(return_value=lib_to_make)
         imp.gi.libraries.list = Mock(return_value=[lib_to_make])
