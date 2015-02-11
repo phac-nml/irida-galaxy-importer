@@ -228,6 +228,7 @@ class IridaImport:
             self.assign_ownership_if_nec(sample)
 
         return True  # for the first unit test
+
 """
 From the command line, pass json files to IridaImport, and set up the logger
 """
