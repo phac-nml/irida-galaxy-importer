@@ -72,8 +72,10 @@ class IridaImport:
         :type folder_path: str
         :param folder_patht: The folder's path e.g. '/bobfolder/bobfolder2'
         """
+
+        made_folder = None
         # Get the folder name from the path, e.g. 'bobfolder2' from
-        # '/bobfolder/bobfolder2/'
+        # '/bobfolder/bobfolder2'
         folder_name = folder_path.rsplit("/", 1)[1]
         # Get the base folder path from the path e.g '/bobfolder' from
         # '/bobfolder/bobfolder2'
@@ -91,9 +93,13 @@ class IridaImport:
 
             if len(base_folder_list) > 0:
                 base_folder = self.library.get_folder(base_folder_list[0]['id'])
-                self.library.create_folder(folder_name, base_folder=base_folder)
+                made_folder = self.library.create_folder(
+                    folder_name,
+                    base_folder=base_folder)
             else:
-                self.library.create_folder(folder_name)
+                made_folder = self.library.create_folder(folder_name)
+
+        return made_folder
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
         """
