@@ -9,13 +9,17 @@ import mock
 
 class TestIridaImport:
 
+    """ TestIridaImport performs unit tests on IridaImport."""
+
     @pytest.fixture(scope='class')
     def setup_logging(self):
+        """Create and configure a logging object"""
         logging.basicConfig(filename="log_irida_import",
                             level=logging.DEBUG, filemode="w")
 
     @pytest.fixture(scope="class")
     def setup_json(self):
+        """Create a json string from a text file"""
         logging.debug("Opening a test json file")
         test_json_file = open('prelim_json.json')
         test_json = test_json_file.read()
@@ -23,10 +27,12 @@ class TestIridaImport:
 
     @pytest.fixture(scope="class")
     def imp(self):
+        """Create an IridaImport instance to test"""
         import irida_import
         return irida_import.IridaImport()
 
     def test_get_samples(self, imp, setup_json):
+        """Test if correct samples are read from the json string"""
         irida_info_dict = json.loads(setup_json)
         samples = imp.get_samples(irida_info_dict)
         size = len(irida_info_dict['_embedded']['samples'])
@@ -37,6 +43,7 @@ class TestIridaImport:
         assert len(samples) == size, 'Number of samples is incorrect'
 
     def test_get_first_or_make_lib(self, imp):
+        """Test if a correct library is created"""
         wanted_name = 'boblib'
 
         lib_to_make = mock.create_autospec(Library)
@@ -57,7 +64,10 @@ class TestIridaImport:
         assert lib_made.name == wanted_name
         assert lib_made.deleted is False
 
-    # Right now, adds sample files and folders to Galaxy, without any assertions
     def test_import_to_galaxy_integration(self, imp, setup_json):
+        """
+        Add sample files and folders to Galaxy,
+        right now, without any assertions
+        """
         assert(imp.import_to_galaxy("", setup_json))
         return True
