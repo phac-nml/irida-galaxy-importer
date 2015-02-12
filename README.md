@@ -11,11 +11,15 @@ Install Instructions:
 
 This tool requires bioblend 0.5.2. It can be installed by:
 
-`pip install bioblend`
+```
+pip install bioblend`
+```
 
 The mock library must be installed as well:
 
-`pip install mock`
+```
+pip install mock
+```
 
 To invoke the import tool from within Galaxy, currently the HTML stub uploader must be used. It requires a web server.
 
@@ -26,16 +30,22 @@ Place the repository's contents into `$GALAXY_ROOT/tools/irida_import` The direc
 
 Add an entry for irida_import.xml to `$GALAXY_ROOT/config/tool_conf.xml` to the "Get Data" section:
 
-`<tool file="irida_import/irida_import.xml" />`
+```
+<tool file="irida_import/irida_import.xml" />
+```
 
 If `tool_conf.xml` doesn't exist, you can copy the example version, `tool_conf.xml.sample`
 As well, if `galaxy.ini` is missing, you can copy `galaxy.ini.sample`
 
 Modify the following lines in galaxy.ini:
 
-`library_import_dir = /`
+```
+library_import_dir = /
+```
 
-`allow_library_path_paste = True`
+```
+allow_library_path_paste = True
+```
 
 
 #### Setting up the HTML Stub Uploader:
@@ -47,7 +57,9 @@ The HTML page must be configured to `POST` to an address consisting of the Galax
 
 An example HTML file is included. Place it in your web server's root directory, or set the tool to look for the HTML page at a custom address by modifying the `action` key's value in `irida_import/irida_import.xml`:
 
-`<inputs action="http://localhost:80" check_values="False" method="post">`
+```
+<inputs action="http://localhost:80" check_values="False" method="post">
+```
 
 If your Galaxy instance supports CORS it will automatically use jQuery to `POST`, otherwise just click the button to send via the `action` of a HTML form.
 It is a good idea to configure CORS for the Galaxy instance: this is planned to become a requirement soon.
@@ -79,7 +91,9 @@ easy_install -U pytest
 
 To run the tests, invoke:
 
-`py.test`
+```
+py.test
+```
 
 In addition, one or more of the paths in `$GALAXY_ROOT/tools/irida_import/prelim_json.json` should be modified to point to local files to test uploading with.
 
@@ -88,8 +102,16 @@ In addition, one or more of the paths in `$GALAXY_ROOT/tools/irida_import/prelim
 
 Install pytest-cov:
 
-`pip install pytest-cov`
+```
+pip install pytest-cov
+```
 
 To generate a html line by line code coverage report for a file, for example for `irida_import.py`, navigate to `$GALAXY_ROOT/tools/irida_import` and then invoke:
 
-`py.test --cov=irida_import.py --cov-report=html`
+```
+py.test --cov=irida_import.py --cov-report=html
+```
+
+
+
+
