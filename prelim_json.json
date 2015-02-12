@@ -1,0 +1,40 @@
+{
+    "_embedded": {
+        "samples": [
+            {
+                "_embedded": {
+                    "sample_files": [
+                        {
+                            "_links": {
+                                "self": {
+                                    "href": "http://localhost:8888/some_IRIDA_API_path/test1.fastq"
+                                }
+                            }
+                        },
+                        {
+                            "_links": {
+                                "self": {
+                                    "href": "file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "_links": {
+                    "self": {
+                        "href": "http://localhost:8888/some_IRIDA_API_path/Projects/1/Samples/1"
+                    }
+                },
+                "sample_name": "bobsample"
+            }
+        ]
+    },
+    "_links": {
+        "self": {
+            "href": "http://localhost:8888"
+        }
+    },
+    "library_name": "boblib2",
+    "type": "samples_for_galaxy",
+    "user_email": "bobname@bio.com"
+}
