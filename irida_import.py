@@ -96,9 +96,11 @@ class IridaImport:
                 made_folder = self.library.create_folder(
                     folder_name,
                     base_folder=base_folder)
-            else:
+            elif base_folder_path == '/':
                 made_folder = self.library.create_folder(folder_name)
-
+            else:
+                raise IOError('base_folder_path must include an existing base'
+                              'folder, or nothing')
         return made_folder
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
@@ -186,6 +188,7 @@ class IridaImport:
                 folder_id=folder_id,
                 link_data_only='link_to_files')
 
+    # TODO: finish this method
     def assign_ownership_if_nec(self, sample):
         """
         Assign ownership to the files in a sample, if neccessary

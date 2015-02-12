@@ -1,11 +1,12 @@
 import pytest
 import json
 import logging
-from sample import Sample
+from .sample import Sample
 from bioblend.galaxy.objects import *
 from bioblend import galaxy
 from mock import Mock
 import mock
+from . import irida_import
 
 
 class TestIridaImport:
@@ -29,7 +30,6 @@ class TestIridaImport:
     @pytest.fixture(scope="function")
     def imp(self):
         """Create an IridaImport instance to test"""
-        import irida_import
         imp = irida_import.IridaImport()
         imp.gi = mock.create_autospec(GalaxyInstance)
         imp.gi.libraries = mock.create_autospec(client.ObjLibraryClient)
@@ -52,9 +52,7 @@ class TestIridaImport:
         """Test library creation if there are no preexisting libraries"""
         wanted_name = 'boblib'
         lib_to_make = mock.create_autospec(Library)
-        lib_to_make.name = Mock()
         lib_to_make.name = wanted_name
-        lib_to_make.deleted = Mock()
         lib_to_make.deleted = False
         imp.gi.libraries.create = Mock(return_value=lib_to_make)
         imp.gi.libraries.list = Mock(return_value=[lib_to_make])
@@ -88,27 +86,24 @@ class TestIridaImport:
     def make_lib(self, name, is_deleted):
         """Set up a library to be used by a test"""
         lib_to_make = mock.create_autospec(Library)
-        lib_to_make.name = Mock()
         lib_to_make.name = name
-        lib_to_make.deleted = Mock()
         lib_to_make.deleted = is_deleted
         return lib_to_make
 
-    def test_create_folder_if_nec_(self, imp):
+    def test_create_folder_if_nec_base(self, imp):
         """Create a folder, as if its base folder exists"""
 
         base_folder = mock.create_autospec(Folder)
         folder_name = 'sample1'
         folder_path = '/illumina_reads/'+folder_name
         folder = mock.create_autospec(Folder)
-        folder.name = Mock()
         folder.name = folder_path
 
         picked_f_id = 1234567
         imp.reg_gi.libraries.get_folders = Mock(
             return_value=[{'id': picked_f_id}])
         imp.library = self.make_lib('wolib', False)
-        imp.library.id = Mock()
+        imp.library.id = 123
         imp.library.get_folder = Mock(return_value=base_folder)
         imp.library.create_folder = Mock(return_value=folder)
 
@@ -131,11 +126,9 @@ class TestIridaImport:
         assert (made_folder.name == folder_path,
                 'The created folder must have the correct name')
 
-    def test_import_to_galaxy_integration(self, imp, setup_json):
-        """
-        Add sample files and folders to Galaxy
-
-        Right now this happens without any assertions
-        """
-        assert(imp.import_to_galaxy("", setup_json))
-        return True
+    # TODO: finish this method
+    def test_create_folder_if_nec_no_base(self, imp):
+        with pytest.raises(IOError):
+            """Correctly raise an exception if the base folder doesn't exist"""
+            raise IOError
+            return True
