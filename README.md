@@ -15,12 +15,6 @@ This tool requires bioblend 0.5.2. It can be installed by:
 pip install bioblend`
 ```
 
-The mock library must be installed as well:
-
-```
-pip install mock
-```
-
 To invoke the import tool from within Galaxy, currently the HTML stub uploader must be used. It requires a web server.
 
 
@@ -89,7 +83,13 @@ pip install -U pytest # or
 easy_install -U pytest
 ```
 
-To run the tests, invoke:
+The mock library must be installed as well:
+
+```
+pip install mock
+```
+
+Then to run the tests invoke:
 
 ```
 py.test

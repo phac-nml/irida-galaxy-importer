@@ -1,7 +1,7 @@
 import pytest
 import json
 import logging
-from .sample import Sample
+from sample import Sample
 from bioblend.galaxy.objects import *
 from bioblend import galaxy
 from mock import Mock
