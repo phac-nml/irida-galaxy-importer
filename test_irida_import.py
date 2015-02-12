@@ -6,7 +6,7 @@ from bioblend.galaxy.objects import *
 from bioblend import galaxy
 from mock import Mock
 import mock
-from . import irida_import
+import irida_import
 
 
 class TestIridaImport:
