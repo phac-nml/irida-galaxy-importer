@@ -1,9 +1,8 @@
 import optparse
 import logging
 import sys
-from bioblend.galaxy.objects import *
+from bioblend.galaxy.objects import GalaxyInstance
 from bioblend import galaxy
-
 import json
 from sample import Sample
 from sample_file import SampleFile
@@ -72,7 +71,6 @@ class IridaImport:
         :type folder_path: str
         :param folder_patht: The folder's path e.g. '/bobfolder/bobfolder2'
         """
-
         made_folder = None
         # Get the folder name from the path, e.g. 'bobfolder2' from
         # '/bobfolder/bobfolder2'
@@ -96,7 +94,7 @@ class IridaImport:
                 made_folder = self.library.create_folder(
                     folder_name,
                     base_folder=base_folder)
-            elif base_folder_path == '/':
+            elif base_folder_path == '':
                 made_folder = self.library.create_folder(folder_name)
             else:
                 raise IOError('base_folder_path must include an existing base'
@@ -263,8 +261,8 @@ if __name__ == '__main__':
 
     logging.debug("Opening a test json file")
     test_json_file = open(
-        '/home/jthiessen/galaxy-dist/tools/irida_import/prelim_json.json')
+        '/home/jthiessen/galaxy-dist/tools/irida_import/sample.json')
     test_json = test_json_file.read()
-
+    logging.debug("test json file : " + test_json)
     importer = IridaImport()
     importer.import_to_galaxy(options.json_parameter_file, test_json)

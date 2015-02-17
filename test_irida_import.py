@@ -2,7 +2,10 @@ import pytest
 import json
 import logging
 from sample import Sample
-from bioblend.galaxy.objects import *
+from bioblend.galaxy.objects import GalaxyInstance
+from bioblend.galaxy.objects import Library
+from bioblend.galaxy.objects import Folder
+from bioblend.galaxy.objects import client
 from bioblend import galaxy
 from mock import Mock
 import mock
@@ -23,7 +26,7 @@ class TestIridaImport:
     def setup_json(self):
         """Create a json string from a text file"""
         logging.debug("Opening a test json file")
-        test_json_file = open('prelim_json.json')
+        test_json_file = open('sample.json')
         test_json = test_json_file.read()
         return test_json
 
