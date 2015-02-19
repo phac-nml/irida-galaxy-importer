@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<base href="/">
+<meta charset="utf-8">
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.13/angular.js"></script>
+</head>
+
+<body>
+<div ng-app="irida_stub" ng-controller="galaxyController">
+
+
+Parameters passed from Galaxy: {{searchAll}}
+
+<br><br>
+Parameter chosen to redirect to: {{redirect}}
+
+</div>
+
+<script>
+
+	angular.module('irida_stub', [], function($locationProvider) {
+			$locationProvider.html5Mode({
+				enabled : true
+				});
+					  })
+		.controller('galaxyController', ['$scope', '$http', '$window', '$location', galaxyController]);
+
+
+	function galaxyController($scope, $http, $window, $location) {
+		var galaxyCallbackURL = $location.search().appCallbackUrl;
+		$scope.searchAll = $location.search();
+		$scope.redirect = galaxyCallbackURL;
+
+		var submitForm = document.createElement('form');
+		submitForm.setAttribute('method','post');
+		submitForm.setAttribute('action',galaxyCallbackURL);
+
+		var lib_name = document.createElement('input');
+		lib_name.setAttribute('type','hidden');
+		lib_name.setAttribute('name','library_name');
+		lib_name.setAttribute('value','boblib');
+		submitForm.appendChild(lib_name);
+		
+		var sample1_name = document.createElement('input');
+		sample1_name.setAttribute('type','hidden');
+		sample1_name.setAttribute('name','sample1_name');
+		sample1_name.setAttribute('value','randomNameForSample1');
+		submitForm.appendChild(sample1_name);
+		
+		var sample1_path = document.createElement('input');
+		sample1_path.setAttribute('type','hidden');
+		sample1_path.setAttribute('name','sample1_path');
+		sample1_path.setAttribute('value','http://localhost/some_IRIDA_API_path/Projects/1/Samples/1');
+		submitForm.appendChild(sample1_path);
+
+		var sample1_file1_path = document.createElement('input');
+		sample1_file1_path.setAttribute('type','hidden');
+		sample1_file1_path.setAttribute('name','sample1_file1_path');
+		sample1_file1_path.setAttribute('value','http://www.dgfdg.com/sample1file1');
+		submitForm.appendChild(sample1_file1_path);
+		
+		
+		var sample1_file2_path = document.createElement('input');
+		sample1_file2_path.setAttribute('type','hidden');
+		sample1_file2_path.setAttribute('name','sample1_file2_path');
+		sample1_file2_path.setAttribute('value','file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq');
+		submitForm.appendChild(sample1_file2_path);
+		
+		document.body.appendChild(submitForm);
+		submitForm.submit();
+			
+	}
+</script>
+
+</body>
+</html>
+

@@ -1,6 +1,7 @@
 import pytest
 import json
 import logging
+import irida_import
 from sample import Sample
 from bioblend.galaxy.objects import GalaxyInstance
 from bioblend.galaxy.objects import Library
@@ -9,7 +10,6 @@ from bioblend.galaxy.objects import client
 from bioblend import galaxy
 from mock import Mock
 import mock
-import irida_import
 
 
 class TestIridaImport:

@@ -20,8 +20,7 @@ To invoke the import tool from within Galaxy, currently the HTML stub uploader m
 
 #### Initial Installation:
 
-Place the repository's contents into `$GALAXY_ROOT/tools/irida_import` The directory `irida_import` must be made.
-
+Place the repository's `irida_import` folder into `$GALAXY_ROOT/tools/`
 Add an entry for irida_import.xml to `$GALAXY_ROOT/config/tool_conf.xml` to the "Get Data" section:
 
 ```
@@ -47,9 +46,9 @@ allow_library_path_paste = True
 Note: It is not neccessary to do any of the steps in this subsection in order to run the tests.
 
 To use the tool from within Galaxy, right now, by default, the tool looks for a HTML page at `http://localhost:81`
-Set up a webserver serving a copy of the HTML page, `irida_import/extras/apache/index.html`. Example config files for Apache2 are included alongside the HTML page.
+Set up a webserver serving a copy of the HTML page, `irida_import/extras/apache2/index.html`. Example config files for Apache2 are included alongside the HTML page.
 
-Cross Origin Resource Sharing (CORS) should be set up, because it likely be required. Galaxy's stripped down paste implementation does not implement CORS, or (to my knowlege) retain an easy way to add it but CORS can be added to a nginx reverse-proxy for Galaxy. A sample configuration file is included: `irida_import/extras/nginx/nginx.conf`
+Cross Origin Resource Sharing (CORS) should be set up, because it will likely be required. Galaxy's stripped down paste implementation does not implement CORS, or (to my knowlege) retain an easy way to add it but CORS can be added to a nginx reverse-proxy for Galaxy. A sample configuration file is included: `irida_import/extras/nginx/nginx.conf`
 The file assumes that Galaxy can be found on `localhost:8888` Change the occurence of this phrase in the configuration file if your Galaxy instance is located elsewhere.
 
 
