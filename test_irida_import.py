@@ -41,15 +41,18 @@ class TestIridaImport:
         return imp
 
     def test_get_samples(self, imp, setup_json):
-        """Test if correct samples are read from the json string"""
-        irida_info_dict = json.loads(setup_json)
-        samples = imp.get_samples(irida_info_dict)
-        size = len(irida_info_dict['_embedded']['samples'])
+        """
+        Test if correct samples are read from the json string
 
+        The tested method is expected to change soon.
+        """
+        param_dict = json.loads(setup_json)['param_dict']
+        samples = imp.get_samples(param_dict)
         assert isinstance(samples, list), 'A list must be returned'
         for sample in samples:
             assert isinstance(sample, Sample), 'The list must contain samples'
-        assert len(samples) == size, 'Number of samples is incorrect'
+            assert len(samples) == 1, 'Number of samples is incorrect'
+
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""

@@ -49,10 +49,9 @@ Note: It is not neccessary to do any of the steps in this subsection in order to
 To use the tool from within Galaxy, right now, by default, the tool looks for a HTML page at `http://localhost:81`
 Set up a webserver serving a copy of the HTML page, `irida_import/extras/apache/index.html`. Example config files for Apache2 are included alongside the HTML page.
 
-CORS is required. Galaxy's stripped down paste implementation does not implement CORS, or (to my knowlege) retain an easy way to add it but CORS can be added to a nginx reverse-proxy for Galaxy. A sample configuration file is included: `irida_import/extras/nginx/nginx.conf`
+Cross Origin Resource Sharing (CORS) should be set up, because it likely be required. Galaxy's stripped down paste implementation does not implement CORS, or (to my knowlege) retain an easy way to add it but CORS can be added to a nginx reverse-proxy for Galaxy. A sample configuration file is included: `irida_import/extras/nginx/nginx.conf`
 The file assumes that Galaxy can be found on `localhost:8888` Change the occurence of this phrase in the configuration file if your Galaxy instance is located elsewhere.
 
-In addition, change the string `/home/jthiessen/galaxy-dist/tools/irida_import/prelim_json.json` in `irida_import.py` to be the location that `prelim_json.json` is on your system.  
 
 #### Final Configuration:
 
