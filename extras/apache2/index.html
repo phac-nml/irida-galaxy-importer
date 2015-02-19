@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+
+<script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.js"></script>
+</head>
+
+<body>
+<div ng-app="irida_stub" ng-controller="galaxyController">
+
+
+Galaxy Search: {{searchAll}}
+
+<br><br>
+Redirects: {{redirect}}
+
+</div>
+
+<script>
+
+	angular.module('irida_stub', [], function($locationProvider) {
+		    		          $locationProvider.html5Mode(true);
+					  })
+		.controller('galaxyController', ['$scope', '$http', '$window', '$location', galaxyController]);
+
+
+	function galaxyController($scope, $http, $window, $location) {
+
+	var galaxyCallbackURL = $location.search().appCallbackUrl;
+	
+	$scope.searchAll = $location.search();
+	$scope.redirect = galaxyCallbackURL;
+
+
+
+	var submitForm = document.createElement('form');
+	
+	submitForm.setAttribute('method','post');
+	submitForm.setAttribute('action',galaxyCallbackURL);
+
+	var lib_name = document.createElement('input');
+	lib_name.setAttribute('type','hidden');
+	lib_name.setAttribute('name','library_name');
+	lib_name.setAttribute('value','boblib');
+	submitForm.appendChild(lib_name);
+	
+	var sample1_name = document.createElement('input');
+	sample1_name.setAttribute('type','hidden');
+	sample1_name.setAttribute('name','sample1_name');
+	sample1_name.setAttribute('value','randomNameForSample1');
+	submitForm.appendChild(sample1_name);
+	
+	var sample1_path = document.createElement('input');
+	sample1_path.setAttribute('type','hidden');
+	sample1_path.setAttribute('name','sample1_path');
+	sample1_path.setAttribute('value','http://localhost/some_IRIDA_API_path/Projects/1/Samples/1');
+	submitForm.appendChild(sample1_path);
+
+	var sample1_file1_path = document.createElement('input');
+	sample1_file1_path.setAttribute('type','hidden');
+	sample1_file1_path.setAttribute('name','sample1_file1_path');
+	sample1_file1_path.setAttribute('value','http://www.dgfdg.com/sample1file1');
+	submitForm.appendChild(sample1_file1_path);
+	
+	
+	var sample1_file2_path = document.createElement('input');
+	sample1_file2_path.setAttribute('type','hidden');
+	sample1_file2_path.setAttribute('name','sample1_file2_path');
+	sample1_file2_path.setAttribute('value','file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq');
+	submitForm.appendChild(sample1_file2_path);
+	
+	
+	document.body.appendChild(submitForm);
+	
+	submitForm.submit();
+	
+
+
+/*
+//	post(galaxyCallbackURL);
+//this function was shamelessly lifted from http://stackoverflow.com/questions/133925/javascript-post-request-like-a-form-submit	
+function post(path, params, method) {
+    method = method || "post"; // Set method to post by default if not specified.
+
+    // The rest of this code assumes you are not using a library.
+    // It can be made less wordy if you use one.
+    var form = document.createElement("form");
+    form.setAttribute("method", method);
+    form.setAttribute("action", path);
+
+    for(var key in params) {
+        if(params.hasOwnProperty(key)) {
+            varte  hiddenField = document.createElement("input");
+            hiddenField.setAttribute("type", "hidden");
+            hiddenField.setAttribute("name", key);
+            hiddenField.setAttribute("value", params[key]);
+
+            form.appendChild(hiddenField);
+         }
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
+/*	
+	$http.post(galaxyCallbackURL,{msg:'grr'}).
+		success(function(data,status,headers,config) {
+		//	$window.location.href ="http://localhost:81/response.html"; //galaxyCallbackURL;
+			}).
+    		error(function(data, status, headers, config) {
+				});				
+		top.Galaxy.currHistoryPanel.refreshContents();
+			
+*/
+		}
+</script>
+
+</body>
+</html>
+
