@@ -80,7 +80,7 @@ The mock library must be installed as well:
 pip install mock
 ```
 
-Then to run the tests invoke:
+Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invoke:
 
 ```
 py.test
