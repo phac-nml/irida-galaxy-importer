@@ -58,6 +58,7 @@
 		function setLibrary(libraryName) {
 			if(addedLib == false) {
 				addSampleEntity("library_name",libraryName);
+				addedLib = true;
 			}
 			else {
 				throw "Only one library to upload to can be added to the HTML form.";
