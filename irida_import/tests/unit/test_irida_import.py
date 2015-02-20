@@ -1,8 +1,8 @@
 import pytest
 import json
 import logging
-import irida_import
-from sample import Sample
+from ...irida_import import IridaImport
+from ...sample import Sample
 from bioblend.galaxy.objects import GalaxyInstance
 from bioblend.galaxy.objects import Library
 from bioblend.galaxy.objects import Folder
@@ -33,7 +33,7 @@ class TestIridaImport:
     @pytest.fixture(scope="function")
     def imp(self):
         """Create an IridaImport instance to test"""
-        imp = irida_import.IridaImport()
+        imp = IridaImport()
         imp.gi = mock.create_autospec(GalaxyInstance)
         imp.gi.libraries = mock.create_autospec(client.ObjLibraryClient)
         imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
@@ -52,7 +52,6 @@ class TestIridaImport:
         for sample in samples:
             assert isinstance(sample, Sample), 'The list must contain samples'
             assert len(samples) == 1, 'Number of samples is incorrect'
-
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""
