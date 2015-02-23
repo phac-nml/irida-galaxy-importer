@@ -34,7 +34,6 @@ class IridaImport:
         samples_remain = True
         sample_num = 1
         samples = []
-        logging.debug(param_dict)
         while samples_remain:
             sample_name_key = 'sample' + str(sample_num) + '_name'
             if sample_name_key not in param_dict:
@@ -294,7 +293,6 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     # this test JSON file does not have to be configured to run the tests
-    logging.debug("Opening a test json file")
     test_json_file = \
         '/home/jthiessen/galaxy-dist/tools/irida_import/sample.json'
 

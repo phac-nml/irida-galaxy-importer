@@ -24,11 +24,24 @@ class TestIridaImport:
 
     @pytest.fixture(scope="class")
     def setup_json(self):
-        """Create a json string from a text file"""
-        logging.debug("Opening a test json file")
-        test_json_file = open('sample.json')
-        test_json = test_json_file.read()
-        return test_json
+        """Create a JSON string representative of the Galaxy dataset file"""
+        logging.debug("Making a test json file")
+        test_json_dict = {
+            "param_dict": {
+                "library_name": "boblib",
+                "userId": "1",
+                "dbkey": "?",
+                "sample1_name": "thisissample1'sname",
+                "__user__": "galaxy.model:User",
+                "__app__": "galaxy.app:UniverseApplication",
+                "sample1_path": "http://localhost/some_IRIDA_API_path/Projects/1/Samples/1",
+                "__user_name__": "jthiessen",
+                "runtool_btn": "Execute",
+                "__user_id__": "1",
+                "sample1_file2_path": "file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq",
+                "__root_dir__": "/home/jthiessen/galaxy-dist",
+                "sample1_file1_path": "http://www.dgfdg.com/sample1file1"}}
+        return json.dumps(test_json_dict)
 
     @pytest.fixture(scope="function")
     def imp(self):
