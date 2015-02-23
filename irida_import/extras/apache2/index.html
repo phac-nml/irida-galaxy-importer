@@ -13,12 +13,7 @@
 	<div ng-app="irida_stub" ng-controller="galaxyController">
 
 
-		Parameters passed from Galaxy: {{searchAll}}
-
-		<br><br>
-		Parameter chosen to redirect to: {{redirect}}
-
-	<form id = "samplesSubmit" action="{{redirect}}" method="post" ng-controller="galaxyController as form">
+	<form id = "samplesSubmit" action="{{form.redirect}}" method="post" ng-controller="galaxyController as form">
 	  <input type="hidden" name="{{sampleEntity.name}}" ng-repeat="sampleEntity in form.sampleEntities" value="{{sampleEntity.value}}"/>
 	</form>
 
@@ -40,10 +35,8 @@
 	function galaxyController($scope, $http, $window, $location, $timeout) {
 
 		var galaxyCallbackURL = $location.search().appCallbackUrl;
-		$scope.searchAll = $location.search();
-		$scope.redirect = galaxyCallbackURL;
-
 		var vm = this;
+		vm.redirect = galaxyCallbackURL;
 		vm.sampleEntities = [];
 	
 		function addSampleEntity(inputName, inputValue) {
@@ -87,7 +80,6 @@
 			function(){
 				document.getElementById("samplesSubmit").submit();
 			}
-			,5000
 			); 
 	}
 
