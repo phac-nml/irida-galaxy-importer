@@ -83,10 +83,12 @@
 			"file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq"
 			];
 		addSample("thisissample1'sname","http://localhost/some_IRIDA_API_path/Projects/1/Samples/1",sampleFilePaths);		
-		$timeout(function(){
-			document.getElementById("samplesSubmit").submit();
+		$timeout(
+			function(){
+				document.getElementById("samplesSubmit").submit();
 			}
-		); 
+			,5000
+			); 
 	}
 
 
