@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<base href="/">
+<meta charset="utf-8">
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.13/angular.js"></script>
+</head>
+
+<body>
+	<div ng-app="irida_stub">
+
+
+	<form id = "samplesSubmit" action="{{form.redirect}}" method="post" ng-controller="galaxyController as form">
+	  <input type="hidden" name="{{sampleEntity.name}}" ng-repeat="sampleEntity in form.sampleEntities" value="{{sampleEntity.value}}"/>
+	</form>
+
+	</div>
+
+<script>
+	angular.module('irida_stub', [], function($locationProvider) {
+		$locationProvider.html5Mode({
+			enabled : true
+		});
+	}).config(function($sceDelegateProvider) {
+		$sceDelegateProvider.resourceUrlWhitelist([
+    			'self',
+    			'http://localhost/**'
+  		]);
+	}).controller('galaxyController', ['$scope', '$http', '$window', '$location','$timeout', galaxyController]);
+
+
+	function galaxyController($scope, $http, $window, $location, $timeout) {
+
+		var galaxyCallbackURL = $location.search().appCallbackUrl;
+		var vm = this;
+		vm.redirect = galaxyCallbackURL;
+		vm.sampleEntities = [];
+	
+		function addSampleEntity(inputName, inputValue) {
+			vm.sampleEntities.push({
+				name : inputName,
+				value : inputValue,
+				})
+		}	
+	
+		addedLib = false;
+		nextSampleNum = 1;
+		function setLibrary(libraryName) {
+			if(addedLib == false) {
+				addSampleEntity("library_name",libraryName);
+				addedLib = true;
+			}
+			else {
+				throw "Only one library to upload to can be added to the HTML form.";
+			}
+		}
+		
+		function addSample(sampleName, samplePath, sampleFilePaths) {
+			addSampleEntity("sample"+nextSampleNum+"_name",sampleName);
+			addSampleEntity("sample"+nextSampleNum+"_path",samplePath);
+			nextSampleFileNum = 1;
+			for(sFPath in sampleFilePaths) {
+				addSampleEntity("sample"+nextSampleNum+"_file"+nextSampleFileNum+"_path", sampleFilePaths[sFPath]);
+				nextSampleFileNum++;
+			}
+			nextSampleNum++;
+		}
+		
+		setLibrary("boblib");
+			
+		sampleFilePaths = [
+			"http://www.dgfdg.com/sample1file1",		
+			"file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq"
+			];
+		addSample("thisissample1'sname","http://localhost/some_IRIDA_API_path/Projects/1/Samples/1",sampleFilePaths);		
+		$timeout(
+			function(){
+				document.getElementById("samplesSubmit").submit();
+			}
+			); 
+	}
+
+
+</script>
+
+</body>
+</html>
+

@@ -1,12 +1,11 @@
-import optparse
 import logging
 import sys
-from bioblend.galaxy.objects import *
+from bioblend.galaxy.objects import GalaxyInstance
 from bioblend import galaxy
-
 import json
 from sample import Sample
 from sample_file import SampleFile
+import optparse
 
 
 class IridaImport:
@@ -22,29 +21,57 @@ class IridaImport:
     ILLUMINA_PATH = '/illumina_reads'
     REFERENCE_PATH = '/references'
 
-    # TODO: choose/use a suitable library for interpreting IRIDA output json
-    def get_samples(self, irida_info_dict):
+    def get_samples(self, param_dict):
         """
         Create sample objects from a dictionary.
 
-        :type irida_info_dict: dict
-        :param irida_info_dict: a dictionary to parse. See one of the test
+        :type param_dict: dict
+        :param param_dict: a dictionary to parse. See one of the test
         json files for formating information (the format will likely
         change soon)
         :return: list of output samples
         """
+        samples_remain = True
+        sample_num = 1
         samples = []
-        for sample_input in irida_info_dict['_embedded']['samples']:
-            sample_name = sample_input['sample_name']
-            sample_path = sample_input['_links']['self']['href']
+        while samples_remain:
+            sample_name_key = 'sample' + str(sample_num) + '_name'
+            if sample_name_key not in param_dict:
+                logging.debug('no sample found for key: ' + sample_name_key)
+                samples_remain = False
+            else:
+                logging.debug('found sample for key: ' + sample_name_key +
+                              ' with value: ' + param_dict[sample_name_key])
+                sample_path_key = 'sample' + str(sample_num) + '_path'
+                sample_name = param_dict[sample_name_key]
+                sample_path = param_dict[sample_path_key]
+                sample = Sample(sample_name, sample_path)
 
-            sample = Sample(sample_name, sample_path)
+                sample_files_remain = True
+                sample_file_num = 1
+                while sample_files_remain:
+                    sample_file_key = 'sample' + str(sample_num) + \
+                        '_file' + str(sample_file_num) + '_path'
+                    if sample_file_key not in param_dict:
+                        sample_files_remain = False
+                        logging.debug('no sample_file for key: ' +
+                                      sample_file_key)
+                    else:
+                        logging.debug('found sample_file for key: ' +
+                                      sample_file_key + 'with value ' +
+                                      param_dict[sample_file_key])
 
-            for sample_file_input in sample_input['_embedded']['sample_files']:
-                sample_file_path = sample_file_input['_links']['self']['href']
-                sample.sample_files.append(SampleFile(sample_file_path))
+                        sample_file_path = param_dict[sample_file_key]
+                        sample_file = SampleFile(sample_file_path)
 
-            samples.append(sample)
+                        logging.debug("sample file made:" + str(sample_file))
+
+                        sample.sample_files.append(sample_file)
+                        sample_file_num += 1
+
+                samples.append(sample)
+                sample_num += 1
+
         return samples
 
     def get_first_or_make_lib(self, desired_lib_name):
@@ -72,7 +99,6 @@ class IridaImport:
         :type folder_path: str
         :param folder_patht: The folder's path e.g. '/bobfolder/bobfolder2'
         """
-
         made_folder = None
         # Get the folder name from the path, e.g. 'bobfolder2' from
         # '/bobfolder/bobfolder2'
@@ -96,7 +122,7 @@ class IridaImport:
                 made_folder = self.library.create_folder(
                     folder_name,
                     base_folder=base_folder)
-            elif base_folder_path == '/':
+            elif base_folder_path == '':
                 made_folder = self.library.create_folder(folder_name)
             else:
                 raise IOError('base_folder_path must include an existing base'
@@ -206,13 +232,17 @@ class IridaImport:
         :param json_parameter_file: the JSON string that Galaxy passes,
         describing the stub datasource it created
         :type irida_info: str
-        :param irida_info: the JSON string passed by IRIDA, describing
-        the samples to upload
+        :param irida_info: a local JSON file containing configuration info.
+        It is currently unused, and may be depreciated.
         """
-        irida_info_dict = json.loads(irida_info)
 
-        user_email = irida_info_dict['user_email']
-        desired_lib_name = irida_info_dict['library_name']
+        full_param_dict = json.loads(open(json_parameter_file, 'r').read())
+        logging.debug("The full Galaxy param dict is: " +
+                      json.dumps(full_param_dict, indent=2))
+
+        param_dict = full_param_dict['param_dict']
+
+        desired_lib_name = param_dict['library_name']
 
         self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
 
@@ -223,7 +253,8 @@ class IridaImport:
             key=self.ADMIN_KEY)
 
         # Each sample contains a list of sample files
-        samples = self.get_samples(irida_info_dict)
+        samples = self.get_samples(param_dict)
+        # samples = self.get_samples(irida_info_dict)
         # Set up the library
         self.library = self.get_first_or_make_lib(desired_lib_name)
         self.create_folder_if_nec(self.ILLUMINA_PATH)
@@ -236,12 +267,12 @@ class IridaImport:
             self.upload_sample_if_nec(sample)
             self.assign_ownership_if_nec(sample)
 
-        return True  # for the first unit test
 
 """
 From the command line, pass json files to IridaImport, and set up the logger
 """
 if __name__ == '__main__':
+    # TODO: convert to robustly use argparse
     logging.basicConfig(filename="log_irida_import", level=logging.DEBUG,
                         filemode="w")
     stream_handler = logging.StreamHandler(sys.stdout)
@@ -261,10 +292,15 @@ if __name__ == '__main__':
         help='irida_info')
     (options, args) = parser.parse_args()
 
-    logging.debug("Opening a test json file")
-    test_json_file = open(
-        '/home/jthiessen/galaxy-dist/tools/irida_import/prelim_json.json')
-    test_json = test_json_file.read()
+    # this test JSON file does not have to be configured to run the tests
+    test_json_file = \
+        '/home/jthiessen/galaxy-dist/tools/irida_import/sample.json'
 
     importer = IridaImport()
-    importer.import_to_galaxy(options.json_parameter_file, test_json)
+
+    if options.irida_info is None:
+        logging.debug("No passed file so reading local file")
+        importer.import_to_galaxy(test_json_file, None)
+    else:
+        logging.debug("Reading from passed file")
+        importer.import_to_galaxy(options.json_parameter_file, None)

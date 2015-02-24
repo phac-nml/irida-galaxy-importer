@@ -1,12 +1,15 @@
 import pytest
 import json
 import logging
-from sample import Sample
-from bioblend.galaxy.objects import *
+from ...irida_import import IridaImport
+from ...sample import Sample
+from bioblend.galaxy.objects import GalaxyInstance
+from bioblend.galaxy.objects import Library
+from bioblend.galaxy.objects import Folder
+from bioblend.galaxy.objects import client
 from bioblend import galaxy
 from mock import Mock
 import mock
-import irida_import
 
 
 class TestIridaImport:
@@ -21,16 +24,29 @@ class TestIridaImport:
 
     @pytest.fixture(scope="class")
     def setup_json(self):
-        """Create a json string from a text file"""
-        logging.debug("Opening a test json file")
-        test_json_file = open('prelim_json.json')
-        test_json = test_json_file.read()
-        return test_json
+        """Create a JSON string representative of the Galaxy dataset file"""
+        logging.debug("Making a test json file")
+        test_json_dict = {
+            "param_dict": {
+                "library_name": "boblib",
+                "userId": "1",
+                "dbkey": "?",
+                "sample1_name": "thisissample1'sname",
+                "__user__": "galaxy.model:User",
+                "__app__": "galaxy.app:UniverseApplication",
+                "sample1_path": "http://localhost/some_IRIDA_API_path/Projects/1/Samples/1",
+                "__user_name__": "jthiessen",
+                "runtool_btn": "Execute",
+                "__user_id__": "1",
+                "sample1_file2_path": "file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq",
+                "__root_dir__": "/home/jthiessen/galaxy-dist",
+                "sample1_file1_path": "http://www.dgfdg.com/sample1file1"}}
+        return json.dumps(test_json_dict)
 
     @pytest.fixture(scope="function")
     def imp(self):
         """Create an IridaImport instance to test"""
-        imp = irida_import.IridaImport()
+        imp = IridaImport()
         imp.gi = mock.create_autospec(GalaxyInstance)
         imp.gi.libraries = mock.create_autospec(client.ObjLibraryClient)
         imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
@@ -38,15 +54,17 @@ class TestIridaImport:
         return imp
 
     def test_get_samples(self, imp, setup_json):
-        """Test if correct samples are read from the json string"""
-        irida_info_dict = json.loads(setup_json)
-        samples = imp.get_samples(irida_info_dict)
-        size = len(irida_info_dict['_embedded']['samples'])
+        """
+        Test if correct samples are read from the json string
 
+        The tested method is expected to change soon.
+        """
+        param_dict = json.loads(setup_json)['param_dict']
+        samples = imp.get_samples(param_dict)
         assert isinstance(samples, list), 'A list must be returned'
         for sample in samples:
             assert isinstance(sample, Sample), 'The list must contain samples'
-        assert len(samples) == size, 'Number of samples is incorrect'
+            assert len(samples) == 1, 'Number of samples is incorrect'
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""
