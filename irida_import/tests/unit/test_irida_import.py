@@ -73,7 +73,7 @@ class TestIridaImport:
         lib_to_make.name = wanted_name
         lib_to_make.deleted = False
         imp.gi.libraries.create = Mock(return_value=lib_to_make)
-        imp.gi.libraries.list = Mock(return_value=[lib_to_make])
+        imp.gi.libraries.list = Mock(return_value=[])
 
         lib_made = imp.get_first_or_make_lib(wanted_name)
 
@@ -144,9 +144,19 @@ class TestIridaImport:
         assert (made_folder.name == folder_path,
                 'The created folder must have the correct name')
 
-    # TODO: finish this method
-    def test_create_folder_if_nec_no_base(self, imp):
+    def test_create_folder_if_nec_wrong_base(self, imp):
         with pytest.raises(IOError):
-            """Correctly raise an exception if the base folder doesn't exist"""
-            raise IOError
-            return True
+            """Raise an exception if the folder's  base folder doesn't exist"""
+
+            folder_name = 'sample1'
+            folder_path = '/illumina_reads/'+folder_name
+            folder = mock.create_autospec(Folder)
+            folder.name = folder_path
+
+            imp.reg_gi.libraries.get_folders = Mock(
+                return_value=[])
+            imp.library = self.make_lib('wolib', False)
+            imp.library.id = 123
+
+            imp.exists_in_lib = Mock(return_value=False)
+            imp.create_folder_if_nec(folder_path)
