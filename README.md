@@ -41,15 +41,24 @@ allow_library_path_paste = True
 ```
 
 
-#### Setting up the HTML Stub Uploader:
+#### Configuring IRIDA-Galaxy Communications:
 
 Note: It is not neccessary to do any of the steps in this subsection in order to run the tests.
 
-To use the tool from within Galaxy, right now, by default, the tool looks for a HTML page at `http://localhost:81`
-Set up a webserver serving a copy of the HTML page, `irida_import/extras/apache2/index.html`.
+To use the tool from within Galaxy, right now, by default, Galaxy looks for the IRIDA projects endpoint at 
+
+```
+http://localhost:8888/projects
+```
+
+This location can be changed by modifying the following line in `irida_import/irida_import.xml`:
+
+```
+<inputs action="http://localhost:8080/projects" check_values="False" method="post">
+```
 
 Cross Origin Resource Sharing (CORS) should be set up, because it may be required. Galaxy's stripped down paste implementation does not implement CORS, or (to my knowlege) retain an easy way to add it but CORS can be added to a nginx reverse-proxy for Galaxy. A sample configuration file is included: `irida_import/extras/nginx/nginx.conf`
-The file assumes that Galaxy can be found on `localhost:8888` Change the occurence of this phrase in the configuration file if your Galaxy instance is located elsewhere.
+The nginx configuration file assumes that Galaxy can be found on `localhost:8888` Change the occurence of this phrase in the configuration file if your Galaxy instance is located elsewhere.
 
 
 #### Final Configuration:
