@@ -161,6 +161,7 @@ class IridaImport:
         :type sample: Sample
         :param sample: the sample to upload
         """
+        uploaded = False
         for sample_file in sample.sample_files:
             sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
             galaxy_sample_file_name = sample_folder_path+'/'+sample_file.name
@@ -175,9 +176,12 @@ class IridaImport:
             if not self.exists_in_lib('file', 'name', galaxy_sample_file_name):
                 logging.debug(
                     "  Sample file does not exist so uploading/linking it")
-                self.upload_or_link(sample_file, sample_folder_path)
+                uploaded = self.upload_or_link(sample_file, sample_folder_path)
             else:
                 logging.debug("  Sample file already exists!")
+        logging.debug("uploaded is:"+str(uploaded))
+        print(uploaded)
+        return uploaded
 
     # TODO: use urllib.request.URLopener (right now only local files work)
     def upload_or_link(self, sample_file, sample_folder_path):
@@ -191,7 +195,7 @@ class IridaImport:
 
         """
         logging.debug('      Attempting to upload or link a file')
-
+        uploaded = False
         # Get the 'file' 'http' prefix from the
         # 'file://...'  or 'http://..' path
         prefix = sample_file.path.split(':/')[0]
@@ -199,7 +203,6 @@ class IridaImport:
             "       Sample file's path's prefix is \"%s\" and path is \"%s\"" %
             (prefix, sample_file.path))
         if prefix == 'file':
-
             # Get e.g. '/folder/folder56/myfile.fastq' from
             # 'file://folder/folder56/myfile.fastq'
             file_path = sample_file.path.split(':/')[1]
@@ -209,12 +212,13 @@ class IridaImport:
                 self.library.id,
                 name=sample_folder_path)[0]['id']
 
-            self.reg_gi.libraries.upload_from_galaxy_filesystem(
+            uploaded = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
                 file_path,
                 folder_id=folder_id,
                 link_data_only='link_to_files')
-
+            logging.debug('wrote file!')
+        return uploaded
     # TODO: finish this method
     def assign_ownership_if_nec(self, sample):
         """

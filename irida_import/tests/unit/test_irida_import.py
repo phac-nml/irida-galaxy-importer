@@ -3,13 +3,16 @@ import json
 import logging
 from ...irida_import import IridaImport
 from ...sample import Sample
+from ...sample_file import SampleFile
 from bioblend.galaxy.objects import GalaxyInstance
 from bioblend.galaxy.objects import Library
 from bioblend.galaxy.objects import Folder
 from bioblend.galaxy.objects import client
+from bioblend.galaxy.objects.wrappers import LibraryContentInfo
 from bioblend import galaxy
 from mock import Mock
 import mock
+
 
 
 class TestIridaImport:
@@ -160,3 +163,50 @@ class TestIridaImport:
 
             imp.exists_in_lib = Mock(return_value=False)
             imp.create_folder_if_nec(folder_path)
+
+    def test_exists_in_lib(self, imp):
+        """ Test if a folder can be found in a library among chaff items """
+        imp.library = self.make_lib('wolib', False)
+        items = []
+        items.append(self.make_content_info('file', 'name', 'sally.fastq'))
+        items.append(self.make_content_info('folder', 'name', 'bob.fasta'))
+        items.append(self.make_content_info('file', 'name', 'bob.fasta'))
+        imp.library.content_infos = items
+        exists = imp.exists_in_lib('file', 'name', 'bob.fasta')
+        assert exists, 'file must exist in library'
+
+    def make_content_info(self, item_type, item_attr_name, item_attr_value):
+        """ Make a content info object for a mock library """
+        content_info = mock.create_autospec(LibraryContentInfo)
+        content_info.type = item_type
+        setattr(content_info, item_attr_name, item_attr_value)
+        return content_info
+
+    def test_upload_sample_if_nec(self, imp):
+        """ Test if a new sample file is uploaded to the library """
+        file_list = [
+            {
+                'url': '/api/libraries/lala/contents/lala1',
+                'id': '59606d2a36c77a56',
+                'name': 'file1.fasta'
+                },
+            {
+                'url': '/api/libraries/lala/contents/lala2',
+                'id': '59606d2a36c77a57',
+                'name': 'file2.fasta'
+                }
+            ]
+        imp.exists_in_lib = Mock(return_value=False)
+        imp.upload_or_link = Mock(return_value=file_list)
+
+        sampleFile1 = SampleFile("/imaginary/path/file1.fasta")
+        sampleFile2 = SampleFile("/imaginary/path/file2.fasta")
+        sample = Sample("bobname", "/imaginary/path/Samples/1")
+        sample.sample_files.append(sampleFile1)
+        sample.sample_files.append(sampleFile2)
+
+        uploaded = imp.upload_sample_if_nec(sample)
+        assert uploaded, 'files must be uploaded'
+        assert (imp.upload_or_link.call_count is 2,
+                'The 2 files should be uploaded once each')
+        assert uploaded == file_list, "The correct files must be uploaded"
