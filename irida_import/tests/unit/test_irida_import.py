@@ -14,7 +14,6 @@ from mock import Mock
 import mock
 
 
-
 class TestIridaImport:
 
     """ TestIridaImport performs unit tests on IridaImport."""
@@ -27,24 +26,14 @@ class TestIridaImport:
 
     @pytest.fixture(scope="class")
     def setup_json(self):
-        """Create a JSON string representative of the Galaxy dataset file"""
-        logging.debug("Making a test json file")
-        test_json_dict = {
-            "param_dict": {
-                "library_name": "boblib",
-                "userId": "1",
-                "dbkey": "?",
-                "sample1_name": "thisissample1'sname",
-                "__user__": "galaxy.model:User",
-                "__app__": "galaxy.app:UniverseApplication",
-                "sample1_path": "http://localhost/some_IRIDA_API_path/Projects/1/Samples/1",
-                "__user_name__": "jthiessen",
-                "runtool_btn": "Execute",
-                "__user_id__": "1",
-                "sample1_file2_path": "file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq",
-                "__root_dir__": "/home/jthiessen/galaxy-dist",
-                "sample1_file1_path": "http://www.dgfdg.com/sample1file1"}}
-        return json.dumps(test_json_dict)
+        """Create a json string from a text file"""
+        logging.debug("Opening a test json string")
+        test_path = 'tests/unit/data/test.dat'
+        # py.test messes up the paths to modules and packages
+        # I haven't found a way to get around it without hardcoding paths
+        test_json_file = open(test_path)
+        test_json = test_json_file.read()
+        return test_json
 
     @pytest.fixture(scope="function")
     def imp(self):
@@ -63,11 +52,13 @@ class TestIridaImport:
         The tested method is expected to change soon.
         """
         param_dict = json.loads(setup_json)['param_dict']
-        samples = imp.get_samples(param_dict)
-        assert isinstance(samples, list), 'A list must be returned'
+        json_params = json.loads(param_dict['json_params'])
+        samples = imp.get_samples(json_params)
+        assert isinstance(
+            samples, list), 'A list must be returned'
         for sample in samples:
             assert isinstance(sample, Sample), 'The list must contain samples'
-            assert len(samples) == 1, 'Number of samples is incorrect'
+        assert len(samples) == 3, 'Number of samples is incorrect'
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""
@@ -111,12 +102,15 @@ class TestIridaImport:
         lib_to_make.deleted = is_deleted
         return lib_to_make
 
-    def test_create_folder_if_nec_base(self, imp):
+    def test_create_folder_if_nec_base(
+            self,
+            imp):
         """Create a folder, as if its base folder exists"""
 
-        base_folder = mock.create_autospec(Folder)
+        base_folder = mock.create_autospec(
+            Folder)
         folder_name = 'sample1'
-        folder_path = '/illumina_reads/'+folder_name
+        folder_path = '/illumina_reads/' + folder_name
         folder = mock.create_autospec(Folder)
         folder.name = folder_path
 
@@ -128,10 +122,13 @@ class TestIridaImport:
         imp.library.get_folder = Mock(return_value=base_folder)
         imp.library.create_folder = Mock(return_value=folder)
 
-        # IridaImport.exists_in_lib(...) is tested elsewhere
-        imp.exists_in_lib = Mock(return_value=False)
+        # IridaImport.exists_in_lib(...) is tested
+        # elsewhere
+        imp.exists_in_lib = Mock(
+            return_value=False)
 
-        made_folder = imp.create_folder_if_nec(folder_path)
+        made_folder = imp.create_folder_if_nec(
+            folder_path)
 
         assert (imp.reg_gi.libraries.get_folders.call_count is 1,
                 'Base folders should only be looked for once')
@@ -140,7 +137,8 @@ class TestIridaImport:
 
         # Can't add assertion message here--either inside the method, or
         # by wrapping with an assert
-        imp.library.get_folder.assert_called_with(picked_f_id)
+        imp.library.get_folder.assert_called_with(
+            picked_f_id)
 
         assert (imp.library.create_folder.call_count is 1,
                 'Only 1 folder must be created')
@@ -152,12 +150,11 @@ class TestIridaImport:
             """Raise an exception if the folder's  base folder doesn't exist"""
 
             folder_name = 'sample1'
-            folder_path = '/illumina_reads/'+folder_name
+            folder_path = '/illumina_reads/' + folder_name
             folder = mock.create_autospec(Folder)
             folder.name = folder_path
 
-            imp.reg_gi.libraries.get_folders = Mock(
-                return_value=[])
+            imp.reg_gi.libraries.get_folders = Mock(return_value=[])
             imp.library = self.make_lib('wolib', False)
             imp.library.id = 123
 
@@ -168,9 +165,12 @@ class TestIridaImport:
         """ Test if a folder can be found in a library among chaff items """
         imp.library = self.make_lib('wolib', False)
         items = []
-        items.append(self.make_content_info('file', 'name', 'sally.fastq'))
-        items.append(self.make_content_info('folder', 'name', 'bob.fasta'))
-        items.append(self.make_content_info('file', 'name', 'bob.fasta'))
+        items.append(
+            self.make_content_info('file', 'name', 'sally.fastq'))
+        items.append(
+            self.make_content_info('folder', 'name', 'bob.fasta'))
+        items.append(
+            self.make_content_info('file', 'name', 'bob.fasta'))
         imp.library.content_infos = items
         exists = imp.exists_in_lib('file', 'name', 'bob.fasta')
         assert exists, 'file must exist in library'
@@ -199,9 +199,13 @@ class TestIridaImport:
         imp.exists_in_lib = Mock(return_value=False)
         imp.upload_or_link = Mock(return_value=file_list)
 
-        sampleFile1 = SampleFile("/imaginary/path/file1.fasta")
-        sampleFile2 = SampleFile("/imaginary/path/file2.fasta")
-        sample = Sample("bobname", "/imaginary/path/Samples/1")
+        sampleFile1 = SampleFile(
+            "/imaginary/path/file1.fasta")
+        sampleFile2 = SampleFile(
+            "/imaginary/path/file2.fasta")
+        sample = Sample(
+            "bobname",
+            "/imaginary/path/Samples/1")
         sample.sample_files.append(sampleFile1)
         sample.sample_files.append(sampleFile2)
 

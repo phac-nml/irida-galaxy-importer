@@ -6,6 +6,7 @@ import json
 from sample import Sample
 from sample_file import SampleFile
 import optparse
+import os.path
 
 
 class IridaImport:
@@ -21,58 +22,28 @@ class IridaImport:
     ILLUMINA_PATH = '/illumina_reads'
     REFERENCE_PATH = '/references'
 
-    def get_samples(self, param_dict):
+    def get_samples(self, json_params_dict):
         """
         Create sample objects from a dictionary.
 
-        :type param_dict: dict
-        :param param_dict: a dictionary to parse. See one of the test
+        :type json_params_dict: dict
+        :param json_params__dict: a dictionary to parse. See one of the test
         json files for formating information (the format will likely
         change soon)
         :return: list of output samples
         """
-        samples_remain = True
-        sample_num = 1
         samples = []
-        logging.debug(param_dict)
-        while samples_remain:
-            sample_name_key = 'sample' + str(sample_num) + '_name'
-            if sample_name_key not in param_dict:
-                logging.debug('no sample found for key: ' + sample_name_key)
-                samples_remain = False
-            else:
-                logging.debug('found sample for key: ' + sample_name_key +
-                              ' with value: ' + param_dict[sample_name_key])
-                sample_path_key = 'sample' + str(sample_num) + '_path'
-                sample_name = param_dict[sample_name_key]
-                sample_path = param_dict[sample_path_key]
-                sample = Sample(sample_name, sample_path)
+        for sample_input in json_params_dict['_embedded']['samples']:
+            sample_name = sample_input['name']
+            sample_path = sample_input['_links']['self']['href']
 
-                sample_files_remain = True
-                sample_file_num = 1
-                while sample_files_remain:
-                    sample_file_key = 'sample' + str(sample_num) + \
-                        '_file' + str(sample_file_num) + '_path'
-                    if sample_file_key not in param_dict:
-                        sample_files_remain = False
-                        logging.debug('no sample_file for key: ' +
-                                      sample_file_key)
-                    else:
-                        logging.debug('found sample_file for key: ' +
-                                      sample_file_key + 'with value ' +
-                                      param_dict[sample_file_key])
+            sample = Sample(sample_name, sample_path)
 
-                        sample_file_path = param_dict[sample_file_key]
-                        sample_file = SampleFile(sample_file_path)
+            for sample_file_input in sample_input['_embedded']['sample_files']:
+                sample_file_path = sample_file_input['_links']['self']['href']
+                sample.sample_files.append(SampleFile(sample_file_path))
 
-                        logging.debug("sample file made:" + str(sample_file))
-
-                        sample.sample_files.append(sample_file)
-                        sample_file_num += 1
-
-                samples.append(sample)
-                sample_num += 1
-
+            samples.append(sample)
         return samples
 
     def get_first_or_make_lib(self, desired_lib_name):
@@ -204,22 +175,25 @@ class IridaImport:
             (prefix, sample_file.path))
         if prefix == 'file':
             # Get e.g. '/folder/folder56/myfile.fastq' from
-            # 'file://folder/folder56/myfile.fastq'
-            file_path = sample_file.path.split(':/')[1]
+            # 'file:///folder/folder56/myfile.fastq'
+            file_path = sample_file.path.split('://')[1]
             logging.debug("File path is"+file_path)
 
             folder_id = self.reg_gi.libraries.get_folders(
                 self.library.id,
                 name=sample_folder_path)[0]['id']
 
-            uploaded = self.reg_gi.libraries.upload_from_galaxy_filesystem(
-                self.library.id,
-                file_path,
-                folder_id=folder_id,
-                link_data_only='link_to_files')
-            logging.debug('wrote file!')
+            if os.path.isfile(file_path):
+                uploaded = self.reg_gi.libraries.upload_from_galaxy_filesystem(
+                    self.library.id,
+                    file_path,
+                    folder_id=folder_id,
+                    link_data_only='link_to_files')
+                logging.debug('wrote file!')
+            else:
+                raise IOError('file not found: '+file_path)
         return uploaded
-    # TODO: finish this method
+
     def assign_ownership_if_nec(self, sample):
         """
         Assign ownership to the files in a sample, if neccessary
@@ -227,6 +201,7 @@ class IridaImport:
         :type sample: Sample
         :param sample: the sample who's sample files will be assigned ownership
         """
+        # TODO: finish this method
         return True  # neccessary here
 
     def import_to_galaxy(self, json_parameter_file, irida_info):
@@ -246,8 +221,9 @@ class IridaImport:
                       json.dumps(full_param_dict, indent=2))
 
         param_dict = full_param_dict['param_dict']
+        json_params_dict = json.loads(param_dict['json_params'])
 
-        desired_lib_name = param_dict['library_name']
+        desired_lib_name = json_params_dict['_embedded']['library']['name']
 
         self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
 
@@ -258,7 +234,7 @@ class IridaImport:
             key=self.ADMIN_KEY)
 
         # Each sample contains a list of sample files
-        samples = self.get_samples(param_dict)
+        samples = self.get_samples(json_params_dict)
         # samples = self.get_samples(irida_info_dict)
         # Set up the library
         self.library = self.get_first_or_make_lib(desired_lib_name)
@@ -300,7 +276,7 @@ if __name__ == '__main__':
     # this test JSON file does not have to be configured to run the tests
     logging.debug("Opening a test json file")
     test_json_file = \
-        '/home/jthiessen/galaxy-dist/tools/irida_import/sample.json'
+        '/home/jthiessen/galaxy-dist/tools/irida_import_tool_for_galaxy/irida_import/sample.dat'
 
     importer = IridaImport()
 

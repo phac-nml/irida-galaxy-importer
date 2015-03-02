@@ -95,8 +95,6 @@ Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invok
 py.test
 ```
 
-In addition, one or more of the paths in `$GALAXY_ROOT/tools/irida_import/prelim_json.json` should be modified to point to local files to test uploading with.
-
 
 #### Generating Code Coverage Reports:
 
