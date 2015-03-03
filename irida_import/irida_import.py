@@ -7,7 +7,7 @@ from sample import Sample
 from sample_file import SampleFile
 import optparse
 import os.path
-
+import pudb
 
 class IridaImport:
 
@@ -125,14 +125,14 @@ class IridaImport:
                     break
         return ans
 
-    def upload_sample_if_nec(self, sample):
+    def add_sample_if_nec(self, sample):
         """
         Upload a sample's sample files if they are not already present in Galaxy
 
         :type sample: Sample
         :param sample: the sample to upload
         """
-        uploaded = False
+        added_to_galaxy = []
         for sample_file in sample.sample_files:
             sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
             galaxy_sample_file_name = sample_folder_path+'/'+sample_file.name
@@ -147,44 +147,44 @@ class IridaImport:
             if not self.exists_in_lib('file', 'name', galaxy_sample_file_name):
                 logging.debug(
                     "  Sample file does not exist so uploading/linking it")
-                uploaded = self.upload_or_link(sample_file, sample_folder_path)
+                added = self.link_or_download(sample_file, sample_folder_path)
+                added_to_galaxy.extend(added)
             else:
                 logging.debug("  Sample file already exists!")
-        logging.debug("uploaded is:"+str(uploaded))
-        print(uploaded)
-        return uploaded
+        return added_to_galaxy
 
     # TODO: use urllib.request.URLopener (right now only local files work)
-    def upload_or_link(self, sample_file, sample_folder_path):
+    def link_or_download(self, sample_file, sample_folder_path):
         """
-        Upload a sample file to Galaxy, linking to it locally if possible.
+        Add a sample file to Galaxy, linking to it locally if possible.
 
         :type sample_file: SampleFile
-        :param sample_file: the sample file to upload
+        :param sample_file: the sample file to download
         :type sample_folder_path: str
-        :param sample_folder_path: the URI to get the file from
-
+        :param sample_folder_path: the folder in Galaxy to store the file in
+        :return: a list containing a single dict with the file's
+        url, id, and name.
         """
         logging.debug('      Attempting to upload or link a file')
-        uploaded = False
+        added_to_galaxy = None
         # Get the 'file' 'http' prefix from the
         # 'file://...'  or 'http://..' path
         prefix = sample_file.path.split(':/')[0]
         logging.debug(
-            "       Sample file's path's prefix is \"%s\" and path is \"%s\"" %
-            (prefix, sample_file.path))
+            "       Sample file's path's prefix is \"%s\" and full path"
+            "is \"%s\"" % (prefix, sample_file.path))
         if prefix == 'file':
             # Get e.g. '/folder/folder56/myfile.fastq' from
             # 'file:///folder/folder56/myfile.fastq'
             file_path = sample_file.path.split('://')[1]
-            logging.debug("File path is"+file_path)
+            logging.debug("        File path is"+file_path)
 
             folder_id = self.reg_gi.libraries.get_folders(
                 self.library.id,
                 name=sample_folder_path)[0]['id']
 
             if os.path.isfile(file_path):
-                uploaded = self.reg_gi.libraries.upload_from_galaxy_filesystem(
+                added_to_galaxy = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                     self.library.id,
                     file_path,
                     folder_id=folder_id,
@@ -192,14 +192,14 @@ class IridaImport:
                 logging.debug('wrote file!')
             else:
                 raise IOError('file not found: '+file_path)
-        return uploaded
+        return added_to_galaxy
 
     def assign_ownership_if_nec(self, sample):
         """
         Assign ownership to the files in a sample, if neccessary
 
         :type sample: Sample
-        :param sample: the sample who's sample files will be assigned ownership
+        :param sample: the sample whose sample files will be assigned ownership
         """
         # TODO: finish this method
         return True  # neccessary here
@@ -209,44 +209,43 @@ class IridaImport:
         Import samples and their sample files into Galaxy from IRIDA
 
         :type json_parameter_file: str
-        :param json_parameter_file: the JSON string that Galaxy passes,
-        describing the stub datasource it created
+        :param json_parameter_file: a path that Galaxy passes,
+        to the stub datasource it created
         :type irida_info: str
         :param irida_info: a local JSON file containing configuration info.
         It is currently unused, and may be depreciated.
         """
+        with open(json_parameter_file, 'r') as param_file_handle:
+            full_param_dict = json.loads(param_file_handle.read())
 
-        full_param_dict = json.loads(open(json_parameter_file, 'r').read())
-        logging.debug("The full Galaxy param dict is: " +
-                      json.dumps(full_param_dict, indent=2))
+            # logging.debug("The full Galaxy param dict is: " +
+            #          json.dumps(full_param_dict, indent=2))
+            param_dict = full_param_dict['param_dict']
+            json_params_dict = json.loads(param_dict['json_params'])
 
-        param_dict = full_param_dict['param_dict']
-        json_params_dict = json.loads(param_dict['json_params'])
+            desired_lib_name = json_params_dict['_embedded']['library']['name']
 
-        desired_lib_name = json_params_dict['_embedded']['library']['name']
+            self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
 
-        self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
+            # This is necessary for uploads from arbitary local paths
+            # that require setting the "link_to_files" flag:
+            self.reg_gi = galaxy.GalaxyInstance(
+                url=self.GALAXY_URL,
+                key=self.ADMIN_KEY)
 
-        # This is necessary for uploads from arbitary local paths
-        # that require setting the "link_to_files" flag:
-        self.reg_gi = galaxy.GalaxyInstance(
-            url=self.GALAXY_URL,
-            key=self.ADMIN_KEY)
+            # Each sample contains a list of sample files
+            samples = self.get_samples(json_params_dict)
+            # Set up the library
+            self.library = self.get_first_or_make_lib(desired_lib_name)
+            self.create_folder_if_nec(self.ILLUMINA_PATH)
+            self.create_folder_if_nec(self.REFERENCE_PATH)
 
-        # Each sample contains a list of sample files
-        samples = self.get_samples(json_params_dict)
-        # samples = self.get_samples(irida_info_dict)
-        # Set up the library
-        self.library = self.get_first_or_make_lib(desired_lib_name)
-        self.create_folder_if_nec(self.ILLUMINA_PATH)
-        self.create_folder_if_nec(self.REFERENCE_PATH)
-
-        # Add each sample's files to the library
-        for sample in samples:
-            logging.debug("sample name is" + sample.name)
-            self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
-            self.upload_sample_if_nec(sample)
-            self.assign_ownership_if_nec(sample)
+            # Add each sample's files to the library
+            for sample in samples:
+                logging.debug("sample name is" + sample.name)
+                self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
+                self.add_sample_if_nec(sample)
+                self.assign_ownership_if_nec(sample)
 
 
 """
