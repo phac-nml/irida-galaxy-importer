@@ -7,7 +7,7 @@ from sample import Sample
 from sample_file import SampleFile
 import optparse
 import os.path
-import pudb
+
 
 class IridaImport:
 
@@ -166,7 +166,7 @@ class IridaImport:
         url, id, and name.
         """
         logging.debug('      Attempting to upload or link a file')
-        added_to_galaxy = None
+        added = None
         # Get the 'file' 'http' prefix from the
         # 'file://...'  or 'http://..' path
         prefix = sample_file.path.split(':/')[0]
@@ -184,7 +184,7 @@ class IridaImport:
                 name=sample_folder_path)[0]['id']
 
             if os.path.isfile(file_path):
-                added_to_galaxy = self.reg_gi.libraries.upload_from_galaxy_filesystem(
+                added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                     self.library.id,
                     file_path,
                     folder_id=folder_id,
@@ -192,7 +192,7 @@ class IridaImport:
                 logging.debug('wrote file!')
             else:
                 raise IOError('file not found: '+file_path)
-        return added_to_galaxy
+        return added
 
     def assign_ownership_if_nec(self, sample):
         """
@@ -218,8 +218,8 @@ class IridaImport:
         with open(json_parameter_file, 'r') as param_file_handle:
             full_param_dict = json.loads(param_file_handle.read())
 
-            # logging.debug("The full Galaxy param dict is: " +
-            #          json.dumps(full_param_dict, indent=2))
+            logging.debug("The full Galaxy param dict is: " +
+                          json.dumps(full_param_dict, indent=2))
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
 

@@ -3,7 +3,7 @@ import json
 import logging
 import pytest
 import mock
-from mock import Mock, MagicMock,  patch
+from mock import Mock
 from bioblend import galaxy
 from bioblend.galaxy.objects import (GalaxyInstance, Library, Folder, client)
 from bioblend.galaxy.objects.wrappers import LibraryContentInfo
@@ -15,8 +15,6 @@ from bioblend.galaxy.objects.wrappers import LibraryContentInfo
 from ...irida_import import IridaImport
 from ...sample import Sample
 from ...sample_file import SampleFile
-import pudb
-import __builtin__
 
 
 class TestIridaImport:
@@ -136,7 +134,7 @@ class TestIridaImport:
 
         lib_made = imp.get_first_or_make_lib(wanted_name)
 
-        assert imp.gi.libraries.create.call_count ==  0, \
+        assert imp.gi.libraries.create.call_count == 0, \
             'No library must be created'
         assert lib_made is not None, 'library must be returned'
         assert lib_made.name == wanted_name, 'Library must have correct name'
@@ -272,19 +270,40 @@ class TestIridaImport:
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
         os.path.isfile = Mock(return_value=True)
         uploaded = imp.link_or_download(sample_file, sample_folder_path)
-        assert imp.reg_gi.libraries.get_folders.call_count ==  1,\
+        assert imp.reg_gi.libraries.get_folders.call_count == 1, \
             "get_folders should be called once"
         assert imp.reg_gi.libraries.upload_from_galaxy_filesystem.call_count \
             == 1, 'upload_from_galaxy_filesystem should only be called once'
-        assert  os.path.isfile.call_count == 1, \
+        assert os.path.isfile.call_count == 1, \
             'os.path.isfile should only be called once'
         assert uploaded == single_file_list, 'The correct file must be made'
 
     def test_link_or_download_download(self, imp):
-        #TODO: write the functionality for this to test
+        # TODO: write the functionality for this to test
         return True
 
     def test_assign_ownership_if_nec(self, imp):
-        #TODO: write the functionality for this to test
+        # TODO: write the functionality for this to test
         return True
 
+    def test_import_to_galaxy(self, setup_json, mocker):
+        """Test reading a file and running apropriate methods"""
+        mocker.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
+        mocker.patch('bioblend.galaxy.GalaxyInstance', autospec=True)
+        mocked_open_function = mock.mock_open(read_data=setup_json)
+        with mock.patch("__builtin__.open", mocked_open_function):
+            imp = IridaImport()
+            lib = mock.create_autospec(Library)
+            imp.get_first_or_make_lib = Mock(return_value=lib)
+            imp.create_folder_if_nec = Mock()
+            imp.add_sample_if_nec = Mock()
+            imp.assign_ownership_if_nec = Mock()
+
+            imp.import_to_galaxy("any_string", None)  # Config data to come
+
+            assert(isinstance(imp.gi, type(GalaxyInstance)),
+                   'A GalaxyInstance must be created')
+            assert imp.get_first_or_make_lib.call_count == 1, \
+                'One library should be created'
+            assert imp.create_folder_if_nec.call_count >= 2, \
+                'At least the illumina and reference folders must be made'
