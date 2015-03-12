@@ -7,6 +7,11 @@ from sample import Sample
 from sample_file import SampleFile
 import optparse
 import os.path
+from requests_oauthlib import OAuth2Session
+
+# FOR DEVELOPMENT ONLY!!
+# This value only exists for this process and processes that fork from it (none)
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 
 class IridaImport:
@@ -22,7 +27,12 @@ class IridaImport:
     ILLUMINA_PATH = '/illumina_reads'
     REFERENCE_PATH = '/references'
 
-    def get_samples(self, json_params_dict):
+    CLIENT_ID = 'webClient'
+    CLIENT_SECRET = 'webClientSecret'
+
+    TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
+
+    def get_samples(self, samples_dict):
         """
         Create sample objects from a dictionary.
 
@@ -30,21 +40,55 @@ class IridaImport:
         :param json_params__dict: a dictionary to parse. See one of the test
         json files for formating information (the format will likely
         change soon)
-        :return: list of output samples
+        :return: a list of output samples
         """
         samples = []
-        for sample_input in json_params_dict['_embedded']['samples']:
+        for sample_input in samples_dict:
             sample_name = sample_input['name']
             sample_path = sample_input['_links']['self']['href']
 
             sample = Sample(sample_name, sample_path)
 
             for sample_file_input in sample_input['_embedded']['sample_files']:
-                sample_file_path = sample_file_input['_links']['self']['href']
+                sample_file_url = sample_file_input['_links']['self']['href']
+
+                sample_file_path = self.get_sample_file_path(sample_file_url)
+
                 sample.sample_files.append(SampleFile(sample_file_path))
 
             samples.append(sample)
         return samples
+
+    def get_sample_file_path(self, sample_file_url):
+        """
+        From an IRIDA REST API URL, get the local path to a sample file
+        :type str
+        :param sample_file_url: the URL to get the sample file representation
+        :return: a local path to the file, if it exists
+        """
+        response = self.irida.get(sample_file_url)
+
+        logging.debug("The JSON parameters from IRIDA for this sample file"
+                      "are:\n" +
+                      json.dumps(response.json(), indent=2))
+        resource = response.json()['resource']
+        path = resource['file']
+        name = resource['fileName']
+
+        return path
+
+    def get_user_lib(self, user_email, desired_lib_name):
+        """
+        If possible, get a library that the user has permissions for
+
+       :type user_email: str
+       :param user_email: the Galaxy username to attempt to make the
+       library for
+       :type desired_lib_name: str
+       :param desired_lib_name: the name
+       """
+
+        return True
 
     def get_first_or_make_lib(self, desired_lib_name):
         """"
@@ -99,6 +143,7 @@ class IridaImport:
             else:
                 raise IOError('base_folder_path must include an existing base'
                               'folder, or nothing')
+            logging.debug("Made folder with path:" + "\"%s\"" % folder_path())
         return made_folder
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
@@ -140,7 +185,7 @@ class IridaImport:
                 "Doing a basic check for already existing sample file at: " +
                 galaxy_sample_file_name)
             logging.debug(
-                "Sample name:" +
+                " Sample name:" +
                 sample.name +
                 " Sample file name:" +
                 sample_file.name)
@@ -148,7 +193,8 @@ class IridaImport:
                 logging.debug(
                     "  Sample file does not exist so uploading/linking it")
                 added = self.link_or_download(sample_file, sample_folder_path)
-                added_to_galaxy.extend(added)
+                if(added):
+                    added_to_galaxy.extend(added)
             else:
                 logging.debug("  Sample file already exists!")
         return added_to_galaxy
@@ -172,7 +218,7 @@ class IridaImport:
         prefix = sample_file.path.split(':/')[0]
         logging.debug(
             "       Sample file's path's prefix is \"%s\" and full path"
-            "is \"%s\"" % (prefix, sample_file.path))
+            " is \"%s\"" % (prefix, sample_file.path))
         if prefix == 'file':
             # Get e.g. '/folder/folder56/myfile.fastq' from
             # 'file:///folder/folder56/myfile.fastq'
@@ -192,6 +238,11 @@ class IridaImport:
                 logging.debug('wrote file!')
             else:
                 raise IOError('file not found: '+file_path)
+        else:
+            raise ValueError(
+                'invalid local path, format should be: \''
+                '/folder/folder/file\', got \'%s\'' %
+                sample_file.path)
         return added
 
     def assign_ownership_if_nec(self, sample):
@@ -203,6 +254,18 @@ class IridaImport:
         """
         # TODO: finish this method
         return True  # neccessary here
+
+    def get_IRIDA_session(self, oauth_dict):
+        # TODO: write docstring
+
+        redirect_uri = oauth_dict['redirect']
+        auth_code = oauth_dict['code']
+
+        irida = OAuth2Session(self.CLIENT_ID, redirect_uri=redirect_uri)
+        irida.fetch_token(
+            self.TOKEN_ENDPOINT, client_secret=self.CLIENT_SECRET,
+            authorization_response=redirect_uri + '?code=' + auth_code)
+        return irida
 
     def import_to_galaxy(self, json_parameter_file, irida_info):
         """
@@ -217,13 +280,20 @@ class IridaImport:
         """
         with open(json_parameter_file, 'r') as param_file_handle:
             full_param_dict = json.loads(param_file_handle.read())
-
-            logging.debug("The full Galaxy param dict is: " +
-                          json.dumps(full_param_dict, indent=2))
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
 
+            logging.debug("The full Galaxy param dict is: " +
+                          json.dumps(full_param_dict, indent=2))
+            logging.debug("The JSON parameters from IRIDA are:\n" +
+                          json.dumps(json_params_dict, indent=2))
+
+            samples_dict = json_params_dict['_embedded']['samples']
+            email = json_params_dict['_embedded']['user']['email']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
+            oauth_dict = json_params_dict['_embedded']['oauth2']
+
+            self.irida = self.get_IRIDA_session(oauth_dict)
 
             self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
 
@@ -234,7 +304,8 @@ class IridaImport:
                 key=self.ADMIN_KEY)
 
             # Each sample contains a list of sample files
-            samples = self.get_samples(json_params_dict)
+            samples = self.get_samples(samples_dict)
+
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name)
             self.create_folder_if_nec(self.ILLUMINA_PATH)
@@ -269,7 +340,7 @@ if __name__ == '__main__':
     parser.add_option(
         '-s', '--irida_info', dest='irida_info',
         action='store', type="string", default=None,
-        help='irida_info')
+        help='configuration file will go here')
     (options, args) = parser.parse_args()
 
     # this test JSON file does not have to be configured to run the tests
