@@ -9,13 +9,11 @@ Install Instructions:
 
 #### Prerequisites:
 
-This tool requires bioblend 0.5.2. It can be installed by:
+This tool requires BioBlend 0.5.2 and Requests-OAuthlib. They can be installed by:
 
 ```
-pip install bioblend`
+pip install bioblend requests-oauthlib
 ```
-
-To invoke the import tool from within Galaxy, currently the HTML stub uploader must be used. It requires a web server.
 
 
 #### Initial Installation:
@@ -63,8 +61,18 @@ The nginx configuration file assumes that Galaxy can be found on `localhost:8888
 
 #### Final Configuration:
 
-The administrator API key, and the URL of the Galaxy web server must be configured. In `$GALAXY_ROOT/tools/irida_import/irida_import.py`, change the values for `ADMIN_KEY` and `GALAXY_URL` appropriately. Instructions for obtaining an API key can be found in the Galaxy documentation.
+The administrator API key, and the URL of the Galaxy web server must be configured. 
+In `$GALAXY_ROOT/tools/irida_import/irida_import.py`, change the values for `ADMIN_KEY` and `GALAXY_URL` appropriately. 
+Instructions for obtaining an API key can be found in the Galaxy documentation.
+The tool expects to obtain OAuth2 tokens at:
 
+```
+http://localhost:8080/api/oauth/token
+```
+
+Changed the value for `TOKEN_ENDPOINT` if neccessary.
+The tool currently uses the webClient client id and secret to access IRIDA. 
+They can be changed by modifying `CLIENT_ID` and `CLIENT_SECRET`
 
 These installation and configuration steps are planned to be simplified, as simplification becomes possible.
 
