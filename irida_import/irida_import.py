@@ -207,36 +207,23 @@ class IridaImport:
         """
         logging.debug('      Attempting to upload or link a file')
         added = None
-        # Get the 'file' 'http' prefix from the
-        # 'file://...'  or 'http://..' path
-        prefix = sample_file.path.split(':/')[0]
+        file_path = sample_file.path
         logging.debug(
-            "       Sample file's path's prefix is \"%s\" and full path"
-            " is \"%s\"" % (prefix, sample_file.path))
-        if prefix == 'file':
-            # Get e.g. '/folder/folder56/myfile.fastq' from
-            # 'file:///folder/folder56/myfile.fastq'
-            file_path = sample_file.path.split('://')[1]
-            logging.debug("        File path is"+file_path)
+            "       Sample file's full path  is" + file_path)
 
-            folder_id = self.reg_gi.libraries.get_folders(
+        folder_id = self.reg_gi.libraries.get_folders(
+            self.library.id,
+            name=sample_folder_path)[0]['id']
+
+        if os.path.isfile(file_path):
+            added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
-                name=sample_folder_path)[0]['id']
-
-            if os.path.isfile(file_path):
-                added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
-                    self.library.id,
-                    file_path,
-                    folder_id=folder_id,
-                    link_data_only='link_to_files')
-                logging.debug('wrote file!')
-            else:
-                raise IOError('file not found: '+file_path)
+                file_path,
+                folder_id=folder_id,
+                link_data_only='link_to_files')
+            logging.debug('wrote file!')
         else:
-            raise ValueError(
-                'invalid local path, format should be: \''
-                '/folder/folder/file\', got \'%s\'' %
-                sample_file.path)
+            raise IOError('file not found: '+file_path)
         return added
 
     def assign_ownership_if_nec(self, sample):
@@ -250,8 +237,12 @@ class IridaImport:
         return True  # neccessary here
 
     def get_IRIDA_session(self, oauth_dict):
-        # TODO: write docstring
+        """
+        Create an OAuth2 session with IRIDA
 
+        :type oauth_dict dict
+        :param oauth_dict: configuration information
+        """
         redirect_uri = oauth_dict['redirect']
         auth_code = oauth_dict['code']
 
@@ -324,6 +315,10 @@ if __name__ == '__main__':
     stream_handler.setLevel(logging.DEBUG)
     logger = logging.getLogger()
     logger.addHandler(stream_handler)
+
+    # Prevent urllib3 from spamming stdout
+    urllib3_logger = logging.getLogger('requests.packages.urllib3')
+    urllib3_logger.setLevel(logging.WARNING)
 
     logging.debug("Parsing the Command Line")
     parser = optparse.OptionParser()
