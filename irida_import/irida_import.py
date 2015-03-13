@@ -52,30 +52,24 @@ class IridaImport:
             for sample_file_input in sample_input['_embedded']['sample_files']:
                 sample_file_url = sample_file_input['_links']['self']['href']
 
-                sample_file_path = self.get_sample_file_path(sample_file_url)
-
-                sample.sample_files.append(SampleFile(sample_file_path))
+                sample_file = self.get_sample_file(sample_file_url)
+                sample.sample_files.append(sample_file)
 
             samples.append(sample)
         return samples
 
-    def get_sample_file_path(self, sample_file_url):
+    def get_sample_file(self, sample_file_url):
         """
-        From an IRIDA REST API URL, get the local path to a sample file
+        From an IRIDA REST API URL, get a sample file
         :type str
         :param sample_file_url: the URL to get the sample file representation
-        :return: a local path to the file, if it exists
+        :return: a sample file with a name and path
         """
         response = self.irida.get(sample_file_url)
-
-        logging.debug("The JSON parameters from IRIDA for this sample file"
-                      "are:\n" +
-                      json.dumps(response.json(), indent=2))
         resource = response.json()['resource']
-        path = resource['file']
         name = resource['fileName']
-
-        return path
+        path = resource['file']
+        return SampleFile(name, path)
 
     def get_user_lib(self, user_email, desired_lib_name):
         """
@@ -123,8 +117,8 @@ class IridaImport:
         # '/bobfolder/bobfolder2'
         base_folder_path = folder_path.rsplit("/", 1)[0]
         logging.debug(
-            "If neccessary, making a folder named \"%s\" on base folder path"
-            "\"%s\" from folder path \"%s\"" %
+            'If neccessary, making a folder named \'%s\' on base folder path'
+            '\'%s\' from folder path \'%s\'' %
             (folder_name, base_folder_path, folder_path))
 
         if not self.exists_in_lib('folder', 'name', folder_path):
@@ -143,7 +137,7 @@ class IridaImport:
             else:
                 raise IOError('base_folder_path must include an existing base'
                               'folder, or nothing')
-            logging.debug("Made folder with path:" + "\"%s\"" % folder_path())
+            logging.debug('Made folder with path:' + '\'%s\'' % folder_path)
         return made_folder
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):

@@ -10,8 +10,6 @@ from bioblend.galaxy.objects.wrappers import LibraryContentInfo
 # Relative imports are currently neccessitated by the package hierarchy.
 # See "The double import trap" at
 # http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html
-# It is an open question whether another hierarchy might be better.
-# Experienced Python programmers often use the layout I chose.
 from ...irida_import import IridaImport
 from ...sample import Sample
 from ...sample_file import SampleFile
@@ -98,12 +96,16 @@ class TestIridaImport:
         """
         param_dict = json.loads(setup_json)['param_dict']
         json_params = json.loads(param_dict['json_params'])
-        samples = imp.get_samples(json_params)
+        sample_file = SampleFile('nameish','pathish')
+        imp.get_sample_file =  Mock(return_value=sample_file)
+
+        samples = imp.get_samples(json_params['_embedded']['samples'])
+
         assert isinstance(
             samples, list), 'A list must be returned'
         for sample in samples:
             assert isinstance(sample, Sample), 'The list must contain samples'
-        assert len(samples) == 3, 'Number of samples is incorrect'
+        assert len(samples) == 1, 'Number of samples is incorrect'
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""
@@ -234,9 +236,9 @@ class TestIridaImport:
         side_effect_list = [[file_dict] for file_dict in file_list]
         imp.link_or_download.side_effect = side_effect_list
 
-        sampleFile1 = SampleFile(
+        sampleFile1 = SampleFile('file1',
             "/imaginary/path/file1.fasta")
-        sampleFile2 = SampleFile(
+        sampleFile2 = SampleFile('file2',
             "/imaginary/path/file2.fasta")
         num_files = 2
         sample = Sample(
@@ -266,7 +268,7 @@ class TestIridaImport:
         imp.reg_gi.libraries.upload_from_galaxy_filesystem = Mock(
             return_value=single_file_list)
 
-        sample_file = SampleFile('file:///imaginary/path/file1.fasta')
+        sample_file = SampleFile('file1','file:///imaginary/path/file1.fasta')
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
         os.path.isfile = Mock(return_value=True)
         uploaded = imp.link_or_download(sample_file, sample_folder_path)
@@ -298,6 +300,8 @@ class TestIridaImport:
             imp.create_folder_if_nec = Mock()
             imp.add_sample_if_nec = Mock()
             imp.assign_ownership_if_nec = Mock()
+            imp.get_IRIDA_session = Mock()
+            imp.get_sample_file = Mock()
 
             imp.import_to_galaxy("any_string", None)  # Config data to come
 
