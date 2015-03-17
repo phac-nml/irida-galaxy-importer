@@ -70,11 +70,6 @@ class IridaImport:
         logging.debug("The JSON parameters from the IRIDA API are:\n" +
                       json.dumps(resource, indent=2))
 
-        # Though uploads with Galaxy file names different than system names
-        # are possible using Blend4j, in the Bioblend documentation,
-        # there are no ways outlined to specify the Galaxy file name when
-        # uploading a linked file. As of yet, I have found no simple way to
-        # change the uploaded file's dataset's name
         name = resource['fileName']
         path = resource['file']
 
@@ -179,6 +174,33 @@ class IridaImport:
                     break
         return ans
 
+    def unique_file(self, sample_file_path, galaxy_name):
+        """
+        Find out if a sample file is unique
+
+        :type sample_file_path: str
+        :param sample_file_path: the local file path to the file to check
+        :type galaxy_name: str
+        :param galaxy_name: the full path to the sample file as it would
+        exist in Galaxy
+
+        Comparison is done against file size for all the files with this path
+        in Galaxy.
+        """
+        logging.debug(
+            "Doing a basic check for already existing sample file at: " +
+            galaxy_name)
+        unique = True
+        size = os.path.getsize(sample_file_path)
+        self.library = self.gi.libraries.get(self.library.id)
+        datasets = self.library.get_datasets(name=galaxy_name)
+        for dataset in datasets:
+            # Galaxy sometimes appends a newline
+            if(dataset.file_size in (size, size + 1)):
+                unique = False
+                break
+        return unique
+
     def add_sample_if_nec(self, sample):
         """
         Upload a sample's sample files if they are not already present in Galaxy
@@ -190,22 +212,19 @@ class IridaImport:
         for sample_file in sample.sample_files:
             sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
             galaxy_sample_file_name = sample_folder_path+'/'+sample_file.name
-            logging.debug(
-                "Doing a basic check for already existing sample file at: " +
-                galaxy_sample_file_name)
-            logging.debug(
-                " Sample name:" +
-                sample.name +
-                " Sample file name:" +
-                sample_file.name)
-            if not self.exists_in_lib('file', 'name', galaxy_sample_file_name):
-                logging.debug(
-                    "  Sample file does not exist so uploading/linking it")
-                added = self.link_or_download(sample_file, sample_folder_path)
-                if(added):
-                    added_to_galaxy.extend(added)
-            else:
-                logging.debug("  Sample file already exists!")
+
+            if os.path.isfile(sample_file.path):
+                if self.unique_file(sample_file.path, galaxy_sample_file_name):
+                    logging.debug(
+                        "  Sample file does not exist so uploading/linking it")
+                    added = self.link_or_download(
+                        sample_file, sample_folder_path)
+                    if(added):
+                        added_to_galaxy.extend(added)
+                else:
+                    logging.info('Skipped uploading file: An identical '\
+                                  'sample file already exists in Galaxy at:'\
+                                 + galaxy_sample_file_name)
         return added_to_galaxy
 
     def link_or_download(self, sample_file, sample_folder_path):
@@ -234,7 +253,9 @@ class IridaImport:
                 file_path,
                 folder_id=folder_id,
                 link_data_only='link_to_files')
-            logging.debug('wrote file!')
+            logging.info('Wrote file: {gal_loc} from {local_loc}'.format(
+                gal_loc=sample_folder_path + sample_file.name,
+                local_loc=sample_file.path))
         else:
             raise IOError('file not found: '+file_path)
         return added
@@ -258,7 +279,7 @@ class IridaImport:
         """
         redirect_uri = oauth_dict['redirect']
         auth_code = oauth_dict['code']
-        if hasattr(self, 'token'):
+        if self.token:
             irida = OAuth2Session(client_id=self.CLIENT_ID,
                                   redirect_uri=redirect_uri,
                                   token=self.token)
@@ -269,7 +290,7 @@ class IridaImport:
                 authorization_response=redirect_uri + '?code=' + auth_code)
         return irida
 
-    def import_to_galaxy(self, json_parameter_file, config):
+    def import_to_galaxy(self, json_parameter_file, config, token):
         """
         Import samples and their sample files into Galaxy from IRIDA
 
@@ -278,7 +299,10 @@ class IridaImport:
         to the stub datasource it created
         :type config: str
         :param config: a local JSON file containing configuration info.
-        It is currently unused, and may be depreciated.
+        It is currently unused
+        :type token: str
+        :param token: An access token that can be passed to the tool when it
+        is manually run.
         """
         with open(json_parameter_file, 'r') as param_file_handle:
             full_param_dict = json.loads(param_file_handle.read())
@@ -293,7 +317,7 @@ class IridaImport:
             email = json_params_dict['_embedded']['user']['email']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
-
+            self.token = token
             self.irida = self.get_IRIDA_session(oauth_dict)
 
             self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
@@ -344,6 +368,11 @@ if __name__ == '__main__':
         '-s', '--config', dest='config',
         action='store', type="string",
         help='A configuration file will go here')
+    parser.add_option(
+        '-t', '--token', dest='token',
+        action='store', type='string',
+        help='The tool can use a supplied access token' +
+        'instead of querying IRIDA')
 
     (options, args) = parser.parse_args()
 
@@ -356,7 +385,10 @@ if __name__ == '__main__':
 
     if options.config is None:
         logging.debug("No passed file so reading local file")
-        importer.import_to_galaxy(test_json_file, None)
+        importer.import_to_galaxy(test_json_file, None, options.token)
     else:
         logging.debug("Reading from passed file")
-        importer.import_to_galaxy(options.json_parameter_file, None)
+        importer.import_to_galaxy(
+            options.json_parameter_file,
+            None,
+            options.token)
