@@ -282,7 +282,7 @@ class IridaImport:
         if self.token:
             irida = OAuth2Session(client_id=self.CLIENT_ID,
                                   redirect_uri=redirect_uri,
-                                  token=self.token)
+                                  token={'access_token':self.token})
         else:
             irida = OAuth2Session(self.CLIENT_ID, redirect_uri=redirect_uri)
             irida.fetch_token(
