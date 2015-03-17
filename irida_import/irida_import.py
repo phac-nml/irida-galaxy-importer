@@ -67,39 +67,53 @@ class IridaImport:
         """
         response = self.irida.get(sample_file_url)
         resource = response.json()['resource']
+        logging.debug("The JSON parameters from the IRIDA API are:\n" +
+                      json.dumps(resource, indent=2))
+
+        # Though uploads with Galaxy file names different than system names
+        # are possible using Blend4j, in the Bioblend documentation,
+        # there are no ways outlined to specify the Galaxy file name when
+        # uploading a linked file. As of yet, I have found no simple way to
+        # change the uploaded file's dataset's name
         name = resource['fileName']
         path = resource['file']
+
         return SampleFile(name, path)
 
-    def get_user_lib(self, user_email, desired_lib_name):
-        """
-        If possible, get a library that the user has permissions for
-
-       :type user_email: str
-       :param user_email: the Galaxy username to attempt to make the
-       library for
-       :type desired_lib_name: str
-       :param desired_lib_name: the name
-       """
-
-        return True
-
-    def get_first_or_make_lib(self, desired_lib_name):
+    def get_first_or_make_lib(self, desired_lib_name, email):
         """"
         Get or if neccessary create a library that matches a given name.
 
         :type desired_lib_name: str
         :param desired_lib_name: the desired library name
+        :type email: str
+        :param email: the email of the Galaxy user to get or make a library for
         :rtype: :class:`~.LibraryDataset`
         :return: the obtained or created library
+
+        This method should never make a library with the same name as an already
+        existing library that is accessible using the administrator API key
+
         """
         lib = None
         libs = self.gi.libraries.list(name=desired_lib_name)
+        # raise Exception(str(libs))
         if len(libs) > 0:
             lib = next(lib_i for lib_i in libs if lib_i.deleted is False)
 
         if(lib is None):
+            users = self.reg_gi.users.get_users()
+            uid = 0
+            try:
+                uid = next(user['id']
+                           for user in users if user['email'] == email)
+            except StopIteration:
+                raise Exception('No Galaxy user could be found for the email: '
+                                + email)
+
             lib = self.gi.libraries.create(desired_lib_name)
+            self.reg_gi.libraries.set_library_permissions(
+                lib.id, access_in=[uid], modify_in=[uid], add_in=[uid])
         return lib
 
     def create_folder_if_nec(self, folder_path):
@@ -156,6 +170,7 @@ class IridaImport:
         """
         ans = False
         # check for an object of the desired type with the desired attribute
+        self.library = self.gi.libraries.get(self.library.id)
         for con_inf in self.library.content_infos:
             if con_inf.type == item_type:
                 attr = getattr(con_inf, item_attr_name)
@@ -193,7 +208,6 @@ class IridaImport:
                 logging.debug("  Sample file already exists!")
         return added_to_galaxy
 
-    # TODO: use urllib.request.URLopener (right now only local files work)
     def link_or_download(self, sample_file, sample_folder_path):
         """
         Add a sample file to Galaxy, linking to it locally if possible.
@@ -209,12 +223,11 @@ class IridaImport:
         added = None
         file_path = sample_file.path
         logging.debug(
-            "       Sample file's full path  is" + file_path)
+            "       Sample file's local path is" + file_path)
 
         folder_id = self.reg_gi.libraries.get_folders(
             self.library.id,
             name=sample_folder_path)[0]['id']
-
         if os.path.isfile(file_path):
             added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
@@ -245,22 +258,26 @@ class IridaImport:
         """
         redirect_uri = oauth_dict['redirect']
         auth_code = oauth_dict['code']
-
-        irida = OAuth2Session(self.CLIENT_ID, redirect_uri=redirect_uri)
-        irida.fetch_token(
-            self.TOKEN_ENDPOINT, client_secret=self.CLIENT_SECRET,
-            authorization_response=redirect_uri + '?code=' + auth_code)
+        if hasattr(self, 'token'):
+            irida = OAuth2Session(client_id=self.CLIENT_ID,
+                                  redirect_uri=redirect_uri,
+                                  token=self.token)
+        else:
+            irida = OAuth2Session(self.CLIENT_ID, redirect_uri=redirect_uri)
+            irida.fetch_token(
+                self.TOKEN_ENDPOINT, client_secret=self.CLIENT_SECRET,
+                authorization_response=redirect_uri + '?code=' + auth_code)
         return irida
 
-    def import_to_galaxy(self, json_parameter_file, irida_info):
+    def import_to_galaxy(self, json_parameter_file, config):
         """
         Import samples and their sample files into Galaxy from IRIDA
 
         :type json_parameter_file: str
         :param json_parameter_file: a path that Galaxy passes,
         to the stub datasource it created
-        :type irida_info: str
-        :param irida_info: a local JSON file containing configuration info.
+        :type config: str
+        :param config: a local JSON file containing configuration info.
         It is currently unused, and may be depreciated.
         """
         with open(json_parameter_file, 'r') as param_file_handle:
@@ -272,7 +289,6 @@ class IridaImport:
                           json.dumps(full_param_dict, indent=2))
             logging.debug("The JSON parameters from IRIDA are:\n" +
                           json.dumps(json_params_dict, indent=2))
-
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
@@ -290,9 +306,8 @@ class IridaImport:
 
             # Each sample contains a list of sample files
             samples = self.get_samples(samples_dict)
-
             # Set up the library
-            self.library = self.get_first_or_make_lib(desired_lib_name)
+            self.library = self.get_first_or_make_lib(desired_lib_name, email)
             self.create_folder_if_nec(self.ILLUMINA_PATH)
             self.create_folder_if_nec(self.REFERENCE_PATH)
 
@@ -301,7 +316,6 @@ class IridaImport:
                 logging.debug("sample name is" + sample.name)
                 self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
                 self.add_sample_if_nec(sample)
-                self.assign_ownership_if_nec(sample)
 
 
 """
@@ -324,12 +338,13 @@ if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option(
         '-p', '--json_parameter_file', dest='json_parameter_file',
-        action='store', type="string", default=None,
-        help='json_parameter_file')
+        action='store', type="string",
+        help='A JSON formatted parameter file from Galaxy')
     parser.add_option(
-        '-s', '--irida_info', dest='irida_info',
-        action='store', type="string", default=None,
-        help='configuration file will go here')
+        '-s', '--config', dest='config',
+        action='store', type="string",
+        help='A configuration file will go here')
+
     (options, args) = parser.parse_args()
 
     # this test JSON file does not have to be configured to run the tests
@@ -339,7 +354,7 @@ if __name__ == '__main__':
 
     importer = IridaImport()
 
-    if options.irida_info is None:
+    if options.config is None:
         logging.debug("No passed file so reading local file")
         importer.import_to_galaxy(test_json_file, None)
     else:

@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <tool name="IRIDA" id="irida_import" tool_type="data_source" add_galaxy_url="False" force_history_refresh="True" version="0.0.1">
     <description>server</description>
-    <command interpreter="python">irida_import.py --json_parameter_file "${output}" --irida_info "dev"</command>
+    <command interpreter="python">irida_import.py
+	    --json_parameter_file "${output}"
+	    --config "dev"
+    </command>
     <inputs action="http://localhost:8080/projects" check_values="False" method="post"> 
         <display>import data from IRIDA to Galaxy</display>
         <param name="galaxyCallbackUrl" type="baseurl" value="/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute" />
