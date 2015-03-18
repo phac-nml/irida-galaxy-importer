@@ -46,6 +46,7 @@ class TestIridaImport:
         imp.gi.libraries = mock.create_autospec(client.ObjLibraryClient)
         imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
         imp.reg_gi.libraries = mock.create_autospec(galaxy.libraries)
+        imp.reg_gi.users = mock.create_autospec(galaxy.users)
         return imp
 
     @pytest.fixture(scope='class')
@@ -96,8 +97,8 @@ class TestIridaImport:
         """
         param_dict = json.loads(setup_json)['param_dict']
         json_params = json.loads(param_dict['json_params'])
-        sample_file = SampleFile('nameish','pathish')
-        imp.get_sample_file =  Mock(return_value=sample_file)
+        sample_file = SampleFile('nameish', 'pathish')
+        imp.get_sample_file = Mock(return_value=sample_file)
 
         samples = imp.get_samples(json_params['_embedded']['samples'])
 
@@ -113,10 +114,17 @@ class TestIridaImport:
         lib_to_make = mock.create_autospec(Library)
         lib_to_make.name = wanted_name
         lib_to_make.deleted = False
+        lib_to_make.id = 1
         imp.gi.libraries.create = Mock(return_value=lib_to_make)
         imp.gi.libraries.list = Mock(return_value=[])
+        email = 'bob@lala.com'
+        users = [self.make_user('sally@lala.com', 59),
+                 self.make_user(email, 34)]
+        imp.reg_gi.users.get_users = Mock(return_value=users)
 
-        lib_made = imp.get_first_or_make_lib(wanted_name)
+        imp.reg_gi.libraries.set_library_permissions = Mock()
+
+        lib_made = imp.get_first_or_make_lib(wanted_name, email)
 
         assert imp.gi.libraries.create.call_count == 1, \
             'Only 1 library must be created'
@@ -133,8 +141,12 @@ class TestIridaImport:
         libs_in_gal = [lib_to_make, chaff_lib, chaff_lib2]
         imp.gi.libraries.list = Mock(return_value=libs_in_gal)
         imp.gi.libraries.create = Mock(return_value=lib_to_make)
+        email = 'bob@lala.com'
+        users = [self.make_user('sally@lala.com', 59),
+                 self.make_user(email, 34)]
+        imp.reg_gi.users.get_users = Mock(return_value=users)
 
-        lib_made = imp.get_first_or_make_lib(wanted_name)
+        lib_made = imp.get_first_or_make_lib(wanted_name, email)
 
         assert imp.gi.libraries.create.call_count == 0, \
             'No library must be created'
@@ -147,13 +159,15 @@ class TestIridaImport:
         lib_to_make = mock.create_autospec(Library)
         lib_to_make.name = name
         lib_to_make.deleted = is_deleted
+        lib_to_make.id = 1
         return lib_to_make
 
-    def test_create_folder_if_nec_base(
-            self,
-            imp):
-        """Create a folder, as if its base folder exists"""
+    def make_user(self, email, id):
+        user = {'email': email, 'id': id}
+        return user
 
+    def test_create_folder_if_nec_base(self, imp):
+        """Create a folder, as if its base folder exists"""
         base_folder = mock.create_autospec(
             Folder)
         folder_name = 'sample1'
@@ -211,6 +225,7 @@ class TestIridaImport:
     def test_exists_in_lib(self, imp):
         """ Test if a folder can be found in a library among chaff items """
         imp.library = self.make_lib('wolib', False)
+        imp.gi.libraries.get = Mock(return_value=imp.library)
         items = []
         items.append(
             self.make_content_info('file', 'name', 'sally.fastq'))
@@ -235,15 +250,13 @@ class TestIridaImport:
         imp.link_or_download = Mock()
         side_effect_list = [[file_dict] for file_dict in file_list]
         imp.link_or_download.side_effect = side_effect_list
+        os.path.isfile = Mock(return_value=True)
+        imp.unique_file = Mock(return_value=True)
 
-        sampleFile1 = SampleFile('file1',
-            "/imaginary/path/file1.fasta")
-        sampleFile2 = SampleFile('file2',
-            "/imaginary/path/file2.fasta")
+        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
+        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
         num_files = 2
-        sample = Sample(
-            "bobname",
-            "/imaginary/path/Samples/1")
+        sample = Sample("bobname", "/imaginary/path/Samples/1")
         sample.sample_files.append(sampleFile1)
         sample.sample_files.append(sampleFile2)
 
@@ -268,7 +281,7 @@ class TestIridaImport:
         imp.reg_gi.libraries.upload_from_galaxy_filesystem = Mock(
             return_value=single_file_list)
 
-        sample_file = SampleFile('file1','file:///imaginary/path/file1.fasta')
+        sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta')
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
         os.path.isfile = Mock(return_value=True)
         uploaded = imp.link_or_download(sample_file, sample_folder_path)
@@ -303,7 +316,8 @@ class TestIridaImport:
             imp.get_IRIDA_session = Mock()
             imp.get_sample_file = Mock()
 
-            imp.import_to_galaxy("any_string", None)  # Config data to come
+            # Config data to come
+            imp.import_to_galaxy("any_string", None, None)
 
             assert(isinstance(imp.gi, type(GalaxyInstance)),
                    'A GalaxyInstance must be created')
