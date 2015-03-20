@@ -90,10 +90,10 @@ It can be installed by:
 pip install -U pytest
 ```
 
-The mock library must be installed as well:
+The mock library, and pytest-mock must be installed as well:
 
 ```
-pip install mock
+pip install mock pytest-mock
 ```
 
 Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invoke:
