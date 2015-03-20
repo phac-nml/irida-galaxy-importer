@@ -46,7 +46,7 @@ Note: It is not neccessary to do any of the steps in this subsection in order to
 To use the tool from within Galaxy, right now, by default, Galaxy looks for the IRIDA projects endpoint at 
 
 ```
-http://localhost:8888/projects
+http://localhost:8080/projects
 ```
 
 This location can be changed by modifying the following line in `irida_import/irida_import.xml`:
@@ -87,8 +87,7 @@ To run the tests, pytest is required.
 It can be installed by:
 
 ```
-pip install -U pytest # or
-easy_install -U pytest
+pip install -U pytest
 ```
 
 The mock library must be installed as well:

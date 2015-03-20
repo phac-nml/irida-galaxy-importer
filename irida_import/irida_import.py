@@ -183,9 +183,8 @@ class IridaImport:
         :type galaxy_name: str
         :param galaxy_name: the full path to the sample file as it would
         exist in Galaxy
-
-        Comparison is done against file size for all the files with this path
-        in Galaxy.
+        :rtype: Boolean
+        :return: whether a file with this name and size does not exist in Galaxy
         """
         logging.debug(
             "Doing a basic check for already existing sample file at: " +
@@ -222,8 +221,8 @@ class IridaImport:
                     if(added):
                         added_to_galaxy.extend(added)
                 else:
-                    logging.info('Skipped uploading file: An identical '\
-                                  'sample file already exists in Galaxy at:'\
+                    logging.info('Skipped uploading file: An identical '
+                                 'sample file already exists in Galaxy at:'
                                  + galaxy_sample_file_name)
         return added_to_galaxy
 
@@ -282,7 +281,7 @@ class IridaImport:
         if self.token:
             irida = OAuth2Session(client_id=self.CLIENT_ID,
                                   redirect_uri=redirect_uri,
-                                  token={'access_token':self.token})
+                                  token={'access_token': self.token})
         else:
             irida = OAuth2Session(self.CLIENT_ID, redirect_uri=redirect_uri)
             irida.fetch_token(
@@ -340,7 +339,7 @@ class IridaImport:
                 logging.debug("sample name is" + sample.name)
                 self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
                 self.add_sample_if_nec(sample)
-
+                self.assign_ownership_if_nec(sample)
 
 """
 From the command line, pass json files to IridaImport, and set up the logger
