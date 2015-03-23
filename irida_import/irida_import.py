@@ -19,7 +19,7 @@ class IridaImport:
     """
     Imports sample's sample files from IRIDA.
 
-    Appropriate folders are created
+    An appropriate library and folders are created if necessary
     """
 
     ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
@@ -27,7 +27,7 @@ class IridaImport:
     ILLUMINA_PATH = '/illumina_reads'
     REFERENCE_PATH = '/references'
 
-    CLIENT_ID = 'webClient'
+    CLIENT_ID = 'webClient'  # This value must also be set in irida_import.xml
     CLIENT_SECRET = 'webClientSecret'
 
     TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
@@ -282,6 +282,13 @@ class IridaImport:
             self.skipped_files_log)
 
     def print_files_log(self, message, log):
+        """
+        Print a log file dictionary with a preceding message
+        :type message: str
+        :param message: A message to show before the files are listed
+        :type log: dict
+        :param log: The local file path and galaxy name of the file
+        """
         if log:
             logging.warn(message)
             for file_log in log:
