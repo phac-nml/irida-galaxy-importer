@@ -102,8 +102,12 @@ class IridaImport:
                 uid = next(user['id']
                            for user in users if user['email'] == email)
             except StopIteration:
-                raise Exception('No Galaxy user could be found for the email: '
-                                + email)
+                error = "No Galaxy user could be found for the email: '{0}', "\
+                    "quiting".format(email)
+                logging.exception(error)
+                self.print_summary()
+                sys.stderr.write(error)
+                sys.exit(1)
 
             lib = self.gi.libraries.create(desired_lib_name)
             self.reg_gi.libraries.set_library_permissions(
@@ -220,13 +224,16 @@ class IridaImport:
                     if(added):
                         added_to_galaxy.extend(added)
                         self.uploaded_files_log.append(
-                            {'galaxy_name' : galaxy_sample_file_name})
-                        logging.info('Uploaded: '+ galaxy_sample_file_name)
+                            {'local_path': sample_file.path,
+                             'galaxy_name': galaxy_sample_file_name})
+                        logging.info('Exported: ' + galaxy_sample_file_name)
                 else:
                     self.skipped_files_log.append(
-                        {'local_path':sample_file.path,
-                         'galaxy_name':galaxy_sample_file_name})
-                    logging.info('Skipped uploading: '+ galaxy_sample_file_name)
+                        {'local_path': sample_file.path,
+                         'galaxy_name': galaxy_sample_file_name})
+                    logging.warning(
+                        'Skipped exporting: ' +
+                        galaxy_sample_file_name)
             else:
                 self.unfound_files_log.append({'local_path': sample_file.path})
                 logging.error('file not found: '+sample_file.path)
@@ -250,8 +257,7 @@ class IridaImport:
             "       Sample file's local path is" + file_path)
 
         folder_id = self.reg_gi.libraries.get_folders(
-        self.library.id,
-        name=sample_folder_path)[0]['id']
+            self.library.id, name=sample_folder_path)[0]['id']
         added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
             self.library.id,
             file_path,
@@ -259,35 +265,26 @@ class IridaImport:
             link_data_only='link_to_files')
         return added
 
-    def assign_ownership_if_nec(self, sample):
-        """
-        Assign ownership to the files in a sample, if neccessary
-        By default files are uploaded as public, the same behaviour as the
-        internal exporter exhibits. This method may thus be superfluous
-
-        :type sample: Sample
-        :param sample: the sample whose sample files will be assigned ownership
-        """
-        # TODO: finish this method
-        return True  # neccessary here
-
     def print_summary(self):
         """
         Print a final summary of the tool's activity
         """
-        logging.warn('Final summary')
-        logging.info('{0} file(s) exported and {1} file(s) skipped'
+        logging.warn('\nFinal summary:')
+        logging.info('{0} file(s) exported and {1} file(s) skipped.'
                      .format(len(self.uploaded_files_log),
                              len(self.skipped_files_log)))
-        if self.skipped_files_log:
-            logging.warn('Some files were not uploaded:')
-            for file_log in self.skipped_files_log:
-                logging.warn('File with local path: {0}\n and Galaxy path: {1}'
-                             .format(file_log['local_path'],
-                                     file_log['galaxy_name']))
-        if self.skipped_files_log:
-            logging.warn('Some files were not uploaded:')
-            for file_log in self.skipped_files_log:
+        self.print_files_log('\nFiles exported:', self.uploaded_files_log)
+        self.print_files_log(
+            "\nSome files couldn't be exported because they don't exist:",
+            self.unfound_files_log)
+        self.print_files_log(
+            '\nSome files were skipped because they were not unique:',
+            self.skipped_files_log)
+
+    def print_files_log(self, message, log):
+        if log:
+            logging.warn(message)
+            for file_log in log:
                 logging.warn('File with local path: {0}\n and Galaxy path: {1}'
                              .format(file_log['local_path'],
                                      file_log['galaxy_name']))
@@ -330,7 +327,7 @@ class IridaImport:
             full_param_dict = json.loads(param_file_handle.read())
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
-
+            logging.info("Exporting files from IRIDA to Galaxy:\n")
             logging.debug("The full Galaxy param dict is: " +
                           json.dumps(full_param_dict, indent=2))
             logging.debug("The JSON parameters from IRIDA are:\n" +
@@ -366,7 +363,6 @@ class IridaImport:
                 logging.debug("sample name is" + sample.name)
                 self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
                 self.add_sample_if_nec(sample)
-                self.assign_ownership_if_nec(sample)
 
             self.print_summary()
 
