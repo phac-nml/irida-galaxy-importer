@@ -9,6 +9,7 @@
         <display>import data from IRIDA to Galaxy</display>
         <param name="galaxyCallbackUrl" type="baseurl" value="/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute" />
 	<param name="appName" type="hidden" value="Galaxy" />
+	<param name="galaxyClientID" type="hidden" value="webClient"/>
     </inputs>
     <uihints minwidth="800"/>
     <outputs>
