@@ -92,7 +92,6 @@ class IridaImport:
         """
         lib = None
         libs = self.gi.libraries.list(name=desired_lib_name)
-        # raise Exception(str(libs))
         if len(libs) > 0:
             lib = next(lib_i for lib_i in libs if lib_i.deleted is False)
 
@@ -216,58 +215,82 @@ class IridaImport:
                 if self.unique_file(sample_file.path, galaxy_sample_file_name):
                     logging.debug(
                         "  Sample file does not exist so uploading/linking it")
-                    added = self.link_or_download(
+                    added = self.link(
                         sample_file, sample_folder_path)
                     if(added):
                         added_to_galaxy.extend(added)
+                        self.uploaded_files_log.append(
+                            {'galaxy_name' : galaxy_sample_file_name})
+                        logging.info('Uploaded: '+ galaxy_sample_file_name)
                 else:
-                    logging.info('Skipped uploading file: An identical '
-                                 'sample file already exists in Galaxy at:'
-                                 + galaxy_sample_file_name)
+                    self.skipped_files_log.append(
+                        {'local_path':sample_file.path,
+                         'galaxy_name':galaxy_sample_file_name})
+                    logging.info('Skipped uploading: '+ galaxy_sample_file_name)
+            else:
+                self.unfound_files_log.append({'local_path': sample_file.path})
+                logging.error('file not found: '+sample_file.path)
         return added_to_galaxy
 
-    def link_or_download(self, sample_file, sample_folder_path):
+    def link(self, sample_file, sample_folder_path):
         """
-        Add a sample file to Galaxy, linking to it locally if possible.
+        Add a sample file to Galaxy, linking to it locally
 
         :type sample_file: SampleFile
-        :param sample_file: the sample file to download
+        :param sample_file: the sample file to link
         :type sample_folder_path: str
         :param sample_folder_path: the folder in Galaxy to store the file in
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
-        logging.debug('      Attempting to upload or link a file')
+        logging.debug('      Attempting to upload a file')
         added = None
         file_path = sample_file.path
         logging.debug(
             "       Sample file's local path is" + file_path)
 
         folder_id = self.reg_gi.libraries.get_folders(
+        self.library.id,
+        name=sample_folder_path)[0]['id']
+        added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
             self.library.id,
-            name=sample_folder_path)[0]['id']
-        if os.path.isfile(file_path):
-            added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
-                self.library.id,
-                file_path,
-                folder_id=folder_id,
-                link_data_only='link_to_files')
-            logging.info('Wrote file: {gal_loc} from {local_loc}'.format(
-                gal_loc=sample_folder_path + sample_file.name,
-                local_loc=sample_file.path))
-        else:
-            raise IOError('file not found: '+file_path)
+            file_path,
+            folder_id=folder_id,
+            link_data_only='link_to_files')
         return added
 
     def assign_ownership_if_nec(self, sample):
         """
         Assign ownership to the files in a sample, if neccessary
+        By default files are uploaded as public, the same behaviour as the
+        internal exporter exhibits. This method may thus be superfluous
 
         :type sample: Sample
         :param sample: the sample whose sample files will be assigned ownership
         """
         # TODO: finish this method
         return True  # neccessary here
+
+    def print_summary(self):
+        """
+        Print a final summary of the tool's activity
+        """
+        logging.warn('Final summary')
+        logging.info('{0} file(s) exported and {1} file(s) skipped'
+                     .format(len(self.uploaded_files_log),
+                             len(self.skipped_files_log)))
+        if self.skipped_files_log:
+            logging.warn('Some files were not uploaded:')
+            for file_log in self.skipped_files_log:
+                logging.warn('File with local path: {0}\n and Galaxy path: {1}'
+                             .format(file_log['local_path'],
+                                     file_log['galaxy_name']))
+        if self.skipped_files_log:
+            logging.warn('Some files were not uploaded:')
+            for file_log in self.skipped_files_log:
+                logging.warn('File with local path: {0}\n and Galaxy path: {1}'
+                             .format(file_log['local_path'],
+                                     file_log['galaxy_name']))
 
     def get_IRIDA_session(self, oauth_dict):
         """
@@ -312,6 +335,9 @@ class IridaImport:
                           json.dumps(full_param_dict, indent=2))
             logging.debug("The JSON parameters from IRIDA are:\n" +
                           json.dumps(json_params_dict, indent=2))
+            self.uploaded_files_log = []
+            self.skipped_files_log = []
+            self.unfound_files_log = []
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
@@ -329,6 +355,7 @@ class IridaImport:
 
             # Each sample contains a list of sample files
             samples = self.get_samples(samples_dict)
+
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name, email)
             self.create_folder_if_nec(self.ILLUMINA_PATH)
@@ -341,15 +368,17 @@ class IridaImport:
                 self.add_sample_if_nec(sample)
                 self.assign_ownership_if_nec(sample)
 
+            self.print_summary()
+
 """
-From the command line, pass json files to IridaImport, and set up the logger
+From the command line, pass JSON files to IridaImport, and set up the logger
 """
 if __name__ == '__main__':
     # TODO: convert to robustly use argparse
     logging.basicConfig(filename="log_irida_import", level=logging.DEBUG,
                         filemode="w")
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.INFO)
     logger = logging.getLogger()
     logger.addHandler(stream_handler)
 

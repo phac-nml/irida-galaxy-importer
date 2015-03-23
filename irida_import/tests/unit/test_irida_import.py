@@ -47,6 +47,9 @@ class TestIridaImport:
         imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
         imp.reg_gi.libraries = mock.create_autospec(galaxy.libraries)
         imp.reg_gi.users = mock.create_autospec(galaxy.users)
+        imp.uploaded_files_log = []
+        imp.skipped_files_log = []
+
         return imp
 
     @pytest.fixture(scope='class')
@@ -247,9 +250,9 @@ class TestIridaImport:
     def test_add_sample_if_nec(self, imp, file_list):
         """ Test if a new sample file is added to the library """
         imp.exists_in_lib = Mock(return_value=False)
-        imp.link_or_download = Mock()
+        imp.link = Mock()
         side_effect_list = [[file_dict] for file_dict in file_list]
-        imp.link_or_download.side_effect = side_effect_list
+        imp.link.side_effect = side_effect_list
         os.path.isfile = Mock(return_value=True)
         imp.unique_file = Mock(return_value=True)
 
@@ -262,11 +265,11 @@ class TestIridaImport:
 
         added = imp.add_sample_if_nec(sample)
         assert added, 'a file must be added'
-        assert imp.link_or_download.call_count is num_files, \
+        assert imp.link.call_count is num_files, \
             'The %s files should be uploaded once each' % num_files
         assert added == file_list, "The correct file must be added"
 
-    def test_link_or_download_link(self, imp, folder_list):
+    def test_link(self, imp, folder_list):
         """Test uploading a local sample file to Galaxy as a link"""
         imp.library = mock.create_autospec(Library)
         imp.library.id = 12345
@@ -283,19 +286,12 @@ class TestIridaImport:
 
         sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta')
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
-        os.path.isfile = Mock(return_value=True)
-        uploaded = imp.link_or_download(sample_file, sample_folder_path)
+        uploaded = imp.link(sample_file, sample_folder_path)
         assert imp.reg_gi.libraries.get_folders.call_count == 1, \
             "get_folders should be called once"
         assert imp.reg_gi.libraries.upload_from_galaxy_filesystem.call_count \
             == 1, 'upload_from_galaxy_filesystem should only be called once'
-        assert os.path.isfile.call_count == 1, \
-            'os.path.isfile should only be called once'
         assert uploaded == single_file_list, 'The correct file must be made'
-
-    def test_link_or_download_download(self, imp):
-        # TODO: write the functionality for this to test
-        return True
 
     def test_assign_ownership_if_nec(self, imp):
         # TODO: write the functionality for this to test
