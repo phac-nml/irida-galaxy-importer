@@ -349,7 +349,7 @@ if __name__ == '__main__':
     logging.basicConfig(filename="log_irida_import", level=logging.DEBUG,
                         filemode="w")
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.INFO)
     logger = logging.getLogger()
     logger.addHandler(stream_handler)
 
