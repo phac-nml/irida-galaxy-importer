@@ -1,15 +1,18 @@
 import logging
 import sys
+import argparse
+import json
+import os.path
 import ConfigParser
+from xml.etree import ElementTree
+
 from bioblend.galaxy.objects import GalaxyInstance
 from bioblend import galaxy
-import json
+from requests_oauthlib import OAuth2Session
+
 from sample import Sample
 from sample_file import SampleFile
-import optparse
-import os.path
-from xml.etree import ElementTree
-from requests_oauthlib import OAuth2Session
+
 
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it (none)
@@ -64,12 +67,12 @@ class IridaImport:
         """
         response = self.irida.get(sample_file_url)
 
-        #Raise an exception if we get 4XX or 5XX server response
+        # Raise an exception if we get 4XX or 5XX server response
         try:
             response.raise_for_status()
         except:
             error = "Failed to get sample file from IRIDA:\n"\
-            "Got HTTP status code:"+str(response.status_code)
+                "Got HTTP status code:"+str(response.status_code)
             logging.exception(error)
             sys.stderr.write(error)
             sys.exit(1)
@@ -394,7 +397,6 @@ class IridaImport:
             logging.debug("The JSON parameters from IRIDA are:\n" +
                           json.dumps(json_params_dict, indent=2))
 
-
             self.uploaded_files_log = []
             self.skipped_files_log = []
             self.unfound_files_log = []
@@ -446,22 +448,19 @@ if __name__ == '__main__':
     urllib3_logger.setLevel(logging.WARNING)
 
     logging.debug("Parsing the Command Line")
-    parser = optparse.OptionParser()
-    parser.add_option(
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
-        action='store', type="string",
         help='A JSON formatted parameter file from Galaxy')
-    parser.add_option(
+    parser.add_argument(
         '-s', '--config', dest='config',
-        action='store', type="string",
         help='A configuration file will go here')
-    parser.add_option(
+    parser.add_argument(
         '-t', '--token', dest='token',
-        action='store', type='string',
         help='The tool can use a supplied access token' +
         'instead of querying IRIDA')
 
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
     # this test JSON file does not have to be configured to run the tests
     logging.debug("Opening a test json file")
@@ -470,12 +469,12 @@ if __name__ == '__main__':
 
     importer = IridaImport()
 
-    if options.json_parameter_file is None:
+    if args.json_parameter_file is None:
         logging.debug("No passed file so reading local file")
-        importer.import_to_galaxy(test_json_file, None, token=options.token)
+        importer.import_to_galaxy(test_json_file, None, token=args.token)
     else:
         logging.debug("Reading from passed file")
         importer.import_to_galaxy(
-            options.json_parameter_file,
+            args.json_parameter_file,
             None,
-            token=options.token)
+            token=args.token)
