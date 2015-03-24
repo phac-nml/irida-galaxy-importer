@@ -384,6 +384,7 @@ class IridaImport:
         is manually run.
         """
         with open(json_parameter_file, 'r') as param_file_handle:
+            self.configure(config_file)
             full_param_dict = json.loads(param_file_handle.read())
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
@@ -393,7 +394,6 @@ class IridaImport:
             logging.debug("The JSON parameters from IRIDA are:\n" +
                           json.dumps(json_params_dict, indent=2))
 
-            self.configure(config_file)
 
             self.uploaded_files_log = []
             self.skipped_files_log = []
