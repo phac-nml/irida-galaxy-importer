@@ -332,6 +332,10 @@ class IridaImport:
         already passed to the tool as command line parameters
 
         """
+        if not path:
+            this_module_path = os.path.abspath(__file__)
+            parent_folder = os.path.dirname(this_module_path)
+            path = os.path.join(parent_folder,self.CONFIG_FILE)
         with open(path, 'r') as config_file:
             config = ConfigParser.ConfigParser()
             config.readfp(config_file)
@@ -373,11 +377,8 @@ class IridaImport:
             logging.debug("The JSON parameters from IRIDA are:\n" +
                           json.dumps(json_params_dict, indent=2))
 
-            if not config_file:
-                this_module_path = os.path.abspath(__file__)
-                parent_folder = os.path.dirname(this_module_path)
-                config_file_path = os.path.join(parent_folder,self.CONFIG_FILE)
-            self.configure(config_file_path)
+            self.configure(config_file)
+
             self.uploaded_files_log = []
             self.skipped_files_log = []
             self.unfound_files_log = []

@@ -49,8 +49,19 @@ class TestIridaImport:
         imp.reg_gi.users = mock.create_autospec(galaxy.users)
         imp.uploaded_files_log = []
         imp.skipped_files_log = []
-
+        imp.configure = Mock()
+        self.add_irida_constants(imp)
         return imp
+
+    def add_irida_constants(self, irida_instance):
+        """Add constants to a passed IRIDA instance"""
+        irida_instance.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
+        irida_instance.GALAXY_URL = "http://localhost:8888/"
+        irida_instance.ILLUMINA_PATH = '/illumina_reads'
+        irida_instance.REFERENCE_PATH = '/references'
+        irida_instance.CLIENT_ID = 'webClient'
+        irida_instance.CLIENT_SECRET = 'webClientSecret'
+        irida_instance.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
 
     @pytest.fixture(scope='class')
     def file_list(self):
@@ -311,6 +322,8 @@ class TestIridaImport:
             imp.assign_ownership_if_nec = Mock()
             imp.get_IRIDA_session = Mock()
             imp.get_sample_file = Mock()
+            imp.configure = Mock()
+            self.add_irida_constants(imp)
 
             # Config data to come
             imp.import_to_galaxy("any_string", None, None)
