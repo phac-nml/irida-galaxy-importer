@@ -9,13 +9,11 @@ Install Instructions:
 
 #### Prerequisites:
 
-This tool requires bioblend 0.5.2. It can be installed by:
+This tool requires BioBlend 0.5.2 and Requests-OAuthlib. They can be installed by:
 
 ```
-pip install bioblend`
+pip install bioblend requests-oauthlib
 ```
-
-To invoke the import tool from within Galaxy, currently the HTML stub uploader must be used. It requires a web server.
 
 
 #### Initial Installation:
@@ -41,21 +39,40 @@ allow_library_path_paste = True
 ```
 
 
-#### Setting up the HTML Stub Uploader:
+#### Configuring IRIDA-Galaxy Communications:
 
 Note: It is not neccessary to do any of the steps in this subsection in order to run the tests.
 
-To use the tool from within Galaxy, right now, by default, the tool looks for a HTML page at `http://localhost:81`
-Set up a webserver serving a copy of the HTML page, `irida_import/extras/apache2/index.html`.
+To use the tool from within Galaxy, right now, by default, Galaxy looks for the IRIDA projects endpoint at 
+
+```
+http://localhost:8080/projects
+```
+
+This location can be changed by modifying the following line in `irida_import/irida_import.xml`:
+
+```
+<inputs action="http://localhost:8080/projects" check_values="False" method="post">
+```
 
 Cross Origin Resource Sharing (CORS) should be set up, because it may be required. Galaxy's stripped down paste implementation does not implement CORS, or (to my knowlege) retain an easy way to add it but CORS can be added to a nginx reverse-proxy for Galaxy. A sample configuration file is included: `irida_import/extras/nginx/nginx.conf`
-The file assumes that Galaxy can be found on `localhost:8888` Change the occurence of this phrase in the configuration file if your Galaxy instance is located elsewhere.
+The nginx configuration file assumes that Galaxy can be found on `localhost:8888` Change the occurence of this phrase in the configuration file if your Galaxy instance is located elsewhere.
 
 
 #### Final Configuration:
 
-The administrator API key, and the URL of the Galaxy web server must be configured. In `$GALAXY_ROOT/tools/irida_import/irida_import.py`, change the values for `ADMIN_KEY` and `GALAXY_URL` appropriately. Instructions for obtaining an API key can be found in the Galaxy documentation.
+The administrator API key, and the URL of the Galaxy web server must be configured. 
+In `$GALAXY_ROOT/tools/irida_import/irida_import.py`, change the values for `ADMIN_KEY` and `GALAXY_URL` appropriately. 
+Instructions for obtaining an API key can be found in the Galaxy documentation.
+The tool expects to obtain OAuth2 tokens at:
 
+```
+http://localhost:8080/api/oauth/token
+```
+
+Changed the value for `TOKEN_ENDPOINT` if neccessary.
+The tool currently uses the webClient client id and secret to access IRIDA. 
+They can be changed by modifying `CLIENT_ID` and `CLIENT_SECRET`
 
 These installation and configuration steps are planned to be simplified, as simplification becomes possible.
 
@@ -70,14 +87,13 @@ To run the tests, pytest is required.
 It can be installed by:
 
 ```
-pip install -U pytest # or
-easy_install -U pytest
+pip install -U pytest
 ```
 
-The mock library must be installed as well:
+The mock library, and pytest-mock must be installed as well:
 
 ```
-pip install mock
+pip install mock pytest-mock
 ```
 
 Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invoke:
@@ -85,8 +101,6 @@ Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invok
 ```
 py.test
 ```
-
-In addition, one or more of the paths in `$GALAXY_ROOT/tools/irida_import/prelim_json.json` should be modified to point to local files to test uploading with.
 
 
 #### Generating Code Coverage Reports:

@@ -6,6 +6,12 @@ import json
 from sample import Sample
 from sample_file import SampleFile
 import optparse
+import os.path
+from requests_oauthlib import OAuth2Session
+
+# FOR DEVELOPMENT ONLY!!
+# This value only exists for this process and processes that fork from it (none)
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 
 class IridaImport:
@@ -21,75 +27,88 @@ class IridaImport:
     ILLUMINA_PATH = '/illumina_reads'
     REFERENCE_PATH = '/references'
 
-    def get_samples(self, param_dict):
+    CLIENT_ID = 'webClient'
+    CLIENT_SECRET = 'webClientSecret'
+
+    TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
+
+    def get_samples(self, samples_dict):
         """
         Create sample objects from a dictionary.
 
-        :type param_dict: dict
-        :param param_dict: a dictionary to parse. See one of the test
+        :type json_params_dict: dict
+        :param json_params__dict: a dictionary to parse. See one of the test
         json files for formating information (the format will likely
         change soon)
-        :return: list of output samples
+        :return: a list of output samples
         """
-        samples_remain = True
-        sample_num = 1
         samples = []
-        while samples_remain:
-            sample_name_key = 'sample' + str(sample_num) + '_name'
-            if sample_name_key not in param_dict:
-                logging.debug('no sample found for key: ' + sample_name_key)
-                samples_remain = False
-            else:
-                logging.debug('found sample for key: ' + sample_name_key +
-                              ' with value: ' + param_dict[sample_name_key])
-                sample_path_key = 'sample' + str(sample_num) + '_path'
-                sample_name = param_dict[sample_name_key]
-                sample_path = param_dict[sample_path_key]
-                sample = Sample(sample_name, sample_path)
+        for sample_input in samples_dict:
+            sample_name = sample_input['name']
+            sample_path = sample_input['_links']['self']['href']
 
-                sample_files_remain = True
-                sample_file_num = 1
-                while sample_files_remain:
-                    sample_file_key = 'sample' + str(sample_num) + \
-                        '_file' + str(sample_file_num) + '_path'
-                    if sample_file_key not in param_dict:
-                        sample_files_remain = False
-                        logging.debug('no sample_file for key: ' +
-                                      sample_file_key)
-                    else:
-                        logging.debug('found sample_file for key: ' +
-                                      sample_file_key + 'with value ' +
-                                      param_dict[sample_file_key])
+            sample = Sample(sample_name, sample_path)
 
-                        sample_file_path = param_dict[sample_file_key]
-                        sample_file = SampleFile(sample_file_path)
+            for sample_file_input in sample_input['_embedded']['sample_files']:
+                sample_file_url = sample_file_input['_links']['self']['href']
 
-                        logging.debug("sample file made:" + str(sample_file))
+                sample_file = self.get_sample_file(sample_file_url)
+                sample.sample_files.append(sample_file)
 
-                        sample.sample_files.append(sample_file)
-                        sample_file_num += 1
-
-                samples.append(sample)
-                sample_num += 1
-
+            samples.append(sample)
         return samples
 
-    def get_first_or_make_lib(self, desired_lib_name):
+    def get_sample_file(self, sample_file_url):
+        """
+        From an IRIDA REST API URL, get a sample file
+        :type str
+        :param sample_file_url: the URL to get the sample file representation
+        :return: a sample file with a name and path
+        """
+        response = self.irida.get(sample_file_url)
+        resource = response.json()['resource']
+        logging.debug("The JSON parameters from the IRIDA API are:\n" +
+                      json.dumps(resource, indent=2))
+
+        name = resource['fileName']
+        path = resource['file']
+
+        return SampleFile(name, path)
+
+    def get_first_or_make_lib(self, desired_lib_name, email):
         """"
         Get or if neccessary create a library that matches a given name.
 
         :type desired_lib_name: str
         :param desired_lib_name: the desired library name
+        :type email: str
+        :param email: the email of the Galaxy user to get or make a library for
         :rtype: :class:`~.LibraryDataset`
         :return: the obtained or created library
+
+        This method should never make a library with the same name as an already
+        existing library that is accessible using the administrator API key
+
         """
         lib = None
         libs = self.gi.libraries.list(name=desired_lib_name)
+        # raise Exception(str(libs))
         if len(libs) > 0:
             lib = next(lib_i for lib_i in libs if lib_i.deleted is False)
 
         if(lib is None):
+            users = self.reg_gi.users.get_users()
+            uid = 0
+            try:
+                uid = next(user['id']
+                           for user in users if user['email'] == email)
+            except StopIteration:
+                raise Exception('No Galaxy user could be found for the email: '
+                                + email)
+
             lib = self.gi.libraries.create(desired_lib_name)
+            self.reg_gi.libraries.set_library_permissions(
+                lib.id, access_in=[uid], modify_in=[uid], add_in=[uid])
         return lib
 
     def create_folder_if_nec(self, folder_path):
@@ -107,8 +126,8 @@ class IridaImport:
         # '/bobfolder/bobfolder2'
         base_folder_path = folder_path.rsplit("/", 1)[0]
         logging.debug(
-            "If neccessary, making a folder named \"%s\" on base folder path"
-            "\"%s\" from folder path \"%s\"" %
+            'If neccessary, making a folder named \'%s\' on base folder path'
+            '\'%s\' from folder path \'%s\'' %
             (folder_name, base_folder_path, folder_path))
 
         if not self.exists_in_lib('folder', 'name', folder_path):
@@ -127,6 +146,7 @@ class IridaImport:
             else:
                 raise IOError('base_folder_path must include an existing base'
                               'folder, or nothing')
+            logging.debug('Made folder with path:' + '\'%s\'' % folder_path)
         return made_folder
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
@@ -145,6 +165,7 @@ class IridaImport:
         """
         ans = False
         # check for an object of the desired type with the desired attribute
+        self.library = self.gi.libraries.get(self.library.id)
         for con_inf in self.library.content_infos:
             if con_inf.type == item_type:
                 attr = getattr(con_inf, item_attr_name)
@@ -153,120 +174,172 @@ class IridaImport:
                     break
         return ans
 
-    def upload_sample_if_nec(self, sample):
+    def unique_file(self, sample_file_path, galaxy_name):
+        """
+        Find out if a sample file is unique
+
+        :type sample_file_path: str
+        :param sample_file_path: the local file path to the file to check
+        :type galaxy_name: str
+        :param galaxy_name: the full path to the sample file as it would
+        exist in Galaxy
+        :rtype: Boolean
+        :return: whether a file with this name and size does not exist in Galaxy
+        """
+        logging.debug(
+            "Doing a basic check for already existing sample file at: " +
+            galaxy_name)
+        unique = True
+        size = os.path.getsize(sample_file_path)
+        self.library = self.gi.libraries.get(self.library.id)
+        datasets = self.library.get_datasets(name=galaxy_name)
+        for dataset in datasets:
+            # Galaxy sometimes appends a newline
+            if(dataset.file_size in (size, size + 1)):
+                unique = False
+                break
+        return unique
+
+    def add_sample_if_nec(self, sample):
         """
         Upload a sample's sample files if they are not already present in Galaxy
 
         :type sample: Sample
         :param sample: the sample to upload
         """
+        added_to_galaxy = []
         for sample_file in sample.sample_files:
             sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
             galaxy_sample_file_name = sample_folder_path+'/'+sample_file.name
-            logging.debug(
-                "Doing a basic check for already existing sample file at: " +
-                galaxy_sample_file_name)
-            logging.debug(
-                "Sample name:" +
-                sample.name +
-                " Sample file name:" +
-                sample_file.name)
-            if not self.exists_in_lib('file', 'name', galaxy_sample_file_name):
-                logging.debug(
-                    "  Sample file does not exist so uploading/linking it")
-                self.upload_or_link(sample_file, sample_folder_path)
-            else:
-                logging.debug("  Sample file already exists!")
 
-    # TODO: use urllib.request.URLopener (right now only local files work)
-    def upload_or_link(self, sample_file, sample_folder_path):
+            if os.path.isfile(sample_file.path):
+                if self.unique_file(sample_file.path, galaxy_sample_file_name):
+                    logging.debug(
+                        "  Sample file does not exist so uploading/linking it")
+                    added = self.link_or_download(
+                        sample_file, sample_folder_path)
+                    if(added):
+                        added_to_galaxy.extend(added)
+                else:
+                    logging.info('Skipped uploading file: An identical '
+                                 'sample file already exists in Galaxy at:'
+                                 + galaxy_sample_file_name)
+        return added_to_galaxy
+
+    def link_or_download(self, sample_file, sample_folder_path):
         """
-        Upload a sample file to Galaxy, linking to it locally if possible.
+        Add a sample file to Galaxy, linking to it locally if possible.
 
         :type sample_file: SampleFile
-        :param sample_file: the sample file to upload
+        :param sample_file: the sample file to download
         :type sample_folder_path: str
-        :param sample_folder_path: the URI to get the file from
-
+        :param sample_folder_path: the folder in Galaxy to store the file in
+        :return: a list containing a single dict with the file's
+        url, id, and name.
         """
         logging.debug('      Attempting to upload or link a file')
-
-        # Get the 'file' 'http' prefix from the
-        # 'file://...'  or 'http://..' path
-        prefix = sample_file.path.split(':/')[0]
+        added = None
+        file_path = sample_file.path
         logging.debug(
-            "       Sample file's path's prefix is \"%s\" and path is \"%s\"" %
-            (prefix, sample_file.path))
-        if prefix == 'file':
+            "       Sample file's local path is" + file_path)
 
-            # Get e.g. '/folder/folder56/myfile.fastq' from
-            # 'file://folder/folder56/myfile.fastq'
-            file_path = "/" + sample_file.path.split('/', 3)[3]
-            logging.debug("File path is"+file_path)
-
-            folder_id = self.reg_gi.libraries.get_folders(
-                self.library.id,
-                name=sample_folder_path)[0]['id']
-
-            self.reg_gi.libraries.upload_from_galaxy_filesystem(
+        folder_id = self.reg_gi.libraries.get_folders(
+            self.library.id,
+            name=sample_folder_path)[0]['id']
+        if os.path.isfile(file_path):
+            added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
                 file_path,
                 folder_id=folder_id,
                 link_data_only='link_to_files')
+            logging.info('Wrote file: {gal_loc} from {local_loc}'.format(
+                gal_loc=sample_folder_path + sample_file.name,
+                local_loc=sample_file.path))
+        else:
+            raise IOError('file not found: '+file_path)
+        return added
 
-    # TODO: finish this method
     def assign_ownership_if_nec(self, sample):
         """
         Assign ownership to the files in a sample, if neccessary
 
         :type sample: Sample
-        :param sample: the sample who's sample files will be assigned ownership
+        :param sample: the sample whose sample files will be assigned ownership
         """
+        # TODO: finish this method
         return True  # neccessary here
 
-    def import_to_galaxy(self, json_parameter_file, irida_info):
+    def get_IRIDA_session(self, oauth_dict):
+        """
+        Create an OAuth2 session with IRIDA
+
+        :type oauth_dict dict
+        :param oauth_dict: configuration information
+        """
+        redirect_uri = oauth_dict['redirect']
+        auth_code = oauth_dict['code']
+        if self.token:
+            irida = OAuth2Session(client_id=self.CLIENT_ID,
+                                  redirect_uri=redirect_uri,
+                                  token={'access_token': self.token})
+        else:
+            irida = OAuth2Session(self.CLIENT_ID, redirect_uri=redirect_uri)
+            irida.fetch_token(
+                self.TOKEN_ENDPOINT, client_secret=self.CLIENT_SECRET,
+                authorization_response=redirect_uri + '?code=' + auth_code)
+        return irida
+
+    def import_to_galaxy(self, json_parameter_file, config, token):
         """
         Import samples and their sample files into Galaxy from IRIDA
 
         :type json_parameter_file: str
-        :param json_parameter_file: the JSON string that Galaxy passes,
-        describing the stub datasource it created
-        :type irida_info: str
-        :param irida_info: a local JSON file containing configuration info.
-        It is currently unused, and may be depreciated.
+        :param json_parameter_file: a path that Galaxy passes,
+        to the stub datasource it created
+        :type config: str
+        :param config: a local JSON file containing configuration info.
+        It is currently unused
+        :type token: str
+        :param token: An access token that can be passed to the tool when it
+        is manually run.
         """
+        with open(json_parameter_file, 'r') as param_file_handle:
+            full_param_dict = json.loads(param_file_handle.read())
+            param_dict = full_param_dict['param_dict']
+            json_params_dict = json.loads(param_dict['json_params'])
 
-        full_param_dict = json.loads(open(json_parameter_file, 'r').read())
-        logging.debug("The full Galaxy param dict is: " +
-                      json.dumps(full_param_dict, indent=2))
+            logging.debug("The full Galaxy param dict is: " +
+                          json.dumps(full_param_dict, indent=2))
+            logging.debug("The JSON parameters from IRIDA are:\n" +
+                          json.dumps(json_params_dict, indent=2))
+            samples_dict = json_params_dict['_embedded']['samples']
+            email = json_params_dict['_embedded']['user']['email']
+            desired_lib_name = json_params_dict['_embedded']['library']['name']
+            oauth_dict = json_params_dict['_embedded']['oauth2']
+            self.token = token
+            self.irida = self.get_IRIDA_session(oauth_dict)
 
-        param_dict = full_param_dict['param_dict']
+            self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
 
-        desired_lib_name = param_dict['library_name']
+            # This is necessary for uploads from arbitary local paths
+            # that require setting the "link_to_files" flag:
+            self.reg_gi = galaxy.GalaxyInstance(
+                url=self.GALAXY_URL,
+                key=self.ADMIN_KEY)
 
-        self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
+            # Each sample contains a list of sample files
+            samples = self.get_samples(samples_dict)
+            # Set up the library
+            self.library = self.get_first_or_make_lib(desired_lib_name, email)
+            self.create_folder_if_nec(self.ILLUMINA_PATH)
+            self.create_folder_if_nec(self.REFERENCE_PATH)
 
-        # This is necessary for uploads from arbitary local paths
-        # that require setting the "link_to_files" flag:
-        self.reg_gi = galaxy.GalaxyInstance(
-            url=self.GALAXY_URL,
-            key=self.ADMIN_KEY)
-
-        # Each sample contains a list of sample files
-        samples = self.get_samples(param_dict)
-        # samples = self.get_samples(irida_info_dict)
-        # Set up the library
-        self.library = self.get_first_or_make_lib(desired_lib_name)
-        self.create_folder_if_nec(self.ILLUMINA_PATH)
-        self.create_folder_if_nec(self.REFERENCE_PATH)
-
-        # Add each sample's files to the library
-        for sample in samples:
-            logging.debug("sample name is" + sample.name)
-            self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
-            self.upload_sample_if_nec(sample)
-            self.assign_ownership_if_nec(sample)
-
+            # Add each sample's files to the library
+            for sample in samples:
+                logging.debug("sample name is" + sample.name)
+                self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
+                self.add_sample_if_nec(sample)
+                self.assign_ownership_if_nec(sample)
 
 """
 From the command line, pass json files to IridaImport, and set up the logger
@@ -276,31 +349,45 @@ if __name__ == '__main__':
     logging.basicConfig(filename="log_irida_import", level=logging.DEBUG,
                         filemode="w")
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setLevel(logging.INFO)
     logger = logging.getLogger()
     logger.addHandler(stream_handler)
+
+    # Prevent urllib3 from spamming stdout
+    urllib3_logger = logging.getLogger('requests.packages.urllib3')
+    urllib3_logger.setLevel(logging.WARNING)
 
     logging.debug("Parsing the Command Line")
     parser = optparse.OptionParser()
     parser.add_option(
         '-p', '--json_parameter_file', dest='json_parameter_file',
-        action='store', type="string", default=None,
-        help='json_parameter_file')
+        action='store', type="string",
+        help='A JSON formatted parameter file from Galaxy')
     parser.add_option(
-        '-s', '--irida_info', dest='irida_info',
-        action='store', type="string", default=None,
-        help='irida_info')
+        '-s', '--config', dest='config',
+        action='store', type="string",
+        help='A configuration file will go here')
+    parser.add_option(
+        '-t', '--token', dest='token',
+        action='store', type='string',
+        help='The tool can use a supplied access token' +
+        'instead of querying IRIDA')
+
     (options, args) = parser.parse_args()
 
     # this test JSON file does not have to be configured to run the tests
+    logging.debug("Opening a test json file")
     test_json_file = \
-        '/home/jthiessen/galaxy-dist/tools/irida_import/sample.json'
+        '/home/jthiessen/galaxy-dist/tools/irida_import_tool_for_galaxy/irida_import/sample.dat'
 
     importer = IridaImport()
 
-    if options.irida_info is None:
+    if options.config is None:
         logging.debug("No passed file so reading local file")
-        importer.import_to_galaxy(test_json_file, None)
+        importer.import_to_galaxy(test_json_file, None, options.token)
     else:
         logging.debug("Reading from passed file")
-        importer.import_to_galaxy(options.json_parameter_file, None)
+        importer.import_to_galaxy(
+            options.json_parameter_file,
+            None,
+            options.token)

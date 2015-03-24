@@ -6,3 +6,4 @@ skip
 .ropeproject
 .coverage
 htmlcov
+irida_import/sample.dat
