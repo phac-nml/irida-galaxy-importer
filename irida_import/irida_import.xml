@@ -3,7 +3,6 @@
     <description>server</description>
     <command interpreter="python">irida_import.py
 	    --json_parameter_file "${output}"
-	    --config "dev"
     </command>
     <inputs action="http://localhost:8080/projects" check_values="False" method="post"> 
         <display>import data from IRIDA to Galaxy</display>

@@ -1,5 +1,6 @@
 import logging
 import sys
+import ConfigParser
 from bioblend.galaxy.objects import GalaxyInstance
 from bioblend import galaxy
 import json
@@ -22,15 +23,9 @@ class IridaImport:
     An appropriate library and folders are created if necessary
     """
 
-    ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
-    GALAXY_URL = "http://localhost:8888/"
-    ILLUMINA_PATH = '/illumina_reads'
-    REFERENCE_PATH = '/references'
-
-    CLIENT_ID = 'webClient'  # This value must also be set in irida_import.xml
-    CLIENT_SECRET = 'webClientSecret'
-
-    TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
+    TOKEN_ENDPOINT_SUFFEX = '/api/oauth/token'
+    INITIAL_ENDPOINT_SUFFEX = '/projects' # TODO: use to set irida_import.xml
+    CONFIG_FILE = 'config.ini'
 
     def get_samples(self, samples_dict):
         """
@@ -66,13 +61,23 @@ class IridaImport:
         :return: a sample file with a name and path
         """
         response = self.irida.get(sample_file_url)
+
+        #Raise an exception if we get 4XX or 5XX server response
+        try:
+            response.raise_for_status()
+        except:
+            error = "Failed to get sample file from IRIDA:\n"\
+            "Got HTTP status code:"+str(response.status_code)
+            logging.exception(error)
+            sys.stderr.write(error)
+            sys.exit(1)
+
         resource = response.json()['resource']
         logging.debug("The JSON parameters from the IRIDA API are:\n" +
                       json.dumps(resource, indent=2))
 
         name = resource['fileName']
         path = resource['file']
-
         return SampleFile(name, path)
 
     def get_first_or_make_lib(self, desired_lib_name, email):
@@ -316,7 +321,35 @@ class IridaImport:
                 authorization_response=redirect_uri + '?code=' + auth_code)
         return irida
 
-    def import_to_galaxy(self, json_parameter_file, config, token):
+    def configure(self, path=None):
+        """
+        Configure the tool using the configuration file where required
+
+        :type path: str
+        :param path: The location of the configuration file
+
+        Values from the configuration file are only used if they have not been
+        already passed to the tool as command line parameters
+
+        """
+        with open(path, 'r') as config_file:
+            config = ConfigParser.ConfigParser()
+            config.readfp(config_file)
+            self.ADMIN_KEY = config.get('Galaxy', 'admin_key')
+            self.GALAXY_URL = config.get('Galaxy', 'galaxy_url')
+            self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
+            self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
+
+            self.CLIENT_ID = config.get('IRIDA', 'client_id')
+            self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
+
+            irida_loc = config.get('IRIDA','irida_url')
+            self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFEX
+            irida_endpoint = irida_loc+self.INITIAL_ENDPOINT_SUFFEX
+
+            #TODO: configure the xml file
+
+    def import_to_galaxy(self, json_parameter_file, config, token=None, config_file=None):
         """
         Import samples and their sample files into Galaxy from IRIDA
 
@@ -339,6 +372,12 @@ class IridaImport:
                           json.dumps(full_param_dict, indent=2))
             logging.debug("The JSON parameters from IRIDA are:\n" +
                           json.dumps(json_params_dict, indent=2))
+
+            if not config_file:
+                this_module_path = os.path.abspath(__file__)
+                parent_folder = os.path.dirname(this_module_path)
+                config_file_path = os.path.join(parent_folder,self.CONFIG_FILE)
+            self.configure(config_file_path)
             self.uploaded_files_log = []
             self.skipped_files_log = []
             self.unfound_files_log = []
@@ -414,12 +453,12 @@ if __name__ == '__main__':
 
     importer = IridaImport()
 
-    if options.config is None:
+    if options.json_parameter_file is None:
         logging.debug("No passed file so reading local file")
-        importer.import_to_galaxy(test_json_file, None, options.token)
+        importer.import_to_galaxy(test_json_file, None, token=options.token)
     else:
         logging.debug("Reading from passed file")
         importer.import_to_galaxy(
             options.json_parameter_file,
             None,
-            options.token)
+            token=options.token)
