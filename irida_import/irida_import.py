@@ -8,6 +8,7 @@ from sample import Sample
 from sample_file import SampleFile
 import optparse
 import os.path
+from xml.etree import ElementTree
 from requests_oauthlib import OAuth2Session
 
 # FOR DEVELOPMENT ONLY!!
@@ -24,8 +25,9 @@ class IridaImport:
     """
 
     TOKEN_ENDPOINT_SUFFEX = '/api/oauth/token'
-    INITIAL_ENDPOINT_SUFFEX = '/projects' # TODO: use to set irida_import.xml
+    INITIAL_ENDPOINT_SUFFEX = '/projects'
     CONFIG_FILE = 'config.ini'
+    XML_FILE = 'irida_import.xml'
 
     def get_samples(self, samples_dict):
         """
@@ -274,32 +276,26 @@ class IridaImport:
         """
         Print a final summary of the tool's activity
         """
+        def print_files_log(message, log):
+            """For the summary, print a log's file's details"""
+            if log:
+                logging.warn(message)
+                for file_log in log:
+                    logging.warn('File with local path: {0}\n'
+                                 'and Galaxy path: {1}'
+                                 .format(file_log['local_path'],
+                                         file_log['galaxy_name']))
         logging.warn('\nFinal summary:')
         logging.info('{0} file(s) exported and {1} file(s) skipped.'
                      .format(len(self.uploaded_files_log),
                              len(self.skipped_files_log)))
-        self.print_files_log('\nFiles exported:', self.uploaded_files_log)
-        self.print_files_log(
+        print_files_log('\nFiles exported:', self.uploaded_files_log)
+        print_files_log(
             "\nSome files couldn't be exported because they don't exist:",
             self.unfound_files_log)
-        self.print_files_log(
+        print_files_log(
             '\nSome files were skipped because they were not unique:',
             self.skipped_files_log)
-
-    def print_files_log(self, message, log):
-        """
-        Print a log file dictionary with a preceding message
-        :type message: str
-        :param message: A message to show before the files are listed
-        :type log: dict
-        :param log: The local file path and galaxy name of the file
-        """
-        if log:
-            logging.warn(message)
-            for file_log in log:
-                logging.warn('File with local path: {0}\n and Galaxy path: {1}'
-                             .format(file_log['local_path'],
-                                     file_log['galaxy_name']))
 
     def get_IRIDA_session(self, oauth_dict):
         """
@@ -332,28 +328,48 @@ class IridaImport:
         already passed to the tool as command line parameters
 
         """
+        this_module_path = os.path.abspath(__file__)
+        parent_folder = os.path.dirname(this_module_path)
         if not path:
-            this_module_path = os.path.abspath(__file__)
-            parent_folder = os.path.dirname(this_module_path)
-            path = os.path.join(parent_folder,self.CONFIG_FILE)
+            path = os.path.join(parent_folder, self.CONFIG_FILE)
         with open(path, 'r') as config_file:
             config = ConfigParser.ConfigParser()
             config.readfp(config_file)
+
+            # TODO: parse options from command line and config file as a list
             self.ADMIN_KEY = config.get('Galaxy', 'admin_key')
             self.GALAXY_URL = config.get('Galaxy', 'galaxy_url')
             self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
             self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
 
+            self.XML_FILE = config.get('Galaxy', 'xml_file')
+
             self.CLIENT_ID = config.get('IRIDA', 'client_id')
             self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
 
-            irida_loc = config.get('IRIDA','irida_url')
+            irida_loc = config.get('IRIDA', 'irida_url')
             self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFEX
             irida_endpoint = irida_loc+self.INITIAL_ENDPOINT_SUFFEX
 
-            #TODO: configure the xml file
+            # Configure the tool XML file
+            # The Galaxy server must be restarted for XML configuration
+            # changes to take effect.
+            # The XML file is only changed to reflect the IRIDA URL
+            # and IRIDA client ID
+            xml_path = os.path.join(parent_folder, self.XML_FILE)
+            tree = ElementTree.parse(xml_path)
 
-    def import_to_galaxy(self, json_parameter_file, config, token=None, config_file=None):
+            inputs = tree.find('inputs')
+            inputs.set('action', irida_endpoint)
+            params = inputs.findall('param')
+            client_id_param = next(param for param in params
+                                   if param.get('name') == 'galaxyClientID')
+            client_id_param.set('value', self.CLIENT_ID)
+
+            tree.write(xml_path)
+
+    def import_to_galaxy(self, json_parameter_file, config, token=None,
+                         config_file=None):
         """
         Import samples and their sample files into Galaxy from IRIDA
 
