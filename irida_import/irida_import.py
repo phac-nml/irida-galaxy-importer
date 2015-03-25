@@ -1,5 +1,4 @@
 import logging
-import sys
 import argparse
 import json
 import os.path
@@ -75,18 +74,11 @@ class IridaImport:
         response = self.irida.get(sample_file_url)
 
         # Raise an exception if we get 4XX or 5XX server response
-        try:
-            response.raise_for_status()
-        except:
-            error = "Failed to get sample file from IRIDA:\n"\
-                "Got HTTP status code:"+str(response.status_code)
-            self.logger.exception(error)
-            sys.stderr.write(error)
-            sys.exit(1)
+        response.raise_for_status()
 
         resource = response.json()['resource']
         self.logger.debug("The JSON parameters from the IRIDA API are:\n" +
-                     json.dumps(resource, indent=2))
+                          json.dumps(resource, indent=2))
 
         name = resource['fileName']
         path = resource['file']
@@ -121,10 +113,7 @@ class IridaImport:
             except StopIteration:
                 error = "No Galaxy user could be found for the email: '{0}', "\
                     "quiting".format(email)
-                self.logger.exception(error)
-                self.print_summary()
-                sys.stderr.write(error)
-                sys.exit(1)
+                raise Exception(error)
 
             lib = self.gi.libraries.create(desired_lib_name)
             self.reg_gi.libraries.set_library_permissions(
@@ -437,7 +426,7 @@ class IridaImport:
             self.print_summary()
 
 """
-From the command line, pass JSON files to IridaImport, and set up the self.logger
+From the command line, pass JSON files to IridaImport, and set up the logger
 """
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -463,21 +452,23 @@ if __name__ == '__main__':
     # Prevent urllib3 from spamming the log
     urllib3_logger = logging.getLogger('requests.packages.urllib3')
     urllib3_logger.setLevel(logging.WARNING)
-    # this test JSON file does not have to be configured to run the tests
-    logging.debug("Opening a test json file")
-    test_json_file = \
-        '/home/jthiessen/galaxy-dist/tools/irida_import_tool_for_galaxy/irida_import/sample.dat'
 
-    importer = IridaImport()
+    try:
+        # this test JSON file does not have to be configured to run the tests
+        logging.debug("Opening a test json file")
+        test_json_file = \
+            '/home/jthiessen/galaxy-dist/tools/irida_import_tool_for_galaxy/irida_import/sample.dat'
 
-    if args.json_parameter_file is None:
-        logging.debug("No passed file so reading local file")
-        importer.import_to_galaxy(test_json_file,
-                                  args.log,
-                                  token=args.token)
-    else:
-        logging.debug("Reading from passed file")
-        importer.import_to_galaxy(
-            args.json_parameter_file,
-            args.log,
-            token=args.token)
+        importer = IridaImport()
+
+        if args.json_parameter_file is None:
+            logging.debug("No passed file so reading local file")
+            file_to_open = test_json_file
+        else:
+            logging.debug("Reading from passed file")
+            file_to_open = args.json_parameter_file
+        importer.import_to_galaxy(file_to_open, args.log, token=args.token)
+
+    except Exception as e:
+        logging.exception('')
+        raise
