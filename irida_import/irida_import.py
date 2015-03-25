@@ -80,12 +80,12 @@ class IridaImport:
         except:
             error = "Failed to get sample file from IRIDA:\n"\
                 "Got HTTP status code:"+str(response.status_code)
-            logger.exception(error)
+            self.logger.exception(error)
             sys.stderr.write(error)
             sys.exit(1)
 
         resource = response.json()['resource']
-        logger.debug("The JSON parameters from the IRIDA API are:\n" +
+        self.logger.debug("The JSON parameters from the IRIDA API are:\n" +
                      json.dumps(resource, indent=2))
 
         name = resource['fileName']
@@ -121,7 +121,7 @@ class IridaImport:
             except StopIteration:
                 error = "No Galaxy user could be found for the email: '{0}', "\
                     "quiting".format(email)
-                logger.exception(error)
+                self.logger.exception(error)
                 self.print_summary()
                 sys.stderr.write(error)
                 sys.exit(1)
@@ -145,7 +145,7 @@ class IridaImport:
         # Get the base folder path from the path e.g '/bobfolder' from
         # '/bobfolder/bobfolder2'
         base_folder_path = folder_path.rsplit("/", 1)[0]
-        logger.debug(
+        self.logger.debug(
             'If neccessary, making a folder named \'%s\' on base folder path'
             '\'%s\' from folder path \'%s\'' %
             (folder_name, base_folder_path, folder_path))
@@ -166,7 +166,7 @@ class IridaImport:
             else:
                 raise IOError('base_folder_path must include an existing base'
                               'folder, or nothing')
-            logger.debug('Made folder with path:' + '\'%s\'' % folder_path)
+            self.logger.debug('Made folder with path:' + '\'%s\'' % folder_path)
         return made_folder
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
@@ -206,7 +206,7 @@ class IridaImport:
         :rtype: Boolean
         :return: whether a file with this name and size does not exist in Galaxy
         """
-        logger.debug(
+        self.logger.debug(
             "Doing a basic check for already existing sample file at: " +
             galaxy_name)
         unique = True
@@ -234,7 +234,7 @@ class IridaImport:
 
             if os.path.isfile(sample_file.path):
                 if self.unique_file(sample_file.path, galaxy_sample_file_name):
-                    logger.debug(
+                    self.logger.debug(
                         "  Sample file does not exist so uploading/linking it")
                     added = self.link(
                         sample_file, sample_folder_path)
@@ -262,10 +262,10 @@ class IridaImport:
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
-        logger.debug('      Attempting to upload a file')
+        self.logger.debug('      Attempting to upload a file')
         added = None
         file_path = sample_file.path
-        logger.debug(
+        self.logger.debug(
             "       Sample file's local path is" + file_path)
 
         folder_id = self.reg_gi.libraries.get_folders(
@@ -301,7 +301,7 @@ class IridaImport:
 
     def print_logged(self, message):
         """Print a message and log it"""
-        logger.info(message)
+        self.logger.info(message)
         print message
 
     def get_IRIDA_session(self, oauth_dict):
@@ -391,6 +391,7 @@ class IridaImport:
         :param token: An access token that can be passed to the tool when it
         is manually run.
         """
+        self.logger = logging.getLogger('irida_import')
         with open(json_parameter_file, 'r') as param_file_handle:
             self.configure(config_file)
             full_param_dict = json.loads(param_file_handle.read())
@@ -398,11 +399,6 @@ class IridaImport:
             json_params_dict = json.loads(param_dict['json_params'])
 
             self.print_logged("Exporting files from IRIDA to Galaxy...")
-
-            logger.debug("The full Galaxy param dict is: " +
-                         json.dumps(full_param_dict, indent=2))
-            logger.debug("The JSON parameters from IRIDA are:\n" +
-                         json.dumps(json_params_dict, indent=2))
 
             self.uploaded_files_log = []
             self.skipped_files_log = []
@@ -433,7 +429,7 @@ class IridaImport:
 
             # Add each sample's files to the library
             for sample in samples:
-                logger.debug("sample name is" + sample.name)
+                self.logger.debug("sample name is" + sample.name)
                 self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
                 self.add_sample_if_nec(sample)
 
@@ -441,7 +437,7 @@ class IridaImport:
             self.print_summary()
 
 """
-From the command line, pass JSON files to IridaImport, and set up the logger
+From the command line, pass JSON files to IridaImport, and set up the self.logger
 """
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -463,25 +459,24 @@ if __name__ == '__main__':
                         datefmt='%a, %d %b %Y %H:%M:%S',
                         level=logging.DEBUG,
                         filemode="w")
-    logger = logging.getLogger('irida_import')
 
     # Prevent urllib3 from spamming the log
     urllib3_logger = logging.getLogger('requests.packages.urllib3')
     urllib3_logger.setLevel(logging.WARNING)
     # this test JSON file does not have to be configured to run the tests
-    logger.debug("Opening a test json file")
+    logging.debug("Opening a test json file")
     test_json_file = \
         '/home/jthiessen/galaxy-dist/tools/irida_import_tool_for_galaxy/irida_import/sample.dat'
 
     importer = IridaImport()
 
     if args.json_parameter_file is None:
-        logger.debug("No passed file so reading local file")
+        logging.debug("No passed file so reading local file")
         importer.import_to_galaxy(test_json_file,
                                   args.log,
                                   token=args.token)
     else:
-        logger.debug("Reading from passed file")
+        logging.debug("Reading from passed file")
         importer.import_to_galaxy(
             args.json_parameter_file,
             args.log,

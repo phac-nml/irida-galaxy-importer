@@ -50,6 +50,7 @@ class TestIridaImport:
         imp.uploaded_files_log = []
         imp.skipped_files_log = []
         imp.configure = Mock()
+        imp.logger = logging.getLogger('irida_import')
         self.add_irida_constants(imp)
         return imp
 
