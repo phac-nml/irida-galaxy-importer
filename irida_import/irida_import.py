@@ -18,6 +18,12 @@ from sample_file import SampleFile
 # This value only exists for this process and processes that fork from it (none)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
+# Print the token so that it can be used to call the tool from the command line
+# I don't think this value should be visible in the configuration file
+# or that it should be a command line option.
+# TODO: use an enviromental variable?
+PRINT_TOKEN_INSECURELY = False
+
 
 class IridaImport:
 
@@ -31,6 +37,7 @@ class IridaImport:
     INITIAL_ENDPOINT_SUFFEX = '/projects'
     CONFIG_FILE = 'config.ini'
     XML_FILE = 'irida_import.xml'
+    CLIENT_ID_PARAM = 'galaxyClientID'
 
     def get_samples(self, samples_dict):
         """
@@ -73,13 +80,13 @@ class IridaImport:
         except:
             error = "Failed to get sample file from IRIDA:\n"\
                 "Got HTTP status code:"+str(response.status_code)
-            logging.exception(error)
+            logger.exception(error)
             sys.stderr.write(error)
             sys.exit(1)
 
         resource = response.json()['resource']
-        logging.debug("The JSON parameters from the IRIDA API are:\n" +
-                      json.dumps(resource, indent=2))
+        logger.debug("The JSON parameters from the IRIDA API are:\n" +
+                     json.dumps(resource, indent=2))
 
         name = resource['fileName']
         path = resource['file']
@@ -114,7 +121,7 @@ class IridaImport:
             except StopIteration:
                 error = "No Galaxy user could be found for the email: '{0}', "\
                     "quiting".format(email)
-                logging.exception(error)
+                logger.exception(error)
                 self.print_summary()
                 sys.stderr.write(error)
                 sys.exit(1)
@@ -138,7 +145,7 @@ class IridaImport:
         # Get the base folder path from the path e.g '/bobfolder' from
         # '/bobfolder/bobfolder2'
         base_folder_path = folder_path.rsplit("/", 1)[0]
-        logging.debug(
+        logger.debug(
             'If neccessary, making a folder named \'%s\' on base folder path'
             '\'%s\' from folder path \'%s\'' %
             (folder_name, base_folder_path, folder_path))
@@ -159,7 +166,7 @@ class IridaImport:
             else:
                 raise IOError('base_folder_path must include an existing base'
                               'folder, or nothing')
-            logging.debug('Made folder with path:' + '\'%s\'' % folder_path)
+            logger.debug('Made folder with path:' + '\'%s\'' % folder_path)
         return made_folder
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
@@ -199,7 +206,7 @@ class IridaImport:
         :rtype: Boolean
         :return: whether a file with this name and size does not exist in Galaxy
         """
-        logging.debug(
+        logger.debug(
             "Doing a basic check for already existing sample file at: " +
             galaxy_name)
         unique = True
@@ -227,7 +234,7 @@ class IridaImport:
 
             if os.path.isfile(sample_file.path):
                 if self.unique_file(sample_file.path, galaxy_sample_file_name):
-                    logging.debug(
+                    logger.debug(
                         "  Sample file does not exist so uploading/linking it")
                     added = self.link(
                         sample_file, sample_folder_path)
@@ -239,8 +246,9 @@ class IridaImport:
                     self.skipped_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
             else:
-                self.unfound_files_log.append(
-                        {'galaxy_name': galaxy_sample_file_name})
+                error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
+                         ).format(galaxy_sample_file_name, sample_file.path)
+                raise ValueError(error)
         return added_to_galaxy
 
     def link(self, sample_file, sample_folder_path):
@@ -254,10 +262,10 @@ class IridaImport:
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
-        logging.debug('      Attempting to upload a file')
+        logger.debug('      Attempting to upload a file')
         added = None
         file_path = sample_file.path
-        logging.debug(
+        logger.debug(
             "       Sample file's local path is" + file_path)
 
         folder_id = self.reg_gi.libraries.get_folders(
@@ -276,27 +284,31 @@ class IridaImport:
         def print_files_log(message, log):
             """For the summary, print a log's file's details"""
             if log:
-                logging.warn(message)
+                self.print_logged(message)
                 for file_log in log:
-                    logging.warn('File with Galaxy path: {0}'
-                                 .format(file_log['galaxy_name']))
-        logging.warn('Final summary:')
-        logging.info('{0} file(s) exported and {1} file(s) skipped.'
-                     .format(len(self.uploaded_files_log),
-                             len(self.skipped_files_log)))
-        print_files_log(
-            '\nWARNING: Some files were not found on the local filesystem'
-            'and were not exported:', self.unfound_files_log)
+                    self.print_logged('File with Galaxy path: {0}'
+                                      .format(file_log['galaxy_name']))
+
+        self.print_logged('\nFinal summary:\n'
+                          '{0} file(s) exported and {1} file(s) skipped.'
+                          .format(len(self.uploaded_files_log),
+                                  len(self.skipped_files_log)))
+
         print_files_log('\nFiles exported:', self.uploaded_files_log)
         print_files_log(
             '\nSome files were skipped because they were not unique:',
             self.skipped_files_log)
 
+    def print_logged(self, message):
+        """Print a message and log it"""
+        logger.info(message)
+        print message
+
     def get_IRIDA_session(self, oauth_dict):
         """
         Create an OAuth2 session with IRIDA
 
-        :type oauth_dict dict
+        :type oauth_dict: dict
         :param oauth_dict: configuration information
         """
         redirect_uri = oauth_dict['redirect']
@@ -310,6 +322,8 @@ class IridaImport:
             irida.fetch_token(
                 self.TOKEN_ENDPOINT, client_secret=self.CLIENT_SECRET,
                 authorization_response=redirect_uri + '?code=' + auth_code)
+        if PRINT_TOKEN_INSECURELY:
+            self.print_logged(irida.token)
         return irida
 
     def configure(self, path=None):
@@ -358,12 +372,12 @@ class IridaImport:
             inputs.set('action', irida_endpoint)
             params = inputs.findall('param')
             client_id_param = next(param for param in params
-                                   if param.get('name') == 'galaxyClientID')
+                                   if param.get('name') == self.CLIENT_ID_PARAM)
             client_id_param.set('value', self.CLIENT_ID)
 
             tree.write(xml_path)
 
-    def import_to_galaxy(self, json_parameter_file, config, token=None,
+    def import_to_galaxy(self, json_parameter_file, log, token=None,
                          config_file=None):
         """
         Import samples and their sample files into Galaxy from IRIDA
@@ -371,9 +385,8 @@ class IridaImport:
         :type json_parameter_file: str
         :param json_parameter_file: a path that Galaxy passes,
         to the stub datasource it created
-        :type config: str
-        :param config: a local JSON file containing configuration info.
-        It is currently unused
+        :type log: str
+        :param config: the name of a file to write the tool's log to.
         :type token: str
         :param token: An access token that can be passed to the tool when it
         is manually run.
@@ -383,19 +396,22 @@ class IridaImport:
             full_param_dict = json.loads(param_file_handle.read())
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
-            logging.info("Exporting files from IRIDA to Galaxy...\n")
-            logging.debug("The full Galaxy param dict is: " +
-                          json.dumps(full_param_dict, indent=2))
-            logging.debug("The JSON parameters from IRIDA are:\n" +
-                          json.dumps(json_params_dict, indent=2))
+
+            self.print_logged("Exporting files from IRIDA to Galaxy...")
+
+            logger.debug("The full Galaxy param dict is: " +
+                         json.dumps(full_param_dict, indent=2))
+            logger.debug("The JSON parameters from IRIDA are:\n" +
+                         json.dumps(json_params_dict, indent=2))
 
             self.uploaded_files_log = []
             self.skipped_files_log = []
-            self.unfound_files_log = []
+
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
+
             self.token = token
             self.irida = self.get_IRIDA_session(oauth_dict)
 
@@ -417,56 +433,56 @@ class IridaImport:
 
             # Add each sample's files to the library
             for sample in samples:
-                logging.debug("sample name is" + sample.name)
+                logger.debug("sample name is" + sample.name)
                 self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
                 self.add_sample_if_nec(sample)
 
+            self.print_logged('\nExport completed successfully.')
             self.print_summary()
 
 """
 From the command line, pass JSON files to IridaImport, and set up the logger
 """
 if __name__ == '__main__':
-    # TODO: convert to robustly use argparse
-    logging.basicConfig(filename="log_irida_import", level=logging.DEBUG,
-                        filemode="w")
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(logging.INFO)
-    logger = logging.getLogger()
-    logger.addHandler(stream_handler)
-
-    # Prevent urllib3 from spamming stdout
-    urllib3_logger = logging.getLogger('requests.packages.urllib3')
-    urllib3_logger.setLevel(logging.WARNING)
-
-    logging.debug("Parsing the Command Line")
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
         help='A JSON formatted parameter file from Galaxy')
     parser.add_argument(
-        '-s', '--config', dest='config',
-        help='A configuration file will go here')
+        '-l', '--log-file', dest='log', default='log_file',
+        help="The file to log the tool's output to")
     parser.add_argument(
         '-t', '--token', dest='token',
         help='The tool can use a supplied access token' +
         'instead of querying IRIDA')
 
     args = parser.parse_args()
+    log_format = "%(asctime)s: %(name)s: %(levelname)s: %(message)s"
+    logging.basicConfig(filename=args.log,
+                        format=log_format,
+                        datefmt='%a, %d %b %Y %H:%M:%S',
+                        level=logging.DEBUG,
+                        filemode="w")
+    logger = logging.getLogger('irida_import')
 
+    # Prevent urllib3 from spamming the log
+    urllib3_logger = logging.getLogger('requests.packages.urllib3')
+    urllib3_logger.setLevel(logging.WARNING)
     # this test JSON file does not have to be configured to run the tests
-    logging.debug("Opening a test json file")
+    logger.debug("Opening a test json file")
     test_json_file = \
         '/home/jthiessen/galaxy-dist/tools/irida_import_tool_for_galaxy/irida_import/sample.dat'
 
     importer = IridaImport()
 
     if args.json_parameter_file is None:
-        logging.debug("No passed file so reading local file")
-        importer.import_to_galaxy(test_json_file, None, token=args.token)
+        logger.debug("No passed file so reading local file")
+        importer.import_to_galaxy(test_json_file,
+                                  args.log,
+                                  token=args.token)
     else:
-        logging.debug("Reading from passed file")
+        logger.debug("Reading from passed file")
         importer.import_to_galaxy(
             args.json_parameter_file,
-            None,
+            args.log,
             token=args.token)

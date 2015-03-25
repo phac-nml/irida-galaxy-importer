@@ -2,6 +2,7 @@
     <description>server</description>
     <command interpreter="python">irida_import.py
 	    --json_parameter_file "${output}"
+	    --log-file "${log_file}"
     </command>
     <inputs action="http://localhost:8080/projects" check_values="False" method="post"> 
         <display>import data from IRIDA to Galaxy</display>
@@ -11,7 +12,8 @@
     </inputs>
     <uihints minwidth="800" />
     <outputs>
-        <data format="auto" name="output" />
+	    <data format="txt" label="IRIDA log file" name="log_file" />
+	    <data format="auto" name="output" />
     </outputs>
     <options refresh="True" sanitize="False" />
 </tool>
