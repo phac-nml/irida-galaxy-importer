@@ -234,19 +234,13 @@ class IridaImport:
                     if(added):
                         added_to_galaxy.extend(added)
                         self.uploaded_files_log.append(
-                            {'local_path': sample_file.path,
-                             'galaxy_name': galaxy_sample_file_name})
-                        logging.info('Exported: ' + galaxy_sample_file_name)
+                            {'galaxy_name': galaxy_sample_file_name})
                 else:
                     self.skipped_files_log.append(
-                        {'local_path': sample_file.path,
-                         'galaxy_name': galaxy_sample_file_name})
-                    logging.warning(
-                        'Skipped exporting: ' +
-                        galaxy_sample_file_name)
+                        {'galaxy_name': galaxy_sample_file_name})
             else:
-                self.unfound_files_log.append({'local_path': sample_file.path})
-                logging.error('file not found: '+sample_file.path)
+                self.unfound_files_log.append(
+                        {'galaxy_name': galaxy_sample_file_name})
         return added_to_galaxy
 
     def link(self, sample_file, sample_folder_path):
@@ -284,18 +278,16 @@ class IridaImport:
             if log:
                 logging.warn(message)
                 for file_log in log:
-                    logging.warn('File with local path: {0}\n'
-                                 'and Galaxy path: {1}'
-                                 .format(file_log['local_path'],
-                                         file_log['galaxy_name']))
-        logging.warn('\nFinal summary:')
+                    logging.warn('File with Galaxy path: {0}'
+                                 .format(file_log['galaxy_name']))
+        logging.warn('Final summary:')
         logging.info('{0} file(s) exported and {1} file(s) skipped.'
                      .format(len(self.uploaded_files_log),
                              len(self.skipped_files_log)))
-        print_files_log('\nFiles exported:', self.uploaded_files_log)
         print_files_log(
-            "\nSome files couldn't be exported because they don't exist:",
-            self.unfound_files_log)
+            '\nWARNING: Some files were not found on the local filesystem'
+            'and were not exported:', self.unfound_files_log)
+        print_files_log('\nFiles exported:', self.uploaded_files_log)
         print_files_log(
             '\nSome files were skipped because they were not unique:',
             self.skipped_files_log)
@@ -391,7 +383,7 @@ class IridaImport:
             full_param_dict = json.loads(param_file_handle.read())
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
-            logging.info("Exporting files from IRIDA to Galaxy:\n")
+            logging.info("Exporting files from IRIDA to Galaxy...\n")
             logging.debug("The full Galaxy param dict is: " +
                           json.dumps(full_param_dict, indent=2))
             logging.debug("The JSON parameters from IRIDA are:\n" +
