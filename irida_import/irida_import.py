@@ -32,8 +32,8 @@ class IridaImport:
     An appropriate library and folders are created if necessary
     """
 
-    TOKEN_ENDPOINT_SUFFEX = '/api/oauth/token'
-    INITIAL_ENDPOINT_SUFFEX = '/projects'
+    TOKEN_ENDPOINT_SUFFIX = '/api/oauth/token'
+    INITIAL_ENDPOINT_SUFFIX = '/projects'
     CONFIG_FILE = 'config.ini'
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
@@ -346,8 +346,8 @@ class IridaImport:
             self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
 
             irida_loc = config.get('IRIDA', 'irida_url')
-            self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFEX
-            irida_endpoint = irida_loc+self.INITIAL_ENDPOINT_SUFFEX
+            self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFIX
+            irida_endpoint = irida_loc+self.INITIAL_ENDPOINT_SUFFIX
 
             # Configure the tool XML file
             # The Galaxy server must be restarted for XML configuration
