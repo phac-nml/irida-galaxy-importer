@@ -18,9 +18,6 @@ from sample_file import SampleFile
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 # Print the token so that it can be used to call the tool from the command line
-# I don't think this value should be visible in the configuration file
-# or that it should be a command line option.
-# TODO: use an enviromental variable?
 PRINT_TOKEN_INSECURELY = False
 
 
@@ -32,8 +29,6 @@ class IridaImport:
     An appropriate library and folders are created if necessary
     """
 
-    TOKEN_ENDPOINT_SUFFIX = '/api/oauth/token'
-    INITIAL_ENDPOINT_SUFFIX = '/projects'
     CONFIG_FILE = 'config.ini'
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
@@ -339,15 +334,19 @@ class IridaImport:
             self.GALAXY_URL = config.get('Galaxy', 'galaxy_url')
             self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
             self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
-
             self.XML_FILE = config.get('Galaxy', 'xml_file')
 
-            self.CLIENT_ID = config.get('IRIDA', 'client_id')
-            self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
+            self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
+                                                    'token_endpoint_suffix')
+            self.INITIAL_ENDPOINT_SUFFIX = config.get('IRIDA',
+                                                      'initial_endpoint_suffix')
 
             irida_loc = config.get('IRIDA', 'irida_url')
             self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFIX
             irida_endpoint = irida_loc+self.INITIAL_ENDPOINT_SUFFIX
+
+            self.CLIENT_ID = config.get('IRIDA', 'client_id')
+            self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
 
             # Configure the tool XML file
             # The Galaxy server must be restarted for XML configuration

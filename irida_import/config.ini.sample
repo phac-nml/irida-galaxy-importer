@@ -1,0 +1,17 @@
+
+[Galaxy]
+
+admin_key: 09008eb345c9d5a166b0d8f301b1e72c
+galaxy_url: http://localhost:8888
+illumina_path: /illumina_reads
+reference_path: /references
+xml_file: irida_import.xml
+
+[IRIDA]
+
+irida_url: http://localhost:8080
+client_id:  webClient
+client_secret: webClientSecret
+
+token_endpoint_suffix: /api/oauth/token
+initial_endpoint_suffix: /projects
