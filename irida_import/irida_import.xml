@@ -1,8 +1,7 @@
 <tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="0.0.1">
     <description>server</description>
     <command interpreter="python">irida_import.py
-	    --json_parameter_file "${output}"
-	    --log-file "${log_file}"
+	    --json_parameter_file "${output}" --log-file $log_file
     </command>
     <inputs action="http://localhost:8080/projects" check_values="False" method="post"> 
         <display>import data from IRIDA to Galaxy</display>
@@ -13,7 +12,7 @@
     <uihints minwidth="800" />
     <outputs>
 	    <data format="txt" label="IRIDA log file" name="log_file" />
-	    <data format="auto" name="output" />
+	    <data format="auto" hidden="True" name="output" />
     </outputs>
     <options refresh="True" sanitize="False" />
 </tool>
