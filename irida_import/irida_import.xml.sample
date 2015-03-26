@@ -11,7 +11,7 @@
     </inputs>
     <uihints minwidth="800" />
     <outputs>
-	    <data format="txt" label="IRIDA log file" name="log_file" />
+	    <data format="txt" label="IRIDA Export" name="log_file" />
 	    <data format="auto" hidden="True" name="output" />
     </outputs>
     <options refresh="True" sanitize="False" />
