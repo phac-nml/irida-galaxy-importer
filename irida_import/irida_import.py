@@ -449,6 +449,10 @@ if __name__ == '__main__':
         '-t', '--token', dest='token',
         help='The tool can use a supplied access token' +
         'instead of querying IRIDA')
+    parser.add_argument(
+        '-c', '--config', action='store_true', default=False, dest='config',
+        help='The tool must configure itself before Galaxy can be started '
+        'Use this option to do so')
 
     args = parser.parse_args()
     log_format = "%(asctime)s: %(name)s: %(levelname)s: %(message)s"
@@ -467,7 +471,13 @@ if __name__ == '__main__':
 
         logging.debug("Reading from passed file")
         file_to_open = args.json_parameter_file
-        importer.import_to_galaxy(file_to_open, args.log, token=args.token)
+        if args.config:
+            importer.configure() #  TODO: change 'configure' into  '__init__'
+            message = 'Configured XML file'
+            logging.info(message)
+            print message
+        else:
+            importer.import_to_galaxy(file_to_open, args.log, token=args.token)
 
     except Exception:
         logging.exception('')
