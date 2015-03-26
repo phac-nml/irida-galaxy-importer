@@ -446,12 +446,12 @@ if __name__ == '__main__':
     logging.basicConfig(filename=args.log,
                         format=log_format,
                         datefmt='%a, %d %b %Y %H:%M:%S',
-                        level=logging.DEBUG,
+                        level=logging.INFO,
                         filemode="w")
 
     # Prevent urllib3 from spamming the log
     urllib3_logger = logging.getLogger('requests.packages.urllib3')
-    urllib3_logger.setLevel(logging.WARNING)
+    urllib3_logger.setLevel(logging.INFO)
 
     try:
         # this test JSON file does not have to be configured to run the tests
