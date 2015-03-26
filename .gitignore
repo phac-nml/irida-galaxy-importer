@@ -7,3 +7,4 @@ skip
 .coverage
 htmlcov
 irida_import/sample.dat
+irida_import/config.ini
