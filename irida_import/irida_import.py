@@ -469,6 +469,6 @@ if __name__ == '__main__':
             file_to_open = args.json_parameter_file
         importer.import_to_galaxy(file_to_open, args.log, token=args.token)
 
-    except Exception as e:
+    except Exception:
         logging.exception('')
         raise
