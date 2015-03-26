@@ -3,6 +3,7 @@ import argparse
 import json
 import os.path
 import ConfigParser
+import shutil
 from xml.etree import ElementTree
 
 from bioblend.galaxy.objects import GalaxyInstance
@@ -30,6 +31,7 @@ class IridaImport:
     """
 
     CONFIG_FILE = 'config.ini'
+    XML_FILE_SAMPLE = 'irida_import.xml.sample'
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
 
@@ -310,22 +312,25 @@ class IridaImport:
             self.print_logged(irida.token)
         return irida
 
-    def configure(self, path=None):
+    def configure(self):
         """
-        Configure the tool using the configuration file where required
+        Configure the tool using the configuration file
 
-        :type path: str
-        :param path: The location of the configuration file
-
-        Values from the configuration file are only used if they have not been
-        already passed to the tool as command line parameters
-
+        The
         """
         this_module_path = os.path.abspath(__file__)
         parent_folder = os.path.dirname(this_module_path)
-        if not path:
-            path = os.path.join(parent_folder, self.CONFIG_FILE)
-        with open(path, 'r') as config_file:
+        src = os.path.join(parent_folder, self.XML_FILE_SAMPLE)
+        dest = os.path.join(parent_folder, self.XML_FILE)
+        # Allows storing developer configuration options in a sample XML file
+        # and not commiting the XML file that Galaxy will read:
+        try:
+            shutil.copyfile(src, dest)
+        except:
+            pass
+
+        config_path = os.path.join(parent_folder, self.CONFIG_FILE)
+        with open(config_path, 'r') as config_file:
             config = ConfigParser.ConfigParser()
             config.readfp(config_file)
 
@@ -383,7 +388,9 @@ class IridaImport:
         """
         self.logger = logging.getLogger('irida_import')
         with open(json_parameter_file, 'r') as param_file_handle:
-            self.configure(config_file)
+
+            self.configure()
+
             full_param_dict = json.loads(param_file_handle.read())
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
