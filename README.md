@@ -69,9 +69,7 @@ The nginx configuration file assumes that Galaxy can be found on `localhost:8888
 
 #### Final Configuration:
 
-The tool will update its XML file when it is run, but Galaxy will have already loaded the XML file when the server started.
-Be sure to restart Galaxy. Running the tool once (with or without any command-line options) and then starting Galaxy works too.
-
+The tool must be run once with the `--config` option to configure the tool XML file. Then Galaxy must be restarted. Exporting will fail if this is not done!
 
 Testing:
 -------
