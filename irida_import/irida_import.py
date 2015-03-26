@@ -375,10 +375,12 @@ class IridaImport:
         :param json_parameter_file: a path that Galaxy passes,
         to the stub datasource it created
         :type log: str
-        :param config: the name of a file to write the tool's log to.
+        :param log: the name of a file to write the tool's log to.
         :type token: str
         :param token: An access token that can be passed to the tool when it
         is manually run.
+        :type config_file: str
+        :param config_file: the name of a file to configure from
         """
         self.logger = logging.getLogger('irida_import')
         with open(json_parameter_file, 'r') as param_file_handle:
