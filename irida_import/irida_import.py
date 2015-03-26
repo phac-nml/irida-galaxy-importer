@@ -387,9 +387,9 @@ class IridaImport:
         :param config_file: the name of a file to configure from
         """
         self.logger = logging.getLogger('irida_import')
+        self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
 
-            self.configure()
 
             full_param_dict = json.loads(param_file_handle.read())
             param_dict = full_param_dict['param_dict']
@@ -440,6 +440,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
+        default='sample.dat',
         help='A JSON formatted parameter file from Galaxy')
     parser.add_argument(
         '-l', '--log-file', dest='log', default='log_file',
@@ -462,19 +463,10 @@ if __name__ == '__main__':
     urllib3_logger.setLevel(logging.INFO)
 
     try:
-        # this test JSON file does not have to be configured to run the tests
-        logging.debug("Opening a test json file")
-        test_json_file = \
-            '/home/jthiessen/galaxy-dist/tools/irida_import_tool_for_galaxy/irida_import/sample.dat'
-
         importer = IridaImport()
 
-        if args.json_parameter_file is None:
-            logging.debug("No passed file so reading local file")
-            file_to_open = test_json_file
-        else:
-            logging.debug("Reading from passed file")
-            file_to_open = args.json_parameter_file
+        logging.debug("Reading from passed file")
+        file_to_open = args.json_parameter_file
         importer.import_to_galaxy(file_to_open, args.log, token=args.token)
 
     except Exception:
