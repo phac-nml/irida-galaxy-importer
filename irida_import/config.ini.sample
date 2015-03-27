@@ -9,10 +9,10 @@ xml_file: irida_import.xml
 
 [IRIDA]
 
-# Be sure to run the tool with the '--config' option and then to restart Galaxy after changing this value!
-client_id:  webClient
-
 client_secret: webClientSecret
-irida_url: http://localhost:8080
 token_endpoint_suffix: /api/oauth/token
+
+# Be sure to run the tool with the '--config' option and then to restart Galaxy after changing these values!
+client_id:  webClient
+irida_url: http://localhost:8080
 initial_endpoint_suffix: /projects

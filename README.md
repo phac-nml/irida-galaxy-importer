@@ -69,7 +69,7 @@ The nginx configuration file assumes that Galaxy can be found on `localhost:8888
 
 #### Final Configuration:
 
-The tool must be run once with the `--config` option to configure the tool XML file. Then Galaxy must be restarted. Exporting will fail if this is not done!
+The tool must be run once with the `--config` option to configure the tool XML file. Then Galaxy must be restarted. The tool will fail to export files if Galaxy is not restarted.
 
 Testing:
 -------
