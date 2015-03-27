@@ -43,17 +43,25 @@ allow_library_path_paste = True
 
 Note: It is not neccessary to do any of the steps in this subsection in order to run the tests.
 
-To use the tool from within Galaxy, right now, by default, Galaxy looks for the IRIDA projects endpoint at 
+
+The tool reads configuration information from `config.ini`. There is a sample configuration file, `config.ini.sample`.
+
+The location at which the tool expects to find the IRIDA server 
+can be changed by modifying the following line in the configuration file:
 
 ```
-http://localhost:8080/projects
+irida_url: http://localhost:8080 
 ```
 
-This location can be changed by modifying the following line in `irida_import/irida_import.xml`:
+The administrator API key, and the URL of the Galaxy web server must be defined. 
+Change the values for `admin_key` and `galaxy_url` appropriately. 
+Instructions for obtaining an API key can be found in the Galaxy documentation.
 
-```
-<inputs action="http://localhost:8080/projects" check_values="False" method="post">
-```
+The tool currently uses the webClient client id and secret to access IRIDA. 
+They can be changed by modifying `client_id` and `client_secret`
+
+It is also possible to configure the folders in which sample files and reference data are stored, and the endpoints at which the tool
+expects to access IRIDA resources.
 
 Cross Origin Resource Sharing (CORS) should be set up, because it may be required. Galaxy's stripped down paste implementation does not implement CORS, or (to my knowlege) retain an easy way to add it but CORS can be added to a nginx reverse-proxy for Galaxy. A sample configuration file is included: `irida_import/extras/nginx/nginx.conf`
 The nginx configuration file assumes that Galaxy can be found on `localhost:8888` Change the occurence of this phrase in the configuration file if your Galaxy instance is located elsewhere.
@@ -61,21 +69,7 @@ The nginx configuration file assumes that Galaxy can be found on `localhost:8888
 
 #### Final Configuration:
 
-The administrator API key, and the URL of the Galaxy web server must be configured. 
-In `$GALAXY_ROOT/tools/irida_import/irida_import.py`, change the values for `ADMIN_KEY` and `GALAXY_URL` appropriately. 
-Instructions for obtaining an API key can be found in the Galaxy documentation.
-The tool expects to obtain OAuth2 tokens at:
-
-```
-http://localhost:8080/api/oauth/token
-```
-
-Changed the value for `TOKEN_ENDPOINT` if neccessary.
-The tool currently uses the webClient client id and secret to access IRIDA. 
-They can be changed by modifying `CLIENT_ID` and `CLIENT_SECRET`
-
-These installation and configuration steps are planned to be simplified, as simplification becomes possible.
-
+The tool must be run once with the `--config` option to configure the tool XML file. Then Galaxy must be restarted. The tool will fail to export files if Galaxy is not restarted.
 
 Testing:
 -------

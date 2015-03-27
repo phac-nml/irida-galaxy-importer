@@ -1,0 +1,18 @@
+
+[Galaxy]
+
+admin_key: 09008eb345c9d5a166b0d8f301b1e72c
+galaxy_url: http://localhost:8888
+illumina_path: /illumina_reads
+reference_path: /references
+xml_file: irida_import.xml
+
+[IRIDA]
+
+client_secret: webClientSecret
+token_endpoint_suffix: /api/oauth/token
+
+# Be sure to run the tool with the '--config' option and then to restart Galaxy after changing these values!
+client_id:  webClient
+irida_url: http://localhost:8080
+initial_endpoint_suffix: /projects
