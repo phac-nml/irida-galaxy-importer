@@ -1,16 +1,36 @@
 #!/bin/bash
 
 # This file is adapted from https://irida.corefacility.ca/gitlab/aaron.petkau/irida-public/blob/master/galaxy/install_galaxy.sh
-# which was written by Aaron Petkau
+# I am considering how many logs are appropriate
 
+echo "Downloading IRIDA..."
+git clone git@irida.corefacility.ca:irida/irida.git
+pushd irida
+git checkout development > irida-checkout.log 2>&1
+git fetch
+git reset --hard
+git clean -fd
+git pull
+echo "Preparing IRIDA for first excecution..."
+rm -rf /tmp/shed_tools/
+pkill -u gitlab_ci_runner -f "python ./scripts/paster.py" || true
+
+# TODO: decide what database names to use
+echo 'drop database if exists irida_test; drop database if exists irida_galaxy_test; create database irida_test;create database irida_galaxy_test;' | mysql -u test -ptest
+pushd lib
+./install-libs.sh
+popd
+popd
+echo "IRIDA has been installed"
 
 echo "Downloading Galaxy..."
 git clone https://github.com/galaxyproject/galaxy/ > galaxy-clone.log 2>&1
 pushd galaxy
-git fetch --all
+git checkout master > galaxy-checkout.log 2>&1
+git fetch
 git reset --hard 
 git clean -fd 
-git checkout master > galaxy-checkout.log 2>&1
+git pull
 echo "Preparing Galaxy for first execution (installing eggs)..."
 ./scripts/common_startup.sh > galaxy-common-startup.log 2>&1
 
@@ -36,7 +56,7 @@ sed  -i 's/#database_connection = sqlite:\/\/\/.\/database\/universe.sqlite?isol
 # Change Galaxy id_secret used for encoding/decoding database ids to URLs
 sed -i "s/#id_secret = .*/id_secret=$galaxy_id_secret/" galaxy.ini
 
-# add uploader/running/admin e-mail user
+# add admin e-mail user
 sed -i 's/#admin_users = None/admin_users=irida@irida.ca/' galaxy.ini
 
 # run galaxy on port 8888 instead of 8080; Tomcat runs on 8080 by default.
@@ -44,16 +64,17 @@ sed -i "s|#port = 8080|port = 8888|" galaxy.ini
 popd
 popd
 
-echo "Installing dependiancies."
+echo "Installing dependiancies." # It is possible that when this script runs in a virtualenv enviroment that sudo won't be required
 pip install -U bioblend pytest pytest-cov pytest-mock requests-oauthlib 
 
 echo "Downloading the IRIDA Export Tool."
-git clone git@irida.corefacility.ca:jthiessen/import-tool-for-galaxy.git # > tool-clone.log 2>&1
+git clone git@irida.corefacility.ca:jthiessen/import-tool-for-galaxy.git > tool-clone.log 2>&1
 pushd import-tool-for-galaxy
-git fetch --all
+git checkout development > tool-checkout.log 2>&1
+git fetch
 git reset --hard origin/development
 git clean -fd
-git checkout development
+git pull
 popd
 
 
@@ -68,18 +89,10 @@ echo "Configuring the tool's XML file"
 python irida_import.py --config
 popd
 
-echo "Adding the tool to the Galaxy tool configuration file."
+echo "Adding the tool to Galaxy's tools configuration file."
 pushd galaxy
 pushd config
 sed  -i '/<section id="getext" name="Get Data">/a\    <tool file="irida_import/irida_import.xml" />' tool_conf.xml
 popd
 
-echo "Starting Galaxy for first run. Run [tail -f /opt/irida/galaxy-dist/galaxy.log] to monitor."
-./run.sh > galaxy.log 2>&1 &
-
-echo "Waiting for Galaxy to finish first run initialization..."
-
-while ! bash -c "echo 2> /dev/null > /dev/tcp/localhost/8888" ; do
-	echo -n '.'
-	sleep 1
-done
+echo "IRIDA, Galaxy, and the IRIDA export tool have been installed"
