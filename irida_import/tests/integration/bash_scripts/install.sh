@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # This file is adapted from https://irida.corefacility.ca/gitlab/aaron.petkau/irida-public/blob/master/galaxy/install_galaxy.sh
-# I am considering how many logs are appropriate
+
+args=("$@")
+tool_loc=${args[0]}
+echo $tool_loc
 
 echo "Downloading IRIDA..."
 git clone git@irida.corefacility.ca:irida/irida.git
@@ -67,23 +70,13 @@ popd
 echo "Installing dependiancies." # It is possible that when this script runs in a virtualenv enviroment that sudo won't be required
 pip install -U bioblend pytest pytest-cov pytest-mock requests-oauthlib 
 
-echo "Downloading the IRIDA Export Tool."
-git clone git@irida.corefacility.ca:jthiessen/import-tool-for-galaxy.git > tool-clone.log 2>&1
-pushd import-tool-for-galaxy
-git checkout development > tool-checkout.log 2>&1
-git fetch
-git reset --hard origin/development
-git clean -fd
-git pull
-popd
-
+echo "Installing the IRIDA Export Tool..."
+echo "Linking tool directory"
+ln -s $tool_loc galaxy/tools/
 
 echo "Initializing the tool's configuration file."
-cp -r import-tool-for-galaxy/irida_import galaxy/tools/
 pushd galaxy/tools/irida_import/
 cp config.ini.sample config.ini
-sed -i "s/.*admin_key:.*/admin_key: $api_key/" config.ini
-sed -i "s/PRINT_TOKEN_INSECURELY = False.*/PRINT_TOKEN_INSECURELY = True/" irida_import.py
 
 echo "Configuring the tool's XML file"
 python irida_import.py --config

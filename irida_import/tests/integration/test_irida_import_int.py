@@ -8,23 +8,26 @@ from . import util
 import getpass
 
 
+@pytest.mark.integration
 class TestIridaImportInt:
 
-    INSTALL = False  # Install or update Galaxy, IRIDA, and the export tool
-    START = False  # Start Galaxy and IRIDA instances
+    INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
+    START = True  # Start Galaxy and IRIDA instances
 
     TIMEOUT = 200  # seconds
 
+    GALAXY_DOMAIN = 'localhost'
     GALAXY_PORT = 8888
-    GALAXY_URL = 'http://localhost:'+str(GALAXY_PORT)
+    GALAXY_URL = 'http://'+GALAXY_DOMAIN+':'+str(GALAXY_PORT)
     GALAXY_CMD = ['bash', 'run.sh']
 
+    IRIDA_DOMAIN = 'localhost'
     IRIDA_PORT = 8080
-    IRIDA_URL = 'http://localhost:'+str(IRIDA_PORT)
+    IRIDA_URL = 'http://'+IRIDA_DOMAIN+':'+str(IRIDA_PORT)
     IRIDA_CMD = ['mvn', 'jetty:run']  # for now
 
     INSTALL_EXEC = 'install.sh'
-    PASTER_PATH = 'python ./scripts/paster.py'
+    PASTER_SIG = '\"python ./scripts/paster.py\"'
 
     def setup_class(self):
         module_dir = os.path.dirname(os.path.abspath(__file__))
@@ -38,7 +41,8 @@ class TestIridaImportInt:
         if self.INSTALL:
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
-            install = subprocess32.Popen(exec_path, cwd=self.REPOS)
+            install = subprocess32.Popen(
+                [exec_path, self.TOOL_DIRECTORY], cwd=self.REPOS)
             install.wait()  # Block untill installed
 
     @pytest.fixture(scope='class')
@@ -55,9 +59,10 @@ class TestIridaImportInt:
         if self.START:
             # TODO: command jetty to stop
             subprocess32.call(
-                ['pkill', '-u', getpass.getuser(), '-f', self.IRIDA_CMD[1]])
+                ['pkill', '-u', getpass.getuser(),
+                 '-f', '\"'+self.IRIDA_CMD[1]+'\"'])
             irida = subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
-            util.wait_until_up('localhost', self.IRIDA_PORT, self.TIMEOUT)
+            util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT, self.TIMEOUT)
 
             def finalize_irida():
                 print 'Killing IRIDA'
@@ -70,10 +75,12 @@ class TestIridaImportInt:
         if self.START:
             # Make very sure Galaxy is not running:
             subprocess32.call(
-                ['pkill', '-u', getpass.getuser(), '-f', self.PASTER_PATH])
-
+                ['pkill', '-u', getpass.getuser(), '-f', self.PASTER_SIG])
             galaxy = subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
-            util.wait_until_up('localhost', self.GALAXY_PORT, self.TIMEOUT)
+            util.wait_until_up(
+                self.GALAXY_DOMAIN,
+                self.GALAXY_PORT,
+                self.TIMEOUT)
 
             def finalize_galaxy():
                 print 'Killing Galaxy'
@@ -87,6 +94,7 @@ class TestIridaImportInt:
     def register_galaxy(self, browser):
         browser.visit(self.GALAXY_URL)
         return True
+
     def register_irida(self, browser):
         browser.visit(self.IRIDA_URL)
         return True
