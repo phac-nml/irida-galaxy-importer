@@ -4,7 +4,6 @@
 
 args=("$@")
 tool_loc=${args[0]}
-echo $tool_loc
 
 echo "Downloading IRIDA..."
 git clone git@irida.corefacility.ca:irida/irida.git
@@ -71,8 +70,8 @@ echo "Installing dependiancies." # It is possible that when this script runs in 
 pip install -U bioblend pytest pytest-cov pytest-mock requests-oauthlib 
 
 echo "Installing the IRIDA Export Tool..."
-echo "Linking tool directory"
-ln -s $tool_loc galaxy/tools/
+echo "Copying tool directory"
+cp $tool_loc galaxy/tools/
 
 echo "Initializing the tool's configuration file."
 pushd galaxy/tools/irida_import/
