@@ -96,6 +96,10 @@ Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invok
 py.test
 ```
 
+To monitor test progress, including the installation and configuration process for the integration tests, use `pytest -s`.
+
+To run only the unit or integration tests use `pytest -m unit` or `pytest -m integration` respectivly.
+
 
 #### Generating Code Coverage Reports:
 
