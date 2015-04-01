@@ -24,7 +24,13 @@ class TestIridaImportInt:
     IRIDA_DOMAIN = 'localhost'
     IRIDA_PORT = 8080
     IRIDA_URL = 'http://'+IRIDA_DOMAIN+':'+str(IRIDA_PORT)
-    IRIDA_CMD = ['mvn', 'jetty:run']  # for now
+    IRIDA_CMD = ['mvn', 'clean', 'jetty:run',
+                 '-Djdbc.url=jdbc:mysql://localhost:3306/irida_test',
+                 '-Djdbc.username=test', '-Djdbc.password=test',
+                 '-Dliquibase.update.database.schema=true',
+                 '-Dhibernate.hbm2ddl.auto=',
+                 '-Dhibernate.hbm2ddl.import_files='
+                 '-DSTOP.PORT=8080', '-DSTOP.KEY=stop']
 
     INSTALL_EXEC = 'install.sh'
     PASTER_SIG = '\"python ./scripts/paster.py\"'
