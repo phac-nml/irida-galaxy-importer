@@ -10,3 +10,4 @@ irida_import/sample.dat
 irida_import/config.ini
 irida_import/irida_import.xml
 irida_import/tests/integration/repos/*
+env
