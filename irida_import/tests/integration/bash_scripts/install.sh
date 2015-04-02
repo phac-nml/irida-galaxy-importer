@@ -17,7 +17,6 @@ echo "Preparing IRIDA for first excecution..."
 rm -rf /tmp/shed_tools/
 pkill -u gitlab_ci_runner -f "python ./scripts/paster.py" || true
 
-echo 'drop database if exists irida_test; drop database if exists irida_galaxy_test; drop database if exists external_galaxy_test; create database irida_test;create database irida_galaxy_test; create database external_galaxy_test;' | mysql -u test -ptest
 pushd lib
 ./install-libs.sh
 popd

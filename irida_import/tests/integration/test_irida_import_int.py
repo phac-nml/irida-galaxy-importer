@@ -39,9 +39,7 @@ class TestIridaImportInt:
     IRIDA_STOP = 'mvn jetty:stop'
     IRIDA_DB_RESET = 'echo '\
         '"drop database if exists irida_test;'\
-        'drop database if exists irida_galaxy_test;'\
         'create database irida_test;'\
-        'create database irida_galaxy_test; '\
         '"| mysql -u test -ptest'
 
     INSTALL_EXEC = 'install.sh'
