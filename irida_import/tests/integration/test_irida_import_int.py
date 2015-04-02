@@ -14,12 +14,18 @@ class TestIridaImportInt:
     INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
     START = True  # Start Galaxy and IRIDA instances
 
-    TIMEOUT = 200  # seconds
+    TIMEOUT = 600  # seconds
+
+    USER = getpass.getuser()
 
     GALAXY_DOMAIN = 'localhost'
     GALAXY_PORT = 8888
     GALAXY_URL = 'http://'+GALAXY_DOMAIN+':'+str(GALAXY_PORT)
     GALAXY_CMD = ['bash', 'run.sh']
+    GALAXY_STOP = 'pkill -u '+USER+' -f "python ./scripts/paster.py"'
+    GALAXY_DB_RESET = '"drop database if exists external_galaxy_test;'\
+        'create database external_galaxy_test;"'\
+        '"| mysql -u test -ptest'
 
     IRIDA_DOMAIN = 'localhost'
     IRIDA_PORT = 8080
@@ -29,11 +35,16 @@ class TestIridaImportInt:
                  '-Djdbc.username=test', '-Djdbc.password=test',
                  '-Dliquibase.update.database.schema=true',
                  '-Dhibernate.hbm2ddl.auto=',
-                 '-Dhibernate.hbm2ddl.import_files='
-                 '-DSTOP.PORT=8080', '-DSTOP.KEY=stop']
+                 '-Dhibernate.hbm2ddl.import_files=']
+    IRIDA_STOP = 'mvn jetty:stop'
+    IRIDA_DB_RESET = 'echo '\
+        '"drop database if exists irida_test;'\
+        'drop database if exists irida_galaxy_test;'\
+        'create database irida_test;'\
+        'create database irida_galaxy_test; '\
+        '"| mysql -u test -ptest'
 
     INSTALL_EXEC = 'install.sh'
-    PASTER_SIG = '\"python ./scripts/paster.py\"'
 
     def setup_class(self):
         module_dir = os.path.dirname(os.path.abspath(__file__))
@@ -62,40 +73,54 @@ class TestIridaImportInt:
 
     @pytest.fixture(scope='class')
     def setup_irida(self, request, browser):
+        def stop_irida():
+            print 'Stopping IRIDA nicely'
+            stopper = subprocess32.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
+                                         shell=True)
+            stopper.wait()
+
         if self.START:
-            # TODO: command jetty to stop
-            subprocess32.call(
-                ['pkill', '-u', getpass.getuser(),
-                 '-f', '\"'+self.IRIDA_CMD[1]+'\"'])
-            irida = subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
+            stop_irida()
+            subprocess32.call(self.IRIDA_DB_RESET, shell=True)
+            subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
             util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT, self.TIMEOUT)
 
             def finalize_irida():
-                print 'Killing IRIDA'
-                irida.kill()
+                stop_irida()
             request.addfinalizer(finalize_irida)
         self.register_irida(browser)
 
     @pytest.fixture(scope='class')
     def setup_galaxy(self, request, browser):
+        def stop_galaxy():
+            print 'Killing Galaxy'
+            # It may possible to kill Galaxy by killing the processes's
+            # children. Using a process group didn't work.
+            subprocess32.call(self.GALAXY_STOP, shell=True)
+
         if self.START:
-            # Make very sure Galaxy is not running:
-            subprocess32.call(
-                ['pkill', '-u', getpass.getuser(), '-f', self.PASTER_SIG])
-            galaxy = subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
+            stop_galaxy()
+            subprocess32.call(self.GALAXY_DB_RESET, shell=True)
+            subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
             util.wait_until_up(
                 self.GALAXY_DOMAIN,
                 self.GALAXY_PORT,
                 self.TIMEOUT)
 
             def finalize_galaxy():
-                print 'Killing Galaxy'
-                galaxy.kill()
+                stop_galaxy()
             request.addfinalizer(finalize_galaxy)
         self.register_galaxy(browser)
 
     def test_configured(self, setup_irida, setup_galaxy, browser):
-        return True
+        browser.visit(self.IRIDA_URL)
+        browser.visit(self.GALAXY_URL)
+
+    def test_tool_visible(self, setup_galaxy, browser):
+        get_data = browser.find_by_css('#title_getext a')
+        get_data.click()
+        browser.is_element_present_by_name('IRIDA')
+        # Don't click the link, Splinter/Selenium will hang
 
     def register_galaxy(self, browser):
         browser.visit(self.GALAXY_URL)

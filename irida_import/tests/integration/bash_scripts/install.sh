@@ -17,8 +17,7 @@ echo "Preparing IRIDA for first excecution..."
 rm -rf /tmp/shed_tools/
 pkill -u gitlab_ci_runner -f "python ./scripts/paster.py" || true
 
-# TODO: decide what database names to use
-echo 'drop database if exists irida_test; drop database if exists irida_galaxy_test; create database irida_test;create database irida_galaxy_test;' | mysql -u test -ptest
+echo 'drop database if exists irida_test; drop database if exists irida_galaxy_test; drop database if exists external_galaxy_test; create database irida_test;create database irida_galaxy_test; create database external_galaxy_test;' | mysql -u test -ptest
 pushd lib
 ./install-libs.sh
 popd
@@ -53,7 +52,7 @@ sed -i 's/#allow_library_path_paste = False/allow_library_path_paste = True/'  g
 sed -i 's/#library_import_dir.*/library_import_dir = \//'  galaxy.ini
 
 # use MySQL instead of sqlite; to be configured to use a database user and name specified in README.md
-sed  -i 's/#database_connection = sqlite:\/\/\/.\/database\/universe.sqlite?isolation_level=IMMEDIATE/database_connection = mysql:\/\/galaxy2:Xuch4pho@localhost\/galaxy2?unix_socket=\/var\/run\/mysqld\/mysqld.sock/' galaxy.ini
+sed  -i 's/#database_connection = sqlite:\/\/\/.\/database\/universe.sqlite?isolation_level=IMMEDIATE/database_connection = mysql:\/\/test:test@localhost\/external_galaxy_test?unix_socket=\/var\/run\/mysqld\/mysqld.sock/' galaxy.ini
 
 # Change Galaxy id_secret used for encoding/decoding database ids to URLs
 sed -i "s/#id_secret = .*/id_secret=$galaxy_id_secret/" galaxy.ini
@@ -65,18 +64,14 @@ sed -i 's/#admin_users = None/admin_users=irida@irida.ca/' galaxy.ini
 sed -i "s|#port = 8080|port = 8888|" galaxy.ini
 popd
 popd
+echo "Galaxy has been installed"
 
-echo "Installing dependiancies." # It is possible that when this script runs in a virtualenv enviroment that sudo won't be required
+echo "Installing dependiancies."
 pip install -U bioblend pytest pytest-cov pytest-mock requests-oauthlib 
 
 echo "Installing the IRIDA Export Tool..."
 echo "Copying tool directory"
-echo "tool origin folder $tool_loc"
-echo "tool destination folder"
-pwd
-ls
-#cp -r $tool_loc galaxy/tools/
-rsync -av --progress $tool_loc galaxy/tools --exclude tests
+rsync -rv --progress $tool_loc galaxy/tools --exclude tests
 
 echo "Initializing the tool's configuration file."
 pushd galaxy/tools/irida_import/
