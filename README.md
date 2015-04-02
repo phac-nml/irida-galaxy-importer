@@ -91,7 +91,7 @@ pip install -U mock pytest-mock subprocess32 splinter
 ```
 
 MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases
-`irida_test`, `irida_galaxy_test`, and `external_galaxy_test`:
+`irida_test`, and `external_galaxy_test`:
 
 ```
 echo "grant all privileges on irida_test.* to 'test'@'localhost' identified by 'test';" | mysql -u root -p
