@@ -65,9 +65,6 @@ popd
 popd
 echo "Galaxy has been installed"
 
-echo "Installing dependiancies."
-pip install -U bioblend pytest pytest-cov pytest-mock requests-oauthlib 
-
 echo "Installing the IRIDA Export Tool..."
 echo "Copying tool directory"
 rsync -rv --progress $tool_loc galaxy/tools --exclude tests
