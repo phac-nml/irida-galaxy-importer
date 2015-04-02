@@ -71,7 +71,12 @@ pip install -U bioblend pytest pytest-cov pytest-mock requests-oauthlib
 
 echo "Installing the IRIDA Export Tool..."
 echo "Copying tool directory"
-cp $tool_loc galaxy/tools/
+echo "tool origin folder $tool_loc"
+echo "tool destination folder"
+pwd
+ls
+#cp -r $tool_loc galaxy/tools/
+rsync -av --progress $tool_loc galaxy/tools --exclude tests
 
 echo "Initializing the tool's configuration file."
 pushd galaxy/tools/irida_import/
