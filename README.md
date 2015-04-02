@@ -9,7 +9,7 @@ Install Instructions:
 
 #### Prerequisites:
 
-This tool requires BioBlend 0.5.2 and Requests-OAuthlib. They can be installed by:
+This tool requires BioBlend and Requests-OAuthlib. They can be installed by:
 
 ```
 pip install bioblend requests-oauthlib
@@ -84,10 +84,10 @@ It can be installed by:
 pip install -U pytest
 ```
 
-The mock library, and pytest-mock must be installed as well:
+The Mock library, pytest-mock, subprocess32, and Splinter must be installed as well:
 
 ```
-pip install mock pytest-mock
+pip install -U mock pytest-mock subprocess32 splinter
 ```
 
 Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invoke:
@@ -96,9 +96,9 @@ Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invok
 py.test
 ```
 
-To monitor test progress, including the installation and configuration process for the integration tests, use `pytest -s`.
+To monitor test progress, for example to monitor the installation and configuration process for the integration tests, use `pytest -s`.
 
-To run only the unit or integration tests use `pytest -m unit` or `pytest -m integration` respectivly.
+To run only the unit or integration tests, use `pytest -m unit` or `pytest -m integration` respectivly.
 
 
 #### Generating Code Coverage Reports:
