@@ -5,6 +5,9 @@
 args=("$@")
 tool_loc=${args[0]}
 
+mkdir repos
+pushd repos
+
 echo "Downloading IRIDA..."
 git clone git@irida.corefacility.ca:irida/irida.git
 pushd irida
@@ -81,6 +84,8 @@ echo "Adding the tool to Galaxy's tools configuration file."
 pushd galaxy
 pushd config
 sed  -i '/<section id="getext" name="Get Data">/a\    <tool file="irida_import/irida_import.xml" />' tool_conf.xml
+popd
+
 popd
 
 echo "IRIDA, Galaxy, and the IRIDA export tool have been installed"

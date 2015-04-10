@@ -47,6 +47,7 @@ class TestIridaImportInt:
     def setup_class(self):
         module_dir = os.path.dirname(os.path.abspath(__file__))
         self.SCRIPTS = os.path.join(module_dir, 'bash_scripts')
+        self.REPOS_PARENT = module_dir
         self.REPOS = os.path.join(module_dir, 'repos')
         self.TOOL_DIRECTORY = os.path.dirname(inspect.getfile(IridaImport))
 
@@ -57,7 +58,7 @@ class TestIridaImportInt:
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
             install = subprocess32.Popen(
-                [exec_path, self.TOOL_DIRECTORY], cwd=self.REPOS)
+                [exec_path, self.TOOL_DIRECTORY], cwd=self.REPOS_PARENT)
             install.wait()  # Block untill installed
 
     @pytest.fixture(scope='class')
