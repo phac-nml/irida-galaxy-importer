@@ -23,8 +23,8 @@ class TestIridaImportInt:
     GALAXY_URL = 'http://'+GALAXY_DOMAIN+':'+str(GALAXY_PORT)
     GALAXY_CMD = ['bash', 'run.sh']
     GALAXY_STOP = 'pkill -u '+USER+' -f "python ./scripts/paster.py"'
-    GALAXY_DB_RESET = '"drop database if exists external_galaxy_test;'\
-        'create database external_galaxy_test;"'\
+    GALAXY_DB_RESET = 'echo "drop database if exists external_galaxy_test;'\
+        ' create database external_galaxy_test;'\
         '"| mysql -u test -ptest'
 
     IRIDA_DOMAIN = 'localhost'
