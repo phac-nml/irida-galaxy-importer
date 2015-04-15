@@ -93,8 +93,6 @@ class TestIridaImportInt:
     def setup_galaxy(self, request, browser):
         def stop_galaxy():
             print 'Killing Galaxy'
-            # It may possible to kill Galaxy by killing the processes's
-            # children. Using a process group didn't work.
             subprocess32.call(self.GALAXY_STOP, shell=True)
 
         if self.START:
@@ -123,8 +121,20 @@ class TestIridaImportInt:
 
     def register_galaxy(self, browser):
         browser.visit(self.GALAXY_URL)
-        return True
+        browser.find_link_by_text("User").click()
+        browser.find_link_by_text("Register").click()
+        browser.find_by_id("email_input").fill("irida@irida.ca")
+        browser.find_by_id("password_input").clear()
+        browser.find_by_id("password_input").fill("Password1")
+        browser.find_by_id("password_check_input").fill("Password1")
+        browser.find_by_id("name_input").fill("irida-test")
+        browser.find_by_id("send").click()
 
     def register_irida(self, browser):
         browser.visit(self.IRIDA_URL)
-        return True
+        browser.find_by_id("emailTF").fill("admin")
+        browser.find_by_id("passwordTF").fill("password1")
+        browser.find_by_id("submitBtn").click()
+        browser.find_by_id("password").fill("Password1")
+        browser.find_by_id("confirmPassword").fill("Password1")
+        browser.find_by_xpath("//button[@type='submit']").click()
