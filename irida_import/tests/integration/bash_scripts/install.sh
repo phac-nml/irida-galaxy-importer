@@ -37,10 +37,6 @@ git pull
 echo "Preparing Galaxy for first execution (installing eggs)..."
 ./scripts/common_startup.sh > galaxy-common-startup.log 2>&1
 
-# setup the Galaxy ID secret 
-galaxy_id_secret=`pwgen -s 56`
-
-
 echo "Configuring Galaxy."
 pushd config
 
@@ -55,9 +51,6 @@ sed -i 's/#library_import_dir.*/library_import_dir = \//'  galaxy.ini
 
 # use MySQL instead of sqlite; to be configured to use a database user and name specified in README.md
 sed  -i 's/#database_connection = sqlite:\/\/\/.\/database\/universe.sqlite?isolation_level=IMMEDIATE/database_connection = mysql:\/\/test:test@localhost\/external_galaxy_test?unix_socket=\/var\/run\/mysqld\/mysqld.sock/' galaxy.ini
-
-# Change Galaxy id_secret used for encoding/decoding database ids to URLs
-sed -i "s/#id_secret = .*/id_secret=$galaxy_id_secret/" galaxy.ini
 
 # add admin e-mail user
 sed -i 's/#admin_users = None/admin_users=irida@irida.ca/' galaxy.ini
