@@ -12,8 +12,8 @@ import getpass
 @pytest.mark.integration
 class TestIridaImportInt:
 
-    INSTALL = False  # Install or update Galaxy, IRIDA, and the export tool
-    START = False  # Start Galaxy and IRIDA instances
+    INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
+    START = True  # Start Galaxy and IRIDA instances
 
     TIMEOUT = 600  # seconds
 
