@@ -9,7 +9,7 @@ mkdir repos
 pushd repos
 
 echo "Downloading IRIDA..."
-git clone git@irida.corefacility.ca:irida/irida.git
+git clone http://gitlab-ci-token:b71f6552f4cbe6f7d3f6faad8939b9@irida.corefacility.ca/gitlab/irida/irida.git
 pushd irida
 git checkout development > irida-checkout.log 2>&1
 git fetch
