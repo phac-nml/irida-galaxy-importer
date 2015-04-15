@@ -1,7 +1,8 @@
 import os
 import pytest
 import subprocess32
-from splinter import Browser
+from selenium import webdriver
+
 from ...irida_import import IridaImport
 import inspect
 from . import util
@@ -11,8 +12,8 @@ import getpass
 @pytest.mark.integration
 class TestIridaImportInt:
 
-    INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
-    START = True  # Start Galaxy and IRIDA instances
+    INSTALL = False  # Install or update Galaxy, IRIDA, and the export tool
+    START = False  # Start Galaxy and IRIDA instances
 
     TIMEOUT = 600  # seconds
 
@@ -62,16 +63,16 @@ class TestIridaImportInt:
             install.wait()  # Block untill installed
 
     @pytest.fixture(scope='class')
-    def browser(self, request):
-        browser = Browser('chrome')
-
-        def finalize_browser():
-            browser.quit()
-        request.addfinalizer(finalize_browser)
-        return browser
+    def driver(self, request):
+        driver = webdriver.Chrome()
+        driver.implicitly_wait(1)
+        def finalize_driver():
+            driver.quit()
+        request.addfinalizer(finalize_driver)
+        return driver
 
     @pytest.fixture(scope='class')
-    def setup_irida(self, request, browser):
+    def setup_irida(self, request, driver):
         def stop_irida():
             print 'Stopping IRIDA nicely'
             stopper = subprocess32.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
@@ -87,10 +88,10 @@ class TestIridaImportInt:
             def finalize_irida():
                 stop_irida()
             request.addfinalizer(finalize_irida)
-        self.register_irida(browser)
+        self.register_irida(driver)
 
     @pytest.fixture(scope='class')
-    def setup_galaxy(self, request, browser):
+    def setup_galaxy(self, request, driver):
         def stop_galaxy():
             print 'Killing Galaxy'
             subprocess32.call(self.GALAXY_STOP, shell=True)
@@ -107,34 +108,39 @@ class TestIridaImportInt:
             def finalize_galaxy():
                 stop_galaxy()
             request.addfinalizer(finalize_galaxy)
-        self.register_galaxy(browser)
+        self.register_galaxy(driver)
 
-    def test_configured(self, setup_irida, setup_galaxy, browser):
-        browser.visit(self.IRIDA_URL)
-        browser.visit(self.GALAXY_URL)
+    def test_configured(self, setup_irida, setup_galaxy, driver):
+        driver.get(self.IRIDA_URL)
+        driver.get(self.GALAXY_URL)
 
-    def test_tool_visible(self, setup_galaxy, browser):
-        get_data = browser.find_by_css('#title_getext a')
+    def test_tool_visible(self, setup_galaxy, driver):
+        get_data = driver.find_element_by_css_selector('#title_getext a')
         get_data.click()
-        browser.is_element_present_by_name('IRIDA')
+        driver.find_element_by_css_selector("#title_getext > a > span").click()
+        assert(driver.find_element_by_link_text("IRIDA"))
         # Don't click the link, Splinter/Selenium will hang
 
-    def register_galaxy(self, browser):
-        browser.visit(self.GALAXY_URL)
-        browser.find_link_by_text("User").click()
-        browser.find_link_by_text("Register").click()
-        browser.find_by_id("email_input").fill("irida@irida.ca")
-        browser.find_by_id("password_input").clear()
-        browser.find_by_id("password_input").fill("Password1")
-        browser.find_by_id("password_check_input").fill("Password1")
-        browser.find_by_id("name_input").fill("irida-test")
-        browser.find_by_id("send").click()
+    def register_galaxy(self, driver):
+        driver.get(self.GALAXY_URL)
+        driver.find_element_by_link_text("User").click()
+        driver.find_element_by_link_text("Register").click()
+        driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
+        driver.find_element_by_id("email_input").send_keys("irida@irida.ca")
+        driver.find_element_by_id("password_input").send_keys("Password1")
+        driver.find_element_by_id("password_check_input").send_keys("Password1")
+        driver.find_element_by_id("name_input").send_keys("irida-test")
+        driver.find_element_by_id("send").click()
 
-    def register_irida(self, browser):
-        browser.visit(self.IRIDA_URL)
-        browser.find_by_id("emailTF").fill("admin")
-        browser.find_by_id("passwordTF").fill("password1")
-        browser.find_by_id("submitBtn").click()
-        browser.find_by_id("password").fill("Password1")
-        browser.find_by_id("confirmPassword").fill("Password1")
-        browser.find_by_xpath("//button[@type='submit']").click()
+    def register_irida(self, driver):
+        driver.get(self.IRIDA_URL)
+        driver.find_element_by_id("emailTF").send_keys("admin")
+        driver.find_element_by_id("passwordTF").send_keys("password1")
+        try:
+            driver.find_element_by_id("submitBtn").click()
+            driver.find_element_by_id("password").send_keys("Password1")
+            driver.find_element_by_id("confirmPassword").send_keys("Password1")
+            driver.find_by_xpath("//button[@type='submit']").click()
+        except Exception:
+            driver.find_element_by_id("emailTF").send_keys("admin")
+            driver.find_element_by_id("passwordTF").send_keys("Password1")
