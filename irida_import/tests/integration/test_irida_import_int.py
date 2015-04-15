@@ -65,7 +65,8 @@ class TestIridaImportInt:
     @pytest.fixture(scope='class')
     def driver(self, request):
         driver = webdriver.Chrome()
-        driver.implicitly_wait(1)
+        driver.implicitly_wait(5)
+
         def finalize_driver():
             driver.quit()
         request.addfinalizer(finalize_driver)
