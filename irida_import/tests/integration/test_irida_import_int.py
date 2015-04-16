@@ -116,11 +116,8 @@ class TestIridaImportInt:
         driver.get(self.GALAXY_URL)
 
     def test_tool_visible(self, setup_galaxy, driver):
-        get_data = driver.find_element_by_css_selector('#title_getext a')
-        get_data.click()
         driver.find_element_by_css_selector("#title_getext > a > span").click()
-        assert(driver.find_element_by_link_text("IRIDA"))
-        # Don't click the link, Splinter/Selenium will hang
+        assert(len(driver.find_element_by_link_text("IRIDA"))>0)
 
     def register_galaxy(self, driver):
         driver.get(self.GALAXY_URL)
