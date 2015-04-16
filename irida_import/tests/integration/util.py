@@ -19,7 +19,7 @@ def wait_until_up(address, port, timeout):
         up = check_up(address, port)
 
         # If we query Galaxy immediately it may reset the connection:
-        time.sleep(1)
+        time.sleep(10)
 
     if not up:
         raise Exception('There was no response at {} on port {} for {} seconds'
