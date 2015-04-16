@@ -2,7 +2,7 @@ import os
 import pytest
 import subprocess32
 from selenium import webdriver
-
+from selenium.common.exceptions import NoSuchElementException
 from ...irida_import import IridaImport
 import inspect
 from . import util
@@ -12,8 +12,8 @@ import getpass
 @pytest.mark.integration
 class TestIridaImportInt:
 
-    INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
-    START = True  # Start Galaxy and IRIDA instances
+    INSTALL = False  # Install or update Galaxy, IRIDA, and the export tool
+    START = False  # Start Galaxy and IRIDA instances
 
     TIMEOUT = 600  # seconds
 
@@ -116,8 +116,9 @@ class TestIridaImportInt:
         driver.get(self.GALAXY_URL)
 
     def test_tool_visible(self, setup_galaxy, driver):
+        driver.get(self.GALAXY_URL)
         driver.find_element_by_css_selector("#title_getext > a > span").click()
-        assert(len(driver.find_element_by_link_text("IRIDA"))>0)
+        assert(driver.find_element_by_link_text("IRIDA"))
 
     def register_galaxy(self, driver):
         driver.get(self.GALAXY_URL)
@@ -138,7 +139,8 @@ class TestIridaImportInt:
             driver.find_element_by_id("submitBtn").click()
             driver.find_element_by_id("password").send_keys("Password1")
             driver.find_element_by_id("confirmPassword").send_keys("Password1")
-            driver.find_by_xpath("//button[@type='submit']").click()
-        except Exception:
+            driver.find_element_by_xpath("//button[@type='submit']").click()
+        except NoSuchElementException:
             driver.find_element_by_id("emailTF").send_keys("admin")
             driver.find_element_by_id("passwordTF").send_keys("Password1")
+            driver.find_element_by_id("submitBtn").click()
