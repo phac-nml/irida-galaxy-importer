@@ -67,6 +67,7 @@ class TestIridaImportInt:
     def driver(self, request):
         driver = webdriver.Chrome()
         driver.implicitly_wait(5)
+        driver.set_window_size(1024, 768)
 
         def finalize_driver():
             driver.quit()
