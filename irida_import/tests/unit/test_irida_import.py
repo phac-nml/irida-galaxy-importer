@@ -7,14 +7,12 @@ from mock import Mock
 from bioblend import galaxy
 from bioblend.galaxy.objects import (GalaxyInstance, Library, Folder, client)
 from bioblend.galaxy.objects.wrappers import LibraryContentInfo
-# Relative imports are currently neccessitated by the package hierarchy.
-# See "The double import trap" at
-# http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html
 from ...irida_import import IridaImport
 from ...sample import Sample
 from ...sample_file import SampleFile
 
 
+@pytest.mark.unit
 class TestIridaImport:
 
     """ TestIridaImport performs unit tests on IridaImport."""
