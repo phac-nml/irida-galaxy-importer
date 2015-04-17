@@ -1,5 +1,4 @@
 import os
-import time
 import pytest
 import subprocess32
 from selenium import webdriver
@@ -14,7 +13,8 @@ import getpass
 class TestIridaImportInt:
 
     INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
-    START = True  # Start Galaxy and IRIDA instances
+    START_GALAXY = True  # Start Galaxy instance
+    START_IRIDA = True  # Start IRIDA instance
 
     TIMEOUT = 600  # seconds
 
@@ -81,7 +81,7 @@ class TestIridaImportInt:
                                          shell=True)
             stopper.wait()
 
-        if self.START:
+        if self.START_IRIDA:
             stop_irida()
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
             subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
@@ -98,7 +98,7 @@ class TestIridaImportInt:
             print 'Killing Galaxy'
             subprocess32.call(self.GALAXY_STOP, shell=True)
 
-        if self.START:
+        if self.START_GALAXY:
             stop_galaxy()
             subprocess32.call(self.GALAXY_DB_RESET, shell=True)
             subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
@@ -110,7 +110,6 @@ class TestIridaImportInt:
             def finalize_galaxy():
                 stop_galaxy()
             request.addfinalizer(finalize_galaxy)
-        time.sleep(60)
         self.register_galaxy(driver)
 
     def test_configured(self, setup_irida, setup_galaxy, driver):
@@ -123,6 +122,7 @@ class TestIridaImportInt:
         assert(driver.find_element_by_link_text("IRIDA"))
 
     def register_galaxy(self, driver):
+        driver.get(self.GALAXY_URL)
         driver.get(self.GALAXY_URL)
         driver.find_element_by_link_text("User").click()
         driver.find_element_by_link_text("Register").click()
@@ -137,8 +137,8 @@ class TestIridaImportInt:
         driver.get(self.IRIDA_URL)
         driver.find_element_by_id("emailTF").send_keys("admin")
         driver.find_element_by_id("passwordTF").send_keys("password1")
+        driver.find_element_by_id("submitBtn").click()
         try:
-            driver.find_element_by_id("submitBtn").click()
             driver.find_element_by_id("password").send_keys("Password1")
             driver.find_element_by_id("confirmPassword").send_keys("Password1")
             driver.find_element_by_xpath("//button[@type='submit']").click()
