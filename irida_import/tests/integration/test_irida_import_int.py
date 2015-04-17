@@ -125,7 +125,6 @@ class TestIridaImportInt:
     def register_galaxy(self, driver):
         """Register with Galaxy"""
         driver.get(self.GALAXY_URL)
-        driver.get(self.GALAXY_URL)
         driver.find_element_by_link_text("User").click()
         driver.find_element_by_link_text("Register").click()
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
