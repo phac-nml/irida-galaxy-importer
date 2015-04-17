@@ -47,6 +47,7 @@ class TestIridaImportInt:
     INSTALL_EXEC = 'install.sh'
 
     def setup_class(self):
+        """Initialize class variables, install IRIDA, Galaxy, and the tool"""
         module_dir = os.path.dirname(os.path.abspath(__file__))
         self.SCRIPTS = os.path.join(module_dir, 'bash_scripts')
         self.REPOS_PARENT = module_dir
@@ -65,6 +66,7 @@ class TestIridaImportInt:
 
     @pytest.fixture(scope='class')
     def driver(self, request):
+        """Set up the Selenium WebDriver"""
         driver = webdriver.Chrome()
         driver.implicitly_wait(5)
         driver.set_window_size(1024, 768)
@@ -76,6 +78,7 @@ class TestIridaImportInt:
 
     @pytest.fixture(scope='class')
     def setup_irida(self, request, driver):
+        """Set up IRIDA for tests (Start if required, register, log in)"""
         def stop_irida():
             print 'Stopping IRIDA nicely'
             stopper = subprocess32.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
@@ -95,6 +98,7 @@ class TestIridaImportInt:
 
     @pytest.fixture(scope='class')
     def setup_galaxy(self, request, driver):
+        """Set up Galaxy for tests (Start if required, register, log in)"""
         def stop_galaxy():
             print 'Killing Galaxy'
             subprocess32.call(self.GALAXY_STOP, shell=True)
@@ -114,10 +118,12 @@ class TestIridaImportInt:
         self.register_galaxy(driver)
 
     def test_configured(self, setup_irida, setup_galaxy, driver):
+        """Verify that IRIDA and Galaxy are both accessible"""
         driver.get(self.IRIDA_URL)
         driver.get(self.GALAXY_URL)
 
     def test_tool_visible(self, setup_galaxy, driver):
+        """Make sure there is a link to the tool in Galaxy"""
         driver.get(self.GALAXY_URL)
         driver.find_element_by_css_selector("#title_getext > a > span").click()
         assert(driver.find_element_by_link_text("IRIDA"))
