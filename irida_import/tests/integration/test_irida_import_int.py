@@ -1,4 +1,5 @@
 import os
+import time
 import pytest
 import subprocess32
 from selenium import webdriver
@@ -109,6 +110,7 @@ class TestIridaImportInt:
             def finalize_galaxy():
                 stop_galaxy()
             request.addfinalizer(finalize_galaxy)
+        time.sleep(60)
         self.register_galaxy(driver)
 
     def test_configured(self, setup_irida, setup_galaxy, driver):
