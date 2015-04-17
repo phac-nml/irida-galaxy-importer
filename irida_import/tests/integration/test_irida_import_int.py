@@ -123,13 +123,10 @@ class TestIridaImportInt:
         assert(driver.find_element_by_link_text("IRIDA"))
 
     def register_galaxy(self, driver):
-        driver.save_screenshot('/Warehouse/Temporary/jthiessen/gal0')
+        """Register with Galaxy"""
         driver.get(self.GALAXY_URL)
-        driver.save_screenshot('/Warehouse/Temporary/jthiessen/gal1')
         driver.get(self.GALAXY_URL)
-        driver.save_screenshot('/Warehouse/Temporary/jthiessen/gal2')
         driver.find_element_by_link_text("User").click()
-        driver.save_screenshot('/Warehouse/Temporary/jthiessen/gal3')
         driver.find_element_by_link_text("Register").click()
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
         driver.find_element_by_id("email_input").send_keys("irida@irida.ca")
@@ -139,6 +136,7 @@ class TestIridaImportInt:
         driver.find_element_by_id("send").click()
 
     def register_irida(self, driver):
+        """Register with IRIDA if neccessary, and then log in"""
         driver.get(self.IRIDA_URL)
         driver.find_element_by_id("emailTF").send_keys("admin")
         driver.find_element_by_id("passwordTF").send_keys("password1")
