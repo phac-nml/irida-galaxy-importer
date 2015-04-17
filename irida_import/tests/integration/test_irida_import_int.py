@@ -122,9 +122,13 @@ class TestIridaImportInt:
         assert(driver.find_element_by_link_text("IRIDA"))
 
     def register_galaxy(self, driver):
+        driver.save_screenshot('/Warehouse/Temporary/jthiessen/gal0')
         driver.get(self.GALAXY_URL)
+        driver.save_screenshot('/Warehouse/Temporary/jthiessen/gal1')
         driver.get(self.GALAXY_URL)
+        driver.save_screenshot('/Warehouse/Temporary/jthiessen/gal2')
         driver.find_element_by_link_text("User").click()
+        driver.save_screenshot('/Warehouse/Temporary/jthiessen/gal3')
         driver.find_element_by_link_text("Register").click()
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
         driver.find_element_by_id("email_input").send_keys("irida@irida.ca")
