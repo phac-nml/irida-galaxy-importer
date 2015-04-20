@@ -233,6 +233,9 @@ class IridaImport:
                         self.uploaded_files_log.append(
                             {'galaxy_name': galaxy_sample_file_name})
                 else:
+                    self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                      ' Skipped file with Galaxy path: ' +
+                                      galaxy_sample_file_name)
                     self.skipped_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
             else:
