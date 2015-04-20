@@ -1,3 +1,4 @@
+import time
 import logging
 import argparse
 import json
@@ -226,6 +227,9 @@ class IridaImport:
                         sample_file, sample_folder_path)
                     if(added):
                         added_to_galaxy.extend(added)
+                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                          ' Exported file with Galaxy path: ' +
+                                          galaxy_sample_file_name)
                         self.uploaded_files_log.append(
                             {'galaxy_name': galaxy_sample_file_name})
                 else:
@@ -276,15 +280,13 @@ class IridaImport:
                                       .format(file_log['galaxy_name']))
 
         if failed:
-            self.print_logged('\nExport failed.')
+            self.print_logged('Export failed.')
         else:
-            self.print_logged('\nExport completed successfully.')
-        self.print_logged('\nFinal summary:\n'
+            self.print_logged('Export completed successfully.')
+        self.print_logged('Final summary:\n'
                           '{0} file(s) exported and {1} file(s) skipped.'
                           .format(len(self.uploaded_files_log),
                                   len(self.skipped_files_log)))
-
-        print_files_log('\nFiles exported:', self.uploaded_files_log)
         print_files_log(
             '\nSome files were skipped because they were not unique:',
             self.skipped_files_log)
@@ -456,10 +458,9 @@ if __name__ == '__main__':
         'Use this option to do so')
 
     args = parser.parse_args()
-    log_format = "%(asctime)s: %(name)s: %(levelname)s: %(message)s"
+    log_format = "%(levelname)s: %(message)s"
     logging.basicConfig(filename=args.log,
                         format=log_format,
-                        datefmt='%a, %d %b %Y %H:%M:%S',
                         level=logging.INFO,
                         filemode="w")
 
