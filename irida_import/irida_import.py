@@ -263,7 +263,7 @@ class IridaImport:
             link_data_only='link_to_files')
         return added
 
-    def print_summary(self):
+    def print_summary(self, failed=False):
         """
         Print a final summary of the tool's activity
         """
@@ -275,6 +275,10 @@ class IridaImport:
                     self.print_logged('File with Galaxy path: {0}'
                                       .format(file_log['galaxy_name']))
 
+        if failed:
+            self.print_logged('\nExport failed.')
+        else:
+            self.print_logged('\nExport completed successfully.')
         self.print_logged('\nFinal summary:\n'
                           '{0} file(s) exported and {1} file(s) skipped.'
                           .format(len(self.uploaded_files_log),
@@ -390,7 +394,6 @@ class IridaImport:
         self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
 
-
             full_param_dict = json.loads(param_file_handle.read())
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
@@ -429,8 +432,6 @@ class IridaImport:
                 self.logger.debug("sample name is" + sample.name)
                 self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
                 self.add_sample_if_nec(sample)
-
-            self.print_logged('\nExport completed successfully.')
             self.print_summary()
 
 """
@@ -464,7 +465,7 @@ if __name__ == '__main__':
 
     # Prevent urllib3 from spamming the log
     urllib3_logger = logging.getLogger('requests.packages.urllib3')
-    urllib3_logger.setLevel(logging.INFO)
+    urllib3_logger.setLevel(logging.ERROR)
 
     try:
         importer = IridaImport()
@@ -472,7 +473,7 @@ if __name__ == '__main__':
         logging.debug("Reading from passed file")
         file_to_open = args.json_parameter_file
         if args.config:
-            importer.configure() #  TODO: change 'configure' into  '__init__'
+            importer.configure()
             message = 'Configured XML file'
             logging.info(message)
             print message
@@ -481,4 +482,5 @@ if __name__ == '__main__':
 
     except Exception:
         logging.exception('')
+        importer.print_summary(failed=True)
         raise
