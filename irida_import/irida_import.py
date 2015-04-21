@@ -1,3 +1,4 @@
+import time
 import logging
 import argparse
 import json
@@ -226,9 +227,15 @@ class IridaImport:
                         sample_file, sample_folder_path)
                     if(added):
                         added_to_galaxy.extend(added)
+                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                          ' Exported file with Galaxy path: ' +
+                                          galaxy_sample_file_name)
                         self.uploaded_files_log.append(
                             {'galaxy_name': galaxy_sample_file_name})
                 else:
+                    self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                      ' Skipped file with Galaxy path: ' +
+                                      galaxy_sample_file_name)
                     self.skipped_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
             else:
@@ -263,7 +270,7 @@ class IridaImport:
             link_data_only='link_to_files')
         return added
 
-    def print_summary(self):
+    def print_summary(self, failed=False):
         """
         Print a final summary of the tool's activity
         """
@@ -275,12 +282,14 @@ class IridaImport:
                     self.print_logged('File with Galaxy path: {0}'
                                       .format(file_log['galaxy_name']))
 
-        self.print_logged('\nFinal summary:\n'
+        if failed:
+            self.print_logged('Export failed.')
+        else:
+            self.print_logged('Export completed successfully.')
+        self.print_logged('Final summary:\n'
                           '{0} file(s) exported and {1} file(s) skipped.'
                           .format(len(self.uploaded_files_log),
                                   len(self.skipped_files_log)))
-
-        print_files_log('\nFiles exported:', self.uploaded_files_log)
         print_files_log(
             '\nSome files were skipped because they were not unique:',
             self.skipped_files_log)
@@ -387,9 +396,9 @@ class IridaImport:
         :param config_file: the name of a file to configure from
         """
         self.logger = logging.getLogger('irida_import')
+        self.logger.setLevel(logging.INFO)
         self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
-
 
             full_param_dict = json.loads(param_file_handle.read())
             param_dict = full_param_dict['param_dict']
@@ -429,8 +438,6 @@ class IridaImport:
                 self.logger.debug("sample name is" + sample.name)
                 self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
                 self.add_sample_if_nec(sample)
-
-            self.print_logged('\nExport completed successfully.')
             self.print_summary()
 
 """
@@ -455,16 +462,11 @@ if __name__ == '__main__':
         'Use this option to do so')
 
     args = parser.parse_args()
-    log_format = "%(asctime)s: %(name)s: %(levelname)s: %(message)s"
+    log_format = "%(levelname)s: %(message)s"
     logging.basicConfig(filename=args.log,
                         format=log_format,
-                        datefmt='%a, %d %b %Y %H:%M:%S',
-                        level=logging.INFO,
+                        level=logging.ERROR,
                         filemode="w")
-
-    # Prevent urllib3 from spamming the log
-    urllib3_logger = logging.getLogger('requests.packages.urllib3')
-    urllib3_logger.setLevel(logging.INFO)
 
     try:
         importer = IridaImport()
@@ -472,7 +474,7 @@ if __name__ == '__main__':
         logging.debug("Reading from passed file")
         file_to_open = args.json_parameter_file
         if args.config:
-            importer.configure() #  TODO: change 'configure' into  '__init__'
+            importer.configure()
             message = 'Configured XML file'
             logging.info(message)
             print message
@@ -481,4 +483,5 @@ if __name__ == '__main__':
 
     except Exception:
         logging.exception('')
+        importer.print_summary(failed=True)
         raise
