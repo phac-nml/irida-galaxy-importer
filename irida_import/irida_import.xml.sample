@@ -1,13 +1,16 @@
-<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="0.0.1">
+<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="1.0.0">
     <description>server</description>
+    <requirements>
+        <requirement type="package" version="1.0.0">IRIDA</requirement>
+    </requirements>
     <command interpreter="python">irida_import.py
 	    --json_parameter_file "${output}" --log-file $log_file
     </command>
-    <inputs action="http://localhost:8080/projects" check_values="False" method="post"> 
+    <inputs action="http://irida-web-production.corefacility.ca:8080/irida/projects" check_values="False" method="post"> 
         <display>import data from IRIDA to Galaxy</display>
         <param name="galaxyCallbackUrl" type="baseurl" value="/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute" />
 	<param name="appName" type="hidden" value="Galaxy" />
-	<param name="galaxyClientID" type="hidden" value="webClient" />
+	<param name="galaxyClientID" type="hidden" value="joel_galaxy" />
     </inputs>
     <uihints minwidth="800" />
     <outputs>

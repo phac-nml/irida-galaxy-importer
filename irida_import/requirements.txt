@@ -1,0 +1,4 @@
+bioblend==0.5.3
+oauthlib==0.7.2
+requests==2.6.0
+requests-oauthlib==0.4.2

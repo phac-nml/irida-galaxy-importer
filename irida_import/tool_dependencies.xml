@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<tool_dependency>
+    <package name="IRIDA" version="1.0.0">
+	    <install version="1.0">
+	         <actions_group>
+	            <actions>
+	                <action type="setup_virtualenv"></action>
+	            </actions>
+	       	</actions_group>
+	    </install>
+	</package>
+</tool_dependency>
