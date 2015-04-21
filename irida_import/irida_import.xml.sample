@@ -6,7 +6,7 @@
     <command interpreter="python">irida_import.py
 	    --json_parameter_file "${output}" --log-file $log_file
     </command>
-    <inputs action="http://irida-web-production.corefacility.ca:8080/irida/projects" check_values="False" method="post"> 
+    <inputs action="http://localhost:8080/projects" check_values="False" method="post"> 
         <display>import data from IRIDA to Galaxy</display>
         <param name="galaxyCallbackUrl" type="baseurl" value="/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute" />
 	<param name="appName" type="hidden" value="Galaxy" />
