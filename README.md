@@ -6,9 +6,6 @@ A tool to import data from IRIDA to Galaxy is being implemented here.
 Install Instructions:
 ---------------------
 
-#### Preamble:
-
-and to add itself to `tool_conf.xml`
 
 #### Prerequisites:
 
@@ -31,7 +28,6 @@ Then add an entry for irida_import.xml to `$GALAXY_ROOT/config/tool_conf.xml` to
 
 If `tool_conf.xml` doesn't exist, you can copy the example version, `tool_conf.xml.sample`
 As well, if `galaxy.ini` is missing, you can copy `galaxy.ini.sample`
-
 
 Modify the following lines in galaxy.ini:
 
