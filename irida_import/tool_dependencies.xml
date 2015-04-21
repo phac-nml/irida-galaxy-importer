@@ -1,12 +1,17 @@
 <?xml version="1.0"?>
 <tool_dependency>
     <package name="IRIDA" version="1.0.0">
-	    <install version="1.0">
-	         <actions_group>
-	            <actions>
-	                <action type="setup_virtualenv"></action>
-	            </actions>
-	       	</actions_group>
-	    </install>
-	</package>
+        <install version="1.0">
+            <actions_group>
+	        <actions>
+	            <action type="setup_virtualenv">
+                        bioblend==0.5.3
+                        oauthlib==0.7.2
+                        requests==2.6.0
+                        requests-oauthlib==0.4.2
+                    </action> 
+	        </actions>
+            </actions_group>
+	</install>
+    </package>
 </tool_dependency>
