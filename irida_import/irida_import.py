@@ -396,6 +396,7 @@ class IridaImport:
         :param config_file: the name of a file to configure from
         """
         self.logger = logging.getLogger('irida_import')
+        self.logger.setLevel(logging.INFO)
         self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
 
@@ -464,12 +465,8 @@ if __name__ == '__main__':
     log_format = "%(levelname)s: %(message)s"
     logging.basicConfig(filename=args.log,
                         format=log_format,
-                        level=logging.INFO,
+                        level=logging.ERROR,
                         filemode="w")
-
-    # Prevent urllib3 from spamming the log
-    requests_logger = logging.getLogger('requests')
-    requests_logger.setLevel(logging.ERROR)
 
     try:
         importer = IridaImport()
