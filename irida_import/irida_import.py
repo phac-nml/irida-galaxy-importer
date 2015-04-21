@@ -468,8 +468,8 @@ if __name__ == '__main__':
                         filemode="w")
 
     # Prevent urllib3 from spamming the log
-    urllib3_logger = logging.getLogger('requests.packages.urllib3')
-    urllib3_logger.setLevel(logging.ERROR)
+    requests_logger = logging.getLogger('requests')
+    requests_logger.setLevel(logging.ERROR)
 
     try:
         importer = IridaImport()
