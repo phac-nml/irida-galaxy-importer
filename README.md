@@ -8,6 +8,7 @@ Install Instructions:
 ---------------------
 
 This tool can be installed manually, or it can be archived to be added to Galaxy via a toolshed by running `make_tool_tarball.sh`
+In both cases, a tool configuration file will need to be modified, and `galaxy.ini` may need to be modified.
 
 If you are installing from a toolshed, note that because of how Galaxy uses virtualenv, 
 the tool may attempt to use the wrong versions of libraries. 
@@ -19,8 +20,6 @@ to read:
 ```
 PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
 ```
-
-In both cases, a tool configuration file will need to be modified, and `galaxy.ini` may need to be modified.
 
 
 #### Prerequisites
@@ -34,7 +33,7 @@ pip install bioblend requests-oauthlib
 
 You may need to install the Python and YAML development libraries. On Ubuntu, you can install them with:
 
-``
+```
 sudo apt-get install python-dev libyaml-dev
 ```
 
