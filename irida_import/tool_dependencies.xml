@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <tool_dependency>
-    <package name="IRIDA" version="1.0.0">
+    <package name="irida-galaxy-importer" version="1.0.0">
         <install version="1.0">
             <actions_group>
 	        <actions>
