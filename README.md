@@ -1,19 +1,29 @@
-IRIDA import tool for Galaxy
+IRIDA Import Tool for Galaxy
 ============================
 
-A tool to import data from IRIDA to Galaxy is being implemented here.
+This is a Galaxy tool that imports sequence data from IRIDA to Galaxy.
+
 
 Install Instructions:
 ---------------------
 
+This tool can be installed manually, or it can be archived to be added to Galaxy via a toolshed by running `make_tool_tarball.sh`
+In both cases, a tool configuration file will need to be modified, and `galaxy.ini` may need to be modified.
 
-#### Prerequisites:
 
-This tool requires BioBlend and Requests-OAuthlib. The tool should install them if it is being installed from a toolshed.
+#### Prerequisites
+
+The tool requires BioBlend and Requests-OAuthlib. The tool should install them if it is being installed from a toolshed.
 They can be manually installed by:
 
 ```
 pip install bioblend requests-oauthlib
+```
+
+If you are using python 2.6, argparse must be installed too. If you are not installing from a toolshed invoke:
+
+```
+pip install argparse
 ```
 
 
@@ -25,9 +35,6 @@ Then add an entry for irida_import.xml to `$GALAXY_ROOT/config/tool_conf.xml` to
 ```
 <tool file="irida_import/irida_import.xml" />
 ```
-
-If `tool_conf.xml` doesn't exist, you can copy the example version, `tool_conf.xml.sample`
-As well, if `galaxy.ini` is missing, you can copy `galaxy.ini.sample`
 
 Modify the following lines in galaxy.ini:
 
@@ -43,7 +50,7 @@ allow_library_path_paste = True
 #### Configuring IRIDA-Galaxy Communications:
 
 WARNING: The tool is currently set to ALLOW unsecured connections to IRIDA. This option MUST be disabled if the tool
- will be used over the internet. Set `os.environ['OAUTHLIB_INSECURE_TRANSPORT']` to `0` in `irida_import.py` to disable it.
+ will be used over the internet. Set `os.environ['OAUTHLIB_INSECURE_TRANSPORT']` to `0` in `irida_import.py` to disable it, or delete that line.
 
 Note: It is not neccessary to do any of the steps in this subsection in order to run the tests.
 
@@ -61,11 +68,13 @@ The administrator API key, and the URL of the Galaxy web server must be defined.
 Change the values for `admin_key` and `galaxy_url` appropriately. 
 Instructions for obtaining an API key can be found in the Galaxy documentation.
 
-Currently the tool uses the webClient client id and secret to access IRIDA. 
-They can be changed by modifying `client_id` and `client_secret`
+Modify `client_id` and `client_secret` to values belonging to an IRIDA client. 
+To find out how to create or view an IRIDA client, consult the IRIDA documentation. 
+The client must have read scope--auto approval is recomended though not required.
 
 It is also possible to configure the folders in which sample files and reference data are stored, and the endpoints at which the tool
 expects to access IRIDA resources.
+
 
 #### Final Configuration:
 
@@ -106,7 +115,7 @@ py.test
 
 To monitor test progress, for example to monitor the installation and configuration process for the integration tests, use `pytest -s`.
 
-To run only the unit or integration tests, use `pytest -m unit` or `pytest -m integration` respectivly.
+To run only the unit or integration tests, use `pytest -m unit` or `pytest -m integration` respectively.
 
 
 #### Generating Code Coverage Reports:
