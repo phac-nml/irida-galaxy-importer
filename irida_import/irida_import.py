@@ -334,8 +334,10 @@ class IridaImport:
         dest = os.path.join(parent_folder, self.XML_FILE)
         # Allows storing recommended configuration options in a sample XML file
         # and not commiting the XML file that Galaxy will read:
-        if not os.path.isfile(dest):
+        try:
             shutil.copyfile(src, dest)
+        except:
+            pass
 
         config_path = os.path.join(parent_folder, self.CONFIG_FILE)
         with open(config_path, 'r') as config_file:
