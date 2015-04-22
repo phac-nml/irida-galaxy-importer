@@ -17,10 +17,8 @@ PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export
 ```
 to read:
 ```
-PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:PYTHONPATH; export PYTHONPATH 
+PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
 ```
-i.e. there is a `$` that should be removed.
-
 
 In both cases, a tool configuration file will need to be modified, and `galaxy.ini` may need to be modified.
 
