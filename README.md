@@ -20,6 +20,12 @@ They can be manually installed by:
 pip install bioblend requests-oauthlib
 ```
 
+You may need to install the Pythin and YAML development libraries. On Ubuntu, you can install them with:
+
+``
+sudo apt-get install python-dev libyaml-dev
+```
+
 If you are using python 2.6, argparse must be installed too. If you are not installing from a toolshed invoke:
 
 ```
