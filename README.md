@@ -10,13 +10,18 @@ Install Instructions:
 This tool can be installed manually, or it can be archived to be added to Galaxy via a toolshed by running `make_tool_tarball.sh`
 
 If you are installing from a toolshed, note that because of how Galaxy uses virtualenv, 
-(env.sh prepends to the PYTHONPATH instead of overwriting it), 
+(`env.sh` prepends to the `PYTHONPATH` instead of setting it), 
 the tool may attempt to use the wrong versions of libraries. 
-To fix this add as a child of the `<actions>` element of `irida_import/tool_dependencies.xml` the line:
+To fix this, the line in the `env.sh` that Galaxy creates for the tool that reads something like:
 ```
-<action> <environment_variable name="PYTHONPATH" action="set_to">$INSTALL_DIR/venv/lib/python2.6/site-packages</environment_variable> </action>
+PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
 ```
-where `python2.6` is replaced with your version of Python.
+to read:
+```
+PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:PYTHONPATH; export PYTHONPATH 
+```
+i.e. there is a `$` that should be removed.
+
 
 In both cases, a tool configuration file will need to be modified, and `galaxy.ini` may need to be modified.
 
