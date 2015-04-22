@@ -103,19 +103,19 @@ class IridaImport:
             lib = next(lib_i for lib_i in libs if lib_i.deleted is False)
 
         if(lib is None):
-            users = self.reg_gi.users.get_users()
-            uid = 0
+            roles = self.reg_gi.roles.get_roles()
+            rid = 0
             try:
-                uid = next(user['id']
-                           for user in users if user['email'] == email)
+                rid = next(role['id']
+                           for role in roles if role['name'] == email)
             except StopIteration:
-                error = "No Galaxy user could be found for the email: '{0}', "\
+                error = "No Galaxy role could be found for the email: '{0}', "\
                     "quiting".format(email)
                 raise Exception(error)
 
             lib = self.gi.libraries.create(desired_lib_name)
             self.reg_gi.libraries.set_library_permissions(
-                lib.id, access_in=[uid], modify_in=[uid], add_in=[uid])
+                lib.id, access_in=[rid], modify_in=[rid], add_in=[rid])
         return lib
 
     def create_folder_if_nec(self, folder_path):
@@ -201,8 +201,9 @@ class IridaImport:
         self.library = self.gi.libraries.get(self.library.id)
         datasets = self.library.get_datasets(name=galaxy_name)
         for dataset in datasets:
-            # Galaxy sometimes appends a newline
-            if(dataset.file_size in (size, size + 1)):
+            # Galaxy sometimes appends a newline, see:
+            # https://bitbucket.org/galaxy/galaxy-dist/src/7e4d21621ce12e13ebbdf9fd3259df58c3ef124c/lib/galaxy/datatypes/data.py?at=stable#cl-673
+            if dataset.file_size in (size, size + 1):
                 unique = False
                 break
         return unique
@@ -260,6 +261,10 @@ class IridaImport:
         file_path = sample_file.path
         self.logger.debug(
             "       Sample file's local path is" + file_path)
+        file_type = 'auto'
+        # Assume fastq files are fastqsanger:
+        if os.path.splitext(file_path)[1] == '.fastq':
+            file_type = 'fastqsanger'
 
         folder_id = self.reg_gi.libraries.get_folders(
             self.library.id, name=sample_folder_path)[0]['id']
@@ -267,7 +272,9 @@ class IridaImport:
             self.library.id,
             file_path,
             folder_id=folder_id,
-            link_data_only='link_to_files')
+            link_data_only='link_to_files',
+            file_type=file_type
+        )
         return added
 
     def print_summary(self, failed=False):
@@ -331,7 +338,7 @@ class IridaImport:
         parent_folder = os.path.dirname(this_module_path)
         src = os.path.join(parent_folder, self.XML_FILE_SAMPLE)
         dest = os.path.join(parent_folder, self.XML_FILE)
-        # Allows storing developer configuration options in a sample XML file
+        # Allows storing recommended configuration options in a sample XML file
         # and not commiting the XML file that Galaxy will read:
         try:
             shutil.copyfile(src, dest)

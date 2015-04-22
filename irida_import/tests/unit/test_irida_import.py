@@ -45,6 +45,7 @@ class TestIridaImport:
         imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
         imp.reg_gi.libraries = mock.create_autospec(galaxy.libraries)
         imp.reg_gi.users = mock.create_autospec(galaxy.users)
+        imp.reg_gi.roles = mock.create_autospec(galaxy.roles)
         imp.uploaded_files_log = []
         imp.skipped_files_log = []
         imp.configure = Mock()
@@ -131,9 +132,9 @@ class TestIridaImport:
         imp.gi.libraries.create = Mock(return_value=lib_to_make)
         imp.gi.libraries.list = Mock(return_value=[])
         email = 'bob@lala.com'
-        users = [self.make_user('sally@lala.com', 59),
-                 self.make_user(email, 34)]
-        imp.reg_gi.users.get_users = Mock(return_value=users)
+        users = [self.make_role('sally@lala.com', 59),
+                 self.make_role(email, 34)]
+        imp.reg_gi.roles.get_roles = Mock(return_value=users)
 
         imp.reg_gi.libraries.set_library_permissions = Mock()
 
@@ -155,9 +156,9 @@ class TestIridaImport:
         imp.gi.libraries.list = Mock(return_value=libs_in_gal)
         imp.gi.libraries.create = Mock(return_value=lib_to_make)
         email = 'bob@lala.com'
-        users = [self.make_user('sally@lala.com', 59),
-                 self.make_user(email, 34)]
-        imp.reg_gi.users.get_users = Mock(return_value=users)
+        users = [self.make_role('sally@lala.com', 59),
+                 self.make_role(email, 34)]
+        imp.reg_gi.roles.get_roles = Mock(return_value=users)
 
         lib_made = imp.get_first_or_make_lib(wanted_name, email)
 
@@ -175,9 +176,9 @@ class TestIridaImport:
         lib_to_make.id = 1
         return lib_to_make
 
-    def make_user(self, email, id):
-        user = {'email': email, 'id': id}
-        return user
+    def make_role(self, email, id):
+        role = {'name': email, 'id': id}
+        return role
 
     def test_create_folder_if_nec_base(self, imp):
         """Create a folder, as if its base folder exists"""
