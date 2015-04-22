@@ -331,12 +331,10 @@ class IridaImport:
         parent_folder = os.path.dirname(this_module_path)
         src = os.path.join(parent_folder, self.XML_FILE_SAMPLE)
         dest = os.path.join(parent_folder, self.XML_FILE)
-        # Allows storing developer configuration options in a sample XML file
+        # Allows storing recommended configuration options in a sample XML file
         # and not commiting the XML file that Galaxy will read:
-        try:
+        if not os.path.isfile(dest):
             shutil.copyfile(src, dest)
-        except:
-            pass
 
         config_path = os.path.join(parent_folder, self.CONFIG_FILE)
         with open(config_path, 'r') as config_file:
