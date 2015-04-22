@@ -78,7 +78,7 @@ expects to access IRIDA resources.
 
 #### Final Configuration:
 
-The tool must be run once with the `--config` option to configure the tool XML file. Then Galaxy must be restarted if it has not been configured to monitor tools for changes. The tool will fail to export files if Galaxy is not restarted or configured to monitor for changes.
+The tool must be run once with the `--config` option to configure the tool XML file (`python irida_import.py --config`). Then Galaxy must be restarted if it has not been configured to monitor tools for changes. The tool will fail to export files if Galaxy is not restarted or configured to monitor for changes.
 
 Testing:
 -------
