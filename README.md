@@ -10,9 +10,8 @@ Install Instructions:
 This tool can be installed manually, or it can be archived to be added to Galaxy via a toolshed by running `make_tool_tarball.sh`
 
 If you are installing from a toolshed, note that because of how Galaxy uses virtualenv, 
-(`env.sh` prepends to the `PYTHONPATH` instead of setting it), 
 the tool may attempt to use the wrong versions of libraries. 
-To fix this, the line in the `env.sh` that Galaxy creates for the tool that reads something like:
+To fix this, change the line in the `env.sh` that Galaxy creates for the tool that reads something like:
 ```
 PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
 ```
