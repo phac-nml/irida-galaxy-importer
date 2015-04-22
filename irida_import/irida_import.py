@@ -261,6 +261,10 @@ class IridaImport:
         file_path = sample_file.path
         self.logger.debug(
             "       Sample file's local path is" + file_path)
+        file_type = 'auto'
+        # Assume fastq files are fastqsanger:
+        if os.path.splitext(file_path)[1] == '.fastq':
+            file_type = 'fastqsanger'
 
         folder_id = self.reg_gi.libraries.get_folders(
             self.library.id, name=sample_folder_path)[0]['id']
@@ -268,7 +272,9 @@ class IridaImport:
             self.library.id,
             file_path,
             folder_id=folder_id,
-            link_data_only='link_to_files')
+            link_data_only='link_to_files',
+            file_type=file_type
+        )
         return added
 
     def print_summary(self, failed=False):
