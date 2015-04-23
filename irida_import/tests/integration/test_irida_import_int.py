@@ -1,4 +1,5 @@
-import time
+import sys
+import logging
 import os
 import pytest
 import subprocess32
@@ -8,14 +9,16 @@ from ...irida_import import IridaImport
 import inspect
 from . import util
 import getpass
+from requests_oauthlib import OAuth2Session
+from oauthlib.oauth2 import LegacyApplicationClient
 
 
 @pytest.mark.integration
 class TestIridaImportInt:
 
-    INSTALL = False  # Install or update Galaxy, IRIDA, and the export tool
-    START_GALAXY = False  # Start Galaxy instance
-    START_IRIDA = False  # Start IRIDA instance
+    INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
+    START_GALAXY = True  # Start Galaxy instance
+    START_IRIDA = True  # Start IRIDA instance
 
     TIMEOUT = 600  # seconds
 
@@ -44,6 +47,11 @@ class TestIridaImportInt:
         '"drop database if exists irida_test;'\
         'create database irida_test;'\
         '"| mysql -u test -ptest'
+    IRIDA_PASSWORD_ID = 'password_client_id'
+    IRIDA_AUTH_CODE_ID = 'auth_code_client_id'
+    IRIDA_USER = 'admin'
+    IRIDA_PASSWORD = 'Password1'
+    IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
 
     INSTALL_EXEC = 'install.sh'
 
@@ -64,6 +72,15 @@ class TestIridaImportInt:
             install = subprocess32.Popen(
                 [exec_path, self.TOOL_DIRECTORY], cwd=self.REPOS_PARENT)
             install.wait()  # Block untill installed
+
+        log = logging.getLogger()
+        log.setLevel(logging.DEBUG)
+        log_out = logging.StreamHandler(sys.stdout)
+        log_out.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        log_out.setFormatter(formatter)
+        log.addHandler(log_out)
 
     @pytest.fixture(scope='class')
     def driver(self, request):
@@ -98,6 +115,13 @@ class TestIridaImportInt:
         self.register_irida(driver)
         self.add_irida_client_auth_code(driver)
         self.add_irida_client_password(driver)
+
+        irida_oauth = self.get_irida_oauth(driver)
+
+        self.create_irida_project(irida_oauth, 'Project1')
+        self.gen_seq_files_irida(
+            irida_oauth, 'Project1', [
+                'file1.fastq', 'file2.fasta'])
 
     @pytest.fixture(scope='class')
     def setup_galaxy(self, request, driver):
@@ -155,20 +179,20 @@ class TestIridaImportInt:
 
             # Set a new password if necessary
             try:
-                driver.find_element_by_id("password").send_keys("Password1")
+                driver.find_element_by_id("password").send_keys(self.IRIDA_PASSWORD)
                 driver.find_element_by_id(
-                    "confirmPassword").send_keys("Password1")
+                    "confirmPassword").send_keys(self.IRIDA_PASSWORD)
                 driver.find_element_by_xpath("//button[@type='submit']").click()
             except NoSuchElementException:
-                driver.find_element_by_id("emailTF").send_keys("admin")
-                driver.find_element_by_id("passwordTF").send_keys("Password1")
+                driver.find_element_by_id("emailTF").send_keys(self.IRIDA_USER)
+                driver.find_element_by_id("passwordTF").send_keys(self.IRIDA_PASSWORD)
                 driver.find_element_by_id("submitBtn").click()
         except NoSuchElementException:
             pass
 
     def add_irida_client_auth_code(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
-        driver.find_element_by_id("clientId").send_keys("auth_code_client")
+        driver.find_element_by_id("clientId").send_keys(self.IRIDA_AUTH_CODE_ID)
         driver.find_element_by_id('s2id_authorizedGrantTypes').click()
         driver.find_element_by_xpath(
             "//*[contains(text(), 'authorization_code')]").click()
@@ -177,6 +201,33 @@ class TestIridaImportInt:
 
     def add_irida_client_password(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
-        driver.find_element_by_id("clientId").send_keys("password_client")
+        driver.find_element_by_id("clientId").send_keys(self.IRIDA_PASSWORD_ID)
         driver.find_element_by_id("scope_write").click()
         driver.find_element_by_id("create-client-submit").click()
+
+    def get_irida_oauth(self, driver):
+        driver.get(self.IRIDA_URL + '/clients')
+        driver.find_element_by_xpath(
+            "//*[contains(text(), '"+self.IRIDA_PASSWORD_ID+"')]").click()
+        secret = driver.find_element_by_id(
+            'client-secret').get_attribute('textContent')
+        client = LegacyApplicationClient(self.IRIDA_PASSWORD_ID)
+        irida_oauth = OAuth2Session(client=client)
+        irida_oauth.fetch_token(
+            self.IRIDA_TOKEN_ENDPOINT,
+            client_id=self.IRIDA_PASSWORD_ID,
+            username=self.IRIDA_USER,
+            password=self.IRIDA_PASSWORD,
+            client_secret=secret)
+        return irida_oauth
+
+    def create_irida_project(self, irida_oauth, name):
+        """Create a new IRIDA project, using an OAuth2 session"""
+        url = self.IRIDA_URL + '/api/projects'
+        payload = {'name': name}
+        r = irida_oauth.post(url, json=payload)
+        r.raise_for_status()
+
+    def gen_seq_files_irida(self, irida_oauth, projectName, seq_file_name_list):
+        """Generate sequence files in an IRIDA project from a list of names"""
+        return True
