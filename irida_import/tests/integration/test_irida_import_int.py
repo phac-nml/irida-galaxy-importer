@@ -16,10 +16,6 @@ from oauthlib.oauth2 import LegacyApplicationClient
 @pytest.mark.integration
 class TestIridaImportInt:
 
-    INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
-    START_GALAXY = True  # Start Galaxy instance
-    START_IRIDA = True  # Start IRIDA instance
-
     TIMEOUT = 600  # seconds
 
     USER = getpass.getuser()
@@ -66,7 +62,7 @@ class TestIridaImportInt:
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
         self.IRIDA = os.path.join(self.REPOS, 'irida')
 
-        if self.INSTALL:
+        if not os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']:
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
             install = subprocess32.Popen(
@@ -103,7 +99,7 @@ class TestIridaImportInt:
                                          shell=True)
             stopper.wait()
 
-        if self.START_IRIDA:
+        if not os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA']:
             stop_irida()
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
             subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
@@ -130,7 +126,7 @@ class TestIridaImportInt:
             print 'Killing Galaxy'
             subprocess32.call(self.GALAXY_STOP, shell=True)
 
-        if self.START_GALAXY:
+        if not os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY']:
             stop_galaxy()
             subprocess32.call(self.GALAXY_DB_RESET, shell=True)
             subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
@@ -227,7 +223,9 @@ class TestIridaImportInt:
         payload = {'name': name}
         r = irida_oauth.post(url, json=payload)
         r.raise_for_status()
+        return r.json()
 
     def gen_seq_files_irida(self, irida_oauth, projectName, seq_file_name_list):
         """Generate sequence files in an IRIDA project from a list of names"""
+        url = self.IRIDA_URL + ''
         return True
