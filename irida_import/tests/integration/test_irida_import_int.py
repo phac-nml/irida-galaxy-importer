@@ -62,7 +62,9 @@ class TestIridaImportInt:
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
         self.IRIDA = os.path.join(self.REPOS, 'irida')
 
-        if not os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']:
+        try:
+            os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']
+        except KeyError:
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
             install = subprocess32.Popen(
@@ -99,7 +101,9 @@ class TestIridaImportInt:
                                          shell=True)
             stopper.wait()
 
-        if not os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA']:
+        try:
+            os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA']
+        except KeyError:
             stop_irida()
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
             subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
@@ -126,7 +130,9 @@ class TestIridaImportInt:
             print 'Killing Galaxy'
             subprocess32.call(self.GALAXY_STOP, shell=True)
 
-        if not os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY']:
+        try:
+            os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY']
+        except KeyError:
             stop_galaxy()
             subprocess32.call(self.GALAXY_DB_RESET, shell=True)
             subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
@@ -225,7 +231,18 @@ class TestIridaImportInt:
         r.raise_for_status()
         return r.json()
 
-    def gen_seq_files_irida(self, irida_oauth, projectName, seq_file_name_list):
+    def create_irida_sample(self, irida_oauth, samples_url, name):
+        """Create a new IRIDA sample, using an OAuth2 session"""
+        payload = {'name': name}
+        r = irida_oauth.post(samples_url, json=payload)
+        r.raise_for_status()
+
+    def create_irida_seqfile(self, irida_oauth, seqfile_url, name, file_path):
+        payload = {'name': name}
+        r = irida_oauth.post(samples_url, json=payload)
+        r.raise_for_status()
+
+    def gen_seq_files_irida(self, irida_oauth, sample_url, seq_file_name_list):
         """Generate sequence files in an IRIDA project from a list of names"""
         url = self.IRIDA_URL + ''
         return True
