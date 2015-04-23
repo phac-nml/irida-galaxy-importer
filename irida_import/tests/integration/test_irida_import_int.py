@@ -1,3 +1,4 @@
+import time
 import os
 import pytest
 import subprocess32
@@ -12,9 +13,9 @@ import getpass
 @pytest.mark.integration
 class TestIridaImportInt:
 
-    INSTALL = True  # Install or update Galaxy, IRIDA, and the export tool
-    START_GALAXY = True  # Start Galaxy instance
-    START_IRIDA = True  # Start IRIDA instance
+    INSTALL = False  # Install or update Galaxy, IRIDA, and the export tool
+    START_GALAXY = False  # Start Galaxy instance
+    START_IRIDA = False  # Start IRIDA instance
 
     TIMEOUT = 600  # seconds
 
@@ -68,7 +69,7 @@ class TestIridaImportInt:
     def driver(self, request):
         """Set up the Selenium WebDriver"""
         driver = webdriver.Chrome()
-        driver.implicitly_wait(5)
+        driver.implicitly_wait(1)
         driver.set_window_size(1024, 768)
 
         def finalize_driver():
@@ -95,6 +96,8 @@ class TestIridaImportInt:
                 stop_irida()
             request.addfinalizer(finalize_irida)
         self.register_irida(driver)
+        self.add_irida_client_auth_code(driver)
+        self.add_irida_client_password(driver)
 
     @pytest.fixture(scope='class')
     def setup_galaxy(self, request, driver):
@@ -143,14 +146,37 @@ class TestIridaImportInt:
     def register_irida(self, driver):
         """Register with IRIDA if neccessary, and then log in"""
         driver.get(self.IRIDA_URL)
-        driver.find_element_by_id("emailTF").send_keys("admin")
-        driver.find_element_by_id("passwordTF").send_keys("password1")
-        driver.find_element_by_id("submitBtn").click()
+
+        # Log in if possible
         try:
-            driver.find_element_by_id("password").send_keys("Password1")
-            driver.find_element_by_id("confirmPassword").send_keys("Password1")
-            driver.find_element_by_xpath("//button[@type='submit']").click()
-        except NoSuchElementException:
             driver.find_element_by_id("emailTF").send_keys("admin")
-            driver.find_element_by_id("passwordTF").send_keys("Password1")
+            driver.find_element_by_id("passwordTF").send_keys("password1")
             driver.find_element_by_id("submitBtn").click()
+
+            # Set a new password if necessary
+            try:
+                driver.find_element_by_id("password").send_keys("Password1")
+                driver.find_element_by_id(
+                    "confirmPassword").send_keys("Password1")
+                driver.find_element_by_xpath("//button[@type='submit']").click()
+            except NoSuchElementException:
+                driver.find_element_by_id("emailTF").send_keys("admin")
+                driver.find_element_by_id("passwordTF").send_keys("Password1")
+                driver.find_element_by_id("submitBtn").click()
+        except NoSuchElementException:
+            pass
+
+    def add_irida_client_auth_code(self, driver):
+        driver.get(self.IRIDA_URL + '/clients/create')
+        driver.find_element_by_id("clientId").send_keys("auth_code_client")
+        driver.find_element_by_id('s2id_authorizedGrantTypes').click()
+        driver.find_element_by_xpath(
+            "//*[contains(text(), 'authorization_code')]").click()
+        driver.find_element_by_id("scope_auto_read").click()
+        driver.find_element_by_id("create-client-submit").click()
+
+    def add_irida_client_password(self, driver):
+        driver.get(self.IRIDA_URL + '/clients/create')
+        driver.find_element_by_id("clientId").send_keys("password_client")
+        driver.find_element_by_id("scope_write").click()
+        driver.find_element_by_id("create-client-submit").click()
