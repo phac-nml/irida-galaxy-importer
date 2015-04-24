@@ -1,3 +1,4 @@
+import json
 import sys
 import logging
 import os
@@ -48,6 +49,7 @@ class TestIridaImportInt:
     IRIDA_USER = 'admin'
     IRIDA_PASSWORD = 'Password1'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
+    IRIDA_PROJECTS = IRIDA_URL + '/api/projects'
 
     INSTALL_EXEC = 'install.sh'
 
@@ -79,6 +81,7 @@ class TestIridaImportInt:
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         log_out.setFormatter(formatter)
         log.addHandler(log_out)
+        self.log = log
 
     @pytest.fixture(scope='class')
     def driver(self, request):
@@ -116,12 +119,8 @@ class TestIridaImportInt:
         self.add_irida_client_auth_code(driver)
         self.add_irida_client_password(driver)
 
-        irida_oauth = self.get_irida_oauth(driver)
-
-        self.create_irida_project(irida_oauth, 'Project1')
-        self.gen_seq_files_irida(
-            irida_oauth, 'Project1', [
-                'file1.fastq', 'file2.fasta'])
+        # Return an OAuth 2.0 authorized session with IRIDA
+        return self.get_irida_oauth(driver)
 
     @pytest.fixture(scope='class')
     def setup_galaxy(self, request, driver):
@@ -146,10 +145,13 @@ class TestIridaImportInt:
             request.addfinalizer(finalize_galaxy)
         self.register_galaxy(driver)
 
-    def test_configured(self, setup_irida, setup_galaxy, driver):
-        """Verify that IRIDA and Galaxy are both accessible"""
-        driver.get(self.IRIDA_URL)
+    def test_galaxy_configured(self, setup_galaxy, driver):
+        """Verify that Galaxy is accessible"""
         driver.get(self.GALAXY_URL)
+
+    def test_irida_configured(self, setup_irida, driver):
+        """Verify that IRIDA is accessible"""
+        driver.get(self.IRIDA_URL)
 
     def test_tool_visible(self, setup_galaxy, driver):
         """Make sure there is a link to the tool in Galaxy"""
@@ -236,34 +238,42 @@ class TestIridaImportInt:
             client_secret=secret)
         return irida_oauth
 
-    def create_irida_project(self, irida_oauth, name):
-        """Create a new IRIDA project, using an OAuth2 session"""
-        url = self.IRIDA_URL + '/api/projects'
-        payload = {'name': name}
-        r = irida_oauth.post(url, json=payload)
-        r.raise_for_status()
-        return r.json()
+    def get_href(self, response, rel):
+        """From a Requests response from IRIDA, get a href given a rel"""
+        links = response.json()['resource']['links']
+        href = next(link['href'] for link in links if link['rel'] == rel)
+        return href
 
-    def create_irida_sample(self, irida_oauth, samples_url, name):
-        """Create a new IRIDA sample, using an OAuth2 session"""
-        payload = {'name': name}
-        r = irida_oauth.post(samples_url, json=payload)
-        r.raise_for_status()
-
-    def create_irida_seqfile(self, irida_oauth, seqfile_url, name, file_path):
-        payload = {'name': name}
-        r = irida_oauth.post(samples_url, json=payload)
-        r.raise_for_status()
-
-    def gen_seq_files_irida(self, irida_oauth, sample_url, seq_file_name_list):
-        """Generate sequence files in an IRIDA project from a list of names"""
-        url = self.IRIDA_URL + ''
-        return True
-
-    def test_project_samples_import(self, setup_irida, setup_galaxy, driver):
+    def test_project_samples_import(self, setup_irida, setup_galaxy,
+                                        driver, tmpdir):
         """Verify that sequence files can be imported from IRIDA to Galaxy"""
+        irida = setup_irida
+        project = irida.post(self.IRIDA_PROJECTS,
+                                json={'name': 'ProjectSamples'})
+
+        samples = self.get_href(project, 'project/samples')
+        sample1 = irida.post(samples, json={'sampleName': 'PS_Sample1',
+                                            'sequencerSampleId': 'PS_1'})
+        sequences1 = self.get_href(sample1, 'sample/sequenceFiles')
+
+        sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
+                                             'sequencerSampleId': 'PS_2'})
+        sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
+
+        # Pytest manages the temporary directory
+        seq1 = tmpdir.join("seq1.fastq")
+        seq1.write("giberish1")
+        sequence1 = irida.post(sequences1, files={'file': open(str(seq1), 'rb')})
+
+        seq2 = tmpdir.join("seq2.fastq")
+        seq2.write("giberish2")
+        sequence2 = irida.post(sequences1, files={'file': open(str(seq2), 'rb')})
+
+        seq3 = tmpdir.join("seq3.fastq")
+        seq3.write("giberish3")
+        sequence3 = irida.post(sequences2, files={'file': open(str(seq3), 'rb')})
+
         driver.get(self.GALAXY_URL)
-        import time
 
     def test_cart_import_multi_project(self, setup_irida, setup_galaxy, driver):
         """Using the cart, import multiple projects from IRIDA to Galaxy"""
