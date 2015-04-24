@@ -158,7 +158,7 @@ class TestIridaImportInt:
         assert(driver.find_element_by_link_text("IRIDA"))
 
     def register_galaxy(self, driver):
-        """Register with Galaxy"""
+        """Register with Galaxy, and then attempt to log in"""
         driver.get(self.GALAXY_URL)
         driver.find_element_by_link_text("User").click()
         driver.find_element_by_link_text("Register").click()
@@ -168,6 +168,17 @@ class TestIridaImportInt:
         driver.find_element_by_id("password_check_input").send_keys("Password1")
         driver.find_element_by_id("name_input").send_keys("irida-test")
         driver.find_element_by_id("send").click()
+
+        try:
+            driver.get(self.GALAXY_URL)
+            driver.find_element_by_link_text("User").click()
+            driver.find_element_by_link_text("Login").click()
+            driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
+            driver.find_element_by_name("email").send_keys("irida@irida.ca")
+            driver.find_element_by_name("password").send_keys("Password1")
+            driver.find_element_by_name("login_button").click()
+        except NoSuchElementException:
+            pass
 
     def register_irida(self, driver):
         """Register with IRIDA if neccessary, and then log in"""
@@ -181,13 +192,15 @@ class TestIridaImportInt:
 
             # Set a new password if necessary
             try:
-                driver.find_element_by_id("password").send_keys(self.IRIDA_PASSWORD)
+                driver.find_element_by_id(
+                    "password").send_keys(self.IRIDA_PASSWORD)
                 driver.find_element_by_id(
                     "confirmPassword").send_keys(self.IRIDA_PASSWORD)
                 driver.find_element_by_xpath("//button[@type='submit']").click()
             except NoSuchElementException:
                 driver.find_element_by_id("emailTF").send_keys(self.IRIDA_USER)
-                driver.find_element_by_id("passwordTF").send_keys(self.IRIDA_PASSWORD)
+                driver.find_element_by_id(
+                    "passwordTF").send_keys(self.IRIDA_PASSWORD)
                 driver.find_element_by_id("submitBtn").click()
         except NoSuchElementException:
             pass
@@ -245,4 +258,13 @@ class TestIridaImportInt:
     def gen_seq_files_irida(self, irida_oauth, sample_url, seq_file_name_list):
         """Generate sequence files in an IRIDA project from a list of names"""
         url = self.IRIDA_URL + ''
+        return True
+
+    def test_project_samples_import(self, setup_irida, setup_galaxy, driver):
+        """Verify that sequence files can be imported from IRIDA to Galaxy"""
+        driver.get(self.GALAXY_URL)
+        import time
+
+    def test_cart_import_multi_project(self, setup_irida, setup_galaxy, driver):
+        """Using the cart, import multiple projects from IRIDA to Galaxy"""
         return True
