@@ -252,7 +252,7 @@ class TestIridaImportInt:
         # It is assumed that the tests are being run from the repo's tool
         # directory:
         config_path = os.path.join(os.getcwd(), 'repos','galaxy','tools','irida_import','config.ini')
-        print 'current dir' + os.cwd()
+        print 'current dir' + os.getcwd()
         print 'config_path' +config_path
         config = ConfigParser.ConfigParser()
         config.read(config_path)
