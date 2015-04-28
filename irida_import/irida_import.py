@@ -229,7 +229,7 @@ class IridaImport:
                     if(added):
                         added_to_galaxy.extend(added)
                         self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                          ' Exported file with Galaxy path: ' +
+                                          ' Imported file with Galaxy path: ' +
                                           galaxy_sample_file_name)
                         self.uploaded_files_log.append(
                             {'galaxy_name': galaxy_sample_file_name})
@@ -290,11 +290,11 @@ class IridaImport:
                                       .format(file_log['galaxy_name']))
 
         if failed:
-            self.print_logged('Export failed.')
+            self.print_logged('Import failed.')
         else:
-            self.print_logged('Export completed successfully.')
+            self.print_logged('Import completed successfully.')
         self.print_logged('Final summary:\n'
-                          '{0} file(s) exported and {1} file(s) skipped.'
+                          '{0} file(s) imported and {1} file(s) skipped.'
                           .format(len(self.uploaded_files_log),
                                   len(self.skipped_files_log)))
         print_files_log(
@@ -411,7 +411,7 @@ class IridaImport:
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
 
-            self.print_logged("Exporting files from IRIDA to Galaxy...")
+            self.print_logged("Importing files from IRIDA to Galaxy...")
 
             self.uploaded_files_log = []
             self.skipped_files_log = []
