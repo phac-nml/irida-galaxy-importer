@@ -13,6 +13,6 @@ client_secret: webClientSecret
 token_endpoint_suffix: /api/oauth/token
 
 # Be sure to run the tool with the '--config' option and then to restart Galaxy after changing these values!
-client_id:  webClient
+client_id: auth_code_client
 irida_url: http://localhost:8080
 initial_endpoint_suffix: /projects

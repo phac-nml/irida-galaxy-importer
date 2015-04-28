@@ -1,11 +1,15 @@
+import time
 import json
 import sys
 import logging
 import os
+import ConfigParser
 import pytest
 import subprocess32
 from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
 from ...irida_import import IridaImport
 import inspect
 from . import util
@@ -20,6 +24,7 @@ class TestIridaImportInt:
     TIMEOUT = 600  # seconds
 
     USER = getpass.getuser()
+    EMAIL = 'irida@irida.ca'
 
     GALAXY_DOMAIN = 'localhost'
     GALAXY_PORT = 8888
@@ -44,8 +49,8 @@ class TestIridaImportInt:
         '"drop database if exists irida_test;'\
         'create database irida_test;'\
         '"| mysql -u test -ptest'
-    IRIDA_PASSWORD_ID = 'password_client_id'
-    IRIDA_AUTH_CODE_ID = 'auth_code_client_id'
+    IRIDA_PASSWORD_ID = 'password_client'
+    IRIDA_AUTH_CODE_ID = 'auth_code_client'
     IRIDA_USER = 'admin'
     IRIDA_PASSWORD = 'Password1'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
@@ -116,8 +121,9 @@ class TestIridaImportInt:
                 stop_irida()
             request.addfinalizer(finalize_irida)
         self.register_irida(driver)
-        self.add_irida_client_auth_code(driver)
         self.add_irida_client_password(driver)
+        self.add_irida_client_auth_code(driver)
+        self.configure_client_secret(driver)
 
         # Return an OAuth 2.0 authorized session with IRIDA
         return self.get_irida_oauth(driver)
@@ -165,7 +171,7 @@ class TestIridaImportInt:
         driver.find_element_by_link_text("User").click()
         driver.find_element_by_link_text("Register").click()
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
-        driver.find_element_by_id("email_input").send_keys("irida@irida.ca")
+        driver.find_element_by_id("email_input").send_keys(self.EMAIL)
         driver.find_element_by_id("password_input").send_keys("Password1")
         driver.find_element_by_id("password_check_input").send_keys("Password1")
         driver.find_element_by_id("name_input").send_keys("irida-test")
@@ -176,7 +182,7 @@ class TestIridaImportInt:
             driver.find_element_by_link_text("User").click()
             driver.find_element_by_link_text("Login").click()
             driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
-            driver.find_element_by_name("email").send_keys("irida@irida.ca")
+            driver.find_element_by_name("email").send_keys(self.EMAIL)
             driver.find_element_by_name("password").send_keys("Password1")
             driver.find_element_by_name("login_button").click()
         except NoSuchElementException:
@@ -185,27 +191,24 @@ class TestIridaImportInt:
     def register_irida(self, driver):
         """Register with IRIDA if neccessary, and then log in"""
         driver.get(self.IRIDA_URL)
+        self.login_irida(driver, 'admin', 'password1')
 
-        # Log in if possible
+        # Set a new password if necessary
         try:
-            driver.find_element_by_id("emailTF").send_keys("admin")
-            driver.find_element_by_id("passwordTF").send_keys("password1")
-            driver.find_element_by_id("submitBtn").click()
-
-            # Set a new password if necessary
-            try:
-                driver.find_element_by_id(
-                    "password").send_keys(self.IRIDA_PASSWORD)
-                driver.find_element_by_id(
-                    "confirmPassword").send_keys(self.IRIDA_PASSWORD)
-                driver.find_element_by_xpath("//button[@type='submit']").click()
-            except NoSuchElementException:
-                driver.find_element_by_id("emailTF").send_keys(self.IRIDA_USER)
-                driver.find_element_by_id(
-                    "passwordTF").send_keys(self.IRIDA_PASSWORD)
-                driver.find_element_by_id("submitBtn").click()
+            driver.find_element_by_id(
+                "password").send_keys(self.IRIDA_PASSWORD)
+            driver.find_element_by_id(
+                "confirmPassword").send_keys(self.IRIDA_PASSWORD)
+            driver.find_element_by_xpath("//button[@type='submit']").click()
         except NoSuchElementException:
-            pass
+            self.login_irida(driver, self.IRIDA_USER, self.IRIDA_PASSWORD)
+
+    def login_irida(self, driver, username, password):
+        """Log in to IRIDA (assumes the login page is opened by the driver)"""
+        driver.find_element_by_id("emailTF").send_keys(username)
+        driver.find_element_by_id(
+            "passwordTF").send_keys(password)
+        driver.find_element_by_id("submitBtn").click()
 
     def add_irida_client_auth_code(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
@@ -223,11 +226,7 @@ class TestIridaImportInt:
         driver.find_element_by_id("create-client-submit").click()
 
     def get_irida_oauth(self, driver):
-        driver.get(self.IRIDA_URL + '/clients')
-        driver.find_element_by_xpath(
-            "//*[contains(text(), '"+self.IRIDA_PASSWORD_ID+"')]").click()
-        secret = driver.find_element_by_id(
-            'client-secret').get_attribute('textContent')
+        secret = self.get_irida_secret(driver, self.IRIDA_PASSWORD_ID)
         client = LegacyApplicationClient(self.IRIDA_PASSWORD_ID)
         irida_oauth = OAuth2Session(client=client)
         irida_oauth.fetch_token(
@@ -237,6 +236,27 @@ class TestIridaImportInt:
             password=self.IRIDA_PASSWORD,
             client_secret=secret)
         return irida_oauth
+
+    def get_irida_secret(self, driver, client_id):
+        """Get an IRIDA client's secret given its client ID """
+        driver.get(self.IRIDA_URL + '/clients')
+        driver.find_element_by_xpath(
+            "//*[contains(text(), '"+client_id+"')]").click()
+        secret = driver.find_element_by_id(
+            'client-secret').get_attribute('textContent')
+        return secret
+
+    def configure_client_secret(self, driver):
+        """Configure the client secret for the tool"""
+        secret = self.get_irida_secret(driver, self.IRIDA_AUTH_CODE_ID)
+        # It is assumed that the tests are being run from the repo's tool
+        # directory:
+        config_path = os.path.join(os.getcwd(), 'config.ini')
+        config = ConfigParser.ConfigParser()
+        config.read(config_path)
+        config.set('IRIDA', 'client_secret', secret)
+        with open(config_path, 'w') as config_file:
+            config.write(config_file)
 
     def get_href(self, response, rel):
         """From a Requests response from IRIDA, get a href given a rel"""
@@ -248,33 +268,85 @@ class TestIridaImportInt:
                                         driver, tmpdir):
         """Verify that sequence files can be imported from IRIDA to Galaxy"""
         irida = setup_irida
+        project_name = 'ImportProjectSamples'
         project = irida.post(self.IRIDA_PROJECTS,
-                                json={'name': 'ProjectSamples'})
+                                json={'name': project_name})
 
         samples = self.get_href(project, 'project/samples')
         sample1 = irida.post(samples, json={'sampleName': 'PS_Sample1',
                                             'sequencerSampleId': 'PS_1'})
         sequences1 = self.get_href(sample1, 'sample/sequenceFiles')
 
-        sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
-                                             'sequencerSampleId': 'PS_2'})
-        sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
-
         # Pytest manages the temporary directory
         seq1 = tmpdir.join("seq1.fastq")
         seq1.write("giberish1")
         sequence1 = irida.post(sequences1, files={'file': open(str(seq1), 'rb')})
-
         seq2 = tmpdir.join("seq2.fastq")
         seq2.write("giberish2")
         sequence2 = irida.post(sequences1, files={'file': open(str(seq2), 'rb')})
 
+        sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
+                                             'sequencerSampleId': 'PS_2'})
+        sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
         seq3 = tmpdir.join("seq3.fastq")
         seq3.write("giberish3")
         sequence3 = irida.post(sequences2, files={'file': open(str(seq3), 'rb')})
 
+        print project.text
+        print sample1.text
+        print sequence1.text
+        # Export to Galaxy using the button on the dropdown menu
         driver.get(self.GALAXY_URL)
+        history_panel = driver.find_element_by_id('current-history-panel')
+        initially_succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+        driver.find_element_by_css_selector("#title_getext > a > span").click()
+        driver.find_element_by_link_text("IRIDA").click()
+        driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
+
+        # Sometimes a login is required
+        try:
+            self.login_irida(driver, self.IRIDA_USER, self.IRIDA_PASSWORD)
+        except NoSuchElementException:
+            pass
+
+        # Pick the last matching project on this page
+        driver.find_elements_by_link_text(project_name)[-1].click()
+
+        # These checkbox elements cannot be clicked directly
+        # Using IDs would complicate running the tests without restarting IRIDA
+        el1 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[1]/td/div/label")
+        el2 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[2]/td/div/label")
+        action = webdriver.common.action_chains.ActionChains(driver)
+        action.move_to_element_with_offset(el1, 5, 5)
+        action.click()
+        action.move_to_element_with_offset(el2, 5, 5)
+        action.click()
+        action.perform()
+
+        driver.find_element_by_id('exportOptionsBtn').click()
+
+        # This should be changed to an ID:
+        driver.find_element_by_xpath("//div[4]/ul/li[3]/a/span[2]").click()
+
+        driver.find_element_by_id('email').clear()
+        driver.find_element_by_id('email').send_keys(self.EMAIL)
+        driver.find_element_by_css_selector('button.btn.btn-primary').click()
+
+        time.sleep(20) # Wait for import to complete
+        history_panel = driver.find_element_by_id('current-history-panel')
+        succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+        assert succeeded - initially_succeeded > 0, "Import did not complete successfully"
 
     def test_cart_import_multi_project(self, setup_irida, setup_galaxy, driver):
         """Using the cart, import multiple projects from IRIDA to Galaxy"""
         return True
+
+
+
+
+
+
+
+
+
+
