@@ -251,7 +251,9 @@ class TestIridaImportInt:
         secret = self.get_irida_secret(driver, self.IRIDA_AUTH_CODE_ID)
         # It is assumed that the tests are being run from the repo's tool
         # directory:
-        config_path = os.path.join(os.getcwd(), 'config.ini')
+        config_path = os.path.join(os.getcwd(), 'repos','galaxy','tools','irida_import','config.ini')
+        print 'current dir' + os.cwd()
+        print 'config_path' +config_path
         config = ConfigParser.ConfigParser()
         config.read(config_path)
         config.set('IRIDA', 'client_secret', secret)
