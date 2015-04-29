@@ -88,8 +88,9 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         except KeyError:
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
-            install = subprocess32.Popen(
-                [exec_path, self.TOOL_DIRECTORY], cwd=self.REPOS_PARENT)
+            install = subprocess32.Popen([exec_path, self.TOOL_DIRECTORY,
+                                         str(self.GALAXY_PORT)],
+                                         cwd=self.REPOS_PARENT)
             install.wait()  # Block untill installed
 
         log = logging.getLogger()

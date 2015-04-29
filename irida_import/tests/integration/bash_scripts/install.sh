@@ -4,6 +4,7 @@
 
 args=("$@")
 tool_loc=${args[0]}
+galaxy_port=${args[1]}
 
 mkdir repos
 pushd repos
@@ -56,7 +57,7 @@ sed  -i 's/#database_connection = sqlite:\/\/\/.\/database\/universe.sqlite?isol
 sed -i 's/#admin_users = None/admin_users=irida@irida.ca/' galaxy.ini
 
 # run galaxy on port 8888 instead of 8080; Tomcat runs on 8080 by default.
-sed -i "s|#port = 8080|port = 8888|" galaxy.ini
+sed -i "s|#port = 8080|port = $galaxy_port|" galaxy.ini
 popd
 popd
 echo "Galaxy has been installed"

@@ -8,7 +8,7 @@ def wait_until_up(address, port, timeout):
 
     :type address: str
     :param address: e.g. 'localhost' or '127.0.0.1'
-    :type prot: int
+    :type port: int
     :param port: e.g. 8888
     :type timeout: int
     :param timeout: the time to wait in seconds until throwing an exception
