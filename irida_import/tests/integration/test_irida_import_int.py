@@ -78,16 +78,22 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
         self.IRIDA = os.path.join(self.REPOS, 'irida')
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('', 0))
-        self.GALAXY_PORT = sock.getsockname()[1]
-        self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
 
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']
+            self.GALAXY_PORT = 8080
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
         except KeyError:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.bind(('', 0))
+            self.GALAXY_PORT = sock.getsockname()[1]
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
+            self.configure_tool('Galaxy','galaxy_url',self.GALAXY_URL)
+
+
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
+            print "PYTHON_PORTIS"+ str(self.GALAXY_PORT)
             install = subprocess32.Popen([exec_path, self.TOOL_DIRECTORY,
                                          str(self.GALAXY_PORT)],
                                          cwd=self.REPOS_PARENT)

@@ -57,6 +57,7 @@ sed  -i 's/#database_connection = sqlite:\/\/\/.\/database\/universe.sqlite?isol
 sed -i 's/#admin_users = None/admin_users=irida@irida.ca/' galaxy.ini
 
 # run galaxy on port 8888 instead of 8080; Tomcat runs on 8080 by default.
+echo "BASH_PORTIS $galaxy_port"
 sed -i "s|#port = 8080|port = $galaxy_port|" galaxy.ini
 popd
 popd
