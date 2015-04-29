@@ -1,4 +1,4 @@
-import sock
+import socket
 import getpass
 import inspect
 import time
@@ -78,6 +78,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
         self.IRIDA = os.path.join(self.REPOS, 'irida')
 
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('', 0))
         self.GALAXY_PORT = sock.getsockname()[1]
         self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
@@ -281,8 +282,6 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         secret = self.get_irida_secret(driver, self.IRIDA_AUTH_CODE_ID)
         # It is assumed that the tests are being run from the repo's tool
         # directory:
-        print 'current dir' + os.getcwd()
-        print 'config_path' + self.CONFIG_PATH
         self.configure_tool('IRIDA', 'client_secret', secret)
 
     def get_href(self, response, rel):
