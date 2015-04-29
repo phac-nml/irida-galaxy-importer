@@ -1,3 +1,6 @@
+import sock
+import getpass
+import inspect
 import time
 import sys
 import logging
@@ -8,9 +11,7 @@ import subprocess32
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from ...irida_import import IridaImport
-import inspect
 from . import util
-import getpass
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import LegacyApplicationClient
 from bioblend import galaxy
@@ -26,8 +27,6 @@ class TestIridaImportInt:
 
     GALAXY_PASSWORD = 'Password1'
     GALAXY_DOMAIN = 'localhost'
-    GALAXY_PORT = 8888
-    GALAXY_URL = 'http://'+GALAXY_DOMAIN+':'+str(GALAXY_PORT)
     GALAXY_CMD = ['bash', 'run.sh']
     GALAXY_STOP = 'pkill -u '+USER+' -f "python ./scripts/paster.py"'
     GALAXY_DB_RESET = 'echo "drop database if exists external_galaxy_test;'\
@@ -78,6 +77,10 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
         self.IRIDA = os.path.join(self.REPOS, 'irida')
+
+        sock.bind(('', 0))
+        self.GALAXY_PORT = sock.getsockname()[1]
+        self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
 
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']
@@ -200,6 +203,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             pass
 
     def configure_galaxy_api_key(self, driver):
+        """Make a new Galaxy admin API key and configure the tool to use it"""
         gal = galaxy.GalaxyInstance(self.GALAXY_URL,
                                     email=self.EMAIL,
                                     password=self.GALAXY_PASSWORD)
@@ -207,6 +211,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         print 'key:' + gal.key
 
     def configure_tool(self, section, option,  value):
+        """"""
         config = ConfigParser.ConfigParser()
         config.read(self.CONFIG_PATH)
         config.set(section, option, value)
