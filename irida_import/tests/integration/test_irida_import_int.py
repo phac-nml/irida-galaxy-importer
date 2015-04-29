@@ -16,6 +16,7 @@ from . import util
 import getpass
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import LegacyApplicationClient
+from bioblend import galaxy
 
 
 @pytest.mark.integration
@@ -26,6 +27,7 @@ class TestIridaImportInt:
     USER = getpass.getuser()
     EMAIL = 'irida@irida.ca'
 
+    GALAXY_PASSWORD = 'Password1'
     GALAXY_DOMAIN = 'localhost'
     GALAXY_PORT = 8888
     GALAXY_URL = 'http://'+GALAXY_DOMAIN+':'+str(GALAXY_PORT)
@@ -58,6 +60,14 @@ class TestIridaImportInt:
 
     INSTALL_EXEC = 'install.sh'
 
+    # Sequence files accessed by IRIDA's REST API will not exist when the
+    # tool attempts to access them if they were not uploaded as valid sequence
+    # files
+    FASTQ_CONTENTS = """@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50
+TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT
++SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50
+hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
+
     def setup_class(self):
         """Initialize class variables, install IRIDA, Galaxy, and the tool"""
         module_dir = os.path.dirname(os.path.abspath(__file__))
@@ -65,6 +75,9 @@ class TestIridaImportInt:
         self.REPOS_PARENT = module_dir
         self.REPOS = os.path.join(module_dir, 'repos')
         self.TOOL_DIRECTORY = os.path.dirname(inspect.getfile(IridaImport))
+        self.CONFIG_PATH = os.path.join(self.TOOL_DIRECTORY, 'tests',
+                                        'integration', 'repos', 'galaxy',
+                                        'tools', 'irida_import', 'config.ini')
 
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
         self.IRIDA = os.path.join(self.REPOS, 'irida')
@@ -123,7 +136,7 @@ class TestIridaImportInt:
         self.register_irida(driver)
         self.add_irida_client_password(driver)
         self.add_irida_client_auth_code(driver)
-        self.configure_client_secret(driver)
+        self.configure_irida_client_secret(driver)
 
         # Return an OAuth 2.0 authorized session with IRIDA
         return self.get_irida_oauth(driver)
@@ -150,6 +163,7 @@ class TestIridaImportInt:
                 stop_galaxy()
             request.addfinalizer(finalize_galaxy)
         self.register_galaxy(driver)
+        self.configure_galaxy_api_key(driver)
 
     def test_galaxy_configured(self, setup_galaxy, driver):
         """Verify that Galaxy is accessible"""
@@ -187,6 +201,20 @@ class TestIridaImportInt:
             driver.find_element_by_name("login_button").click()
         except NoSuchElementException:
             pass
+
+    def configure_galaxy_api_key(self, driver):
+        gal = galaxy.GalaxyInstance(self.GALAXY_URL,
+                                    email=self.EMAIL,
+                                    password=self.GALAXY_PASSWORD)
+        self.configure_tool('Galaxy', 'admin_key', gal.key)
+        print 'key:' + gal.key
+
+    def configure_tool(self, section, option,  value):
+        config = ConfigParser.ConfigParser()
+        config.read(self.CONFIG_PATH)
+        config.set(section, option, value)
+        with open(self.CONFIG_PATH, 'w') as config_file:
+            config.write(config_file)
 
     def register_irida(self, driver):
         """Register with IRIDA if neccessary, and then log in"""
@@ -246,19 +274,14 @@ class TestIridaImportInt:
             'client-secret').get_attribute('textContent')
         return secret
 
-    def configure_client_secret(self, driver):
+    def configure_irida_client_secret(self, driver):
         """Configure the client secret for the tool"""
         secret = self.get_irida_secret(driver, self.IRIDA_AUTH_CODE_ID)
         # It is assumed that the tests are being run from the repo's tool
         # directory:
-        config_path = os.path.join(os.getcwd(), 'repos','galaxy','tools','irida_import','config.ini')
         print 'current dir' + os.getcwd()
-        print 'config_path' +config_path
-        config = ConfigParser.ConfigParser()
-        config.read(config_path)
-        config.set('IRIDA', 'client_secret', secret)
-        with open(config_path, 'w') as config_file:
-            config.write(config_file)
+        print 'config_path' + self.CONFIG_PATH
+        self.configure_tool('IRIDA', 'client_secret', secret)
 
     def get_href(self, response, rel):
         """From a Requests response from IRIDA, get a href given a rel"""
@@ -281,17 +304,18 @@ class TestIridaImportInt:
 
         # Pytest manages the temporary directory
         seq1 = tmpdir.join("seq1.fastq")
-        seq1.write("giberish1")
+        seq1.write(self.FASTQ_CONTENTS)
         sequence1 = irida.post(sequences1, files={'file': open(str(seq1), 'rb')})
+
         seq2 = tmpdir.join("seq2.fastq")
-        seq2.write("giberish2")
+        seq2.write(self.FASTQ_CONTENTS)
         sequence2 = irida.post(sequences1, files={'file': open(str(seq2), 'rb')})
 
         sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
                                              'sequencerSampleId': 'PS_2'})
         sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
         seq3 = tmpdir.join("seq3.fastq")
-        seq3.write("giberish3")
+        seq3.write(self.FASTQ_CONTENTS)
         sequence3 = irida.post(sequences2, files={'file': open(str(seq3), 'rb')})
 
         print project.text
