@@ -211,7 +211,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         print 'key:' + gal.key
 
     def configure_tool(self, section, option,  value):
-        """"""
+        """Write tool configuration data"""
         config = ConfigParser.ConfigParser()
         config.read(self.CONFIG_PATH)
         config.set(section, option, value)
