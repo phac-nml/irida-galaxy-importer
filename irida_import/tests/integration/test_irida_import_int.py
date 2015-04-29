@@ -1,5 +1,4 @@
 import time
-import json
 import sys
 import logging
 import os
@@ -7,9 +6,7 @@ import ConfigParser
 import pytest
 import subprocess32
 from selenium import webdriver
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import StaleElementReferenceException
 from ...irida_import import IridaImport
 import inspect
 from . import util
@@ -358,7 +355,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         driver.find_element_by_id('email').send_keys(self.EMAIL)
         driver.find_element_by_css_selector('button.btn.btn-primary').click()
 
-        time.sleep(20) # Wait for import to complete
+        time.sleep(20) #  Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
         assert succeeded - initially_succeeded > 0, "Import did not complete successfully"
@@ -366,13 +363,3 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
     def test_cart_import_multi_project(self, setup_irida, setup_galaxy, driver):
         """Using the cart, import multiple projects from IRIDA to Galaxy"""
         return True
-
-
-
-
-
-
-
-
-
-
