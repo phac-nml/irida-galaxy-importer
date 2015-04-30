@@ -19,6 +19,12 @@ from bioblend import galaxy
 
 @pytest.mark.integration
 class TestIridaImportInt:
+    """
+    Perform integration tests on the IRIDA import tool for Galaxy
+
+    To use an already running instance of Galaxy on port 8888, installation
+    must be disabled, in addition to Galaxy starting/stopping
+    """
 
     TIMEOUT = 600  # seconds
 
@@ -88,7 +94,6 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             sock.bind(('', 0))
             self.GALAXY_PORT = sock.getsockname()[1]
             self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
-            self.configure_tool('Galaxy','galaxy_url',self.GALAXY_URL)
 
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
@@ -172,6 +177,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             request.addfinalizer(finalize_galaxy)
         self.register_galaxy(driver)
         self.configure_galaxy_api_key(driver)
+        self.configure_tool('Galaxy','galaxy_url', self.GALAXY_URL)
 
     def test_galaxy_configured(self, setup_galaxy, driver):
         """Verify that Galaxy is accessible"""
@@ -218,7 +224,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         self.configure_tool('Galaxy', 'admin_key', gal.key)
         print 'key:' + gal.key
 
-    def configure_tool(self, section, option,  value):
+    def configure_tool(self, section, option, value):
         """Write tool configuration data"""
         config = ConfigParser.ConfigParser()
         config.read(self.CONFIG_PATH)
