@@ -98,7 +98,6 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
-            print "PYTHON_PORTIS"+ str(self.GALAXY_PORT)
             install = subprocess32.Popen([exec_path, self.TOOL_DIRECTORY,
                                          str(self.GALAXY_PORT)],
                                          cwd=self.REPOS_PARENT)
