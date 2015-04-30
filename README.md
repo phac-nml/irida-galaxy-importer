@@ -143,13 +143,13 @@ To run only the unit or integration tests, use `pytest -m unit` or `pytest -m in
 
 #### Generating Code Coverage Reports:
 
-Install pytest-cov:
+First install pytest-cov:
 
 ```
 pip install pytest-cov
 ```
 
-To generate a html line by line code coverage report for a file, for example for `irida_import.py`, navigate to `$GALAXY_ROOT/tools/irida_import` and then invoke:
+Then, to generate a html line by line code coverage report for a file--for example for `irida_import.py`--navigate to `$GALAXY_ROOT/tools/irida_import` and then invoke:
 
 ```bash
 py.test --cov=irida_import.py --cov-report=html
