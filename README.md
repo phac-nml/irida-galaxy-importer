@@ -122,6 +122,11 @@ The Mock library, pytest-mock, subprocess32, and Splinter must be installed as w
 pip install -U mock pytest-mock subprocess32 splinter
 ```
 
+Requests 2.6.2 causes the test setup to fail while uploading sequence files to IRIDA. Use Requests 2.6.0 instead:
+```
+pip install requests==2.6.0 requests-oauthlib==0.4.2
+```
+
 MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases
 `irida_test`, and `external_galaxy_test`:
 
