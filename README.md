@@ -17,11 +17,11 @@ In both cases, a tool configuration file will need to be modified, and `galaxy.i
 If you are installing from a toolshed, note that because of how Galaxy uses virtualenv, 
 the tool may attempt to use the wrong versions of libraries. 
 To fix this, change the line in the `env.sh` that Galaxy creates for the tool that reads something like:
-```
+```bash
 PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
 ```
 to read:
-```
+```bash
 PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
 ```
 
@@ -151,7 +151,7 @@ pip install pytest-cov
 
 To generate a html line by line code coverage report for a file, for example for `irida_import.py`, navigate to `$GALAXY_ROOT/tools/irida_import` and then invoke:
 
-```
+```bash
 py.test --cov=irida_import.py --cov-report=html
 ```
 
