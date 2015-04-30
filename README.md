@@ -17,11 +17,11 @@ In both cases, a tool configuration file will need to be modified, and `galaxy.i
 If you are installing from a toolshed, note that because of how Galaxy uses virtualenv, 
 the tool may attempt to use the wrong versions of libraries. 
 To fix this, change the line in the `env.sh` that Galaxy creates for the tool that reads something like:
-```
+```bash
 PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
 ```
 to read:
-```
+```bash
 PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
 ```
 
@@ -122,6 +122,11 @@ The Mock library, pytest-mock, subprocess32, and Splinter must be installed as w
 pip install -U mock pytest-mock subprocess32 splinter
 ```
 
+Requests 2.6.2 causes the test setup to fail while uploading sequence files to IRIDA. Use Requests 2.6.0 instead:
+```
+pip install requests==2.6.0 requests-oauthlib==0.4.2
+```
+
 MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases
 `irida_test`, and `external_galaxy_test`:
 
@@ -143,15 +148,15 @@ To run only the unit or integration tests, use `pytest -m unit` or `pytest -m in
 
 #### Generating Code Coverage Reports:
 
-Install pytest-cov:
+First install pytest-cov:
 
 ```
 pip install pytest-cov
 ```
 
-To generate a html line by line code coverage report for a file, for example for `irida_import.py`, navigate to `$GALAXY_ROOT/tools/irida_import` and then invoke:
+Then, to generate a html line by line code coverage report for a file--for example for `irida_import.py`--navigate to `$GALAXY_ROOT/tools/irida_import` and then invoke:
 
-```
+```bash
 py.test --cov=irida_import.py --cov-report=html
 ```
 
