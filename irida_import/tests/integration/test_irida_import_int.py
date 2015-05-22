@@ -197,7 +197,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         driver.get(self.GALAXY_URL)
         driver.find_element_by_link_text("User").click()
         driver.find_element_by_link_text("Register").click()
-#        driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
+        driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
         driver.find_element_by_id("email_input").send_keys(self.EMAIL)
         driver.find_element_by_id("password_input").send_keys("Password1")
         driver.find_element_by_id("password_check_input").send_keys("Password1")
@@ -208,7 +208,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             driver.get(self.GALAXY_URL)
             driver.find_element_by_link_text("User").click()
             driver.find_element_by_link_text("Login").click()
-#            driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
+            driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
             driver.find_element_by_name("email").send_keys(self.EMAIL)
             driver.find_element_by_name("password").send_keys("Password1")
             driver.find_element_by_name("login_button").click()
@@ -340,7 +340,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         initially_succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
         driver.find_element_by_css_selector("#title_getext > a > span").click()
         driver.find_element_by_link_text("IRIDA").click()
-        driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
+#         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
 
         # Sometimes a login is required
         try:
