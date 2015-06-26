@@ -340,7 +340,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         initially_succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
         driver.find_element_by_css_selector("#title_getext > a > span").click()
         driver.find_element_by_link_text("IRIDA").click()
-        driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
+#         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
 
         # Sometimes a login is required
         try:
