@@ -1,18 +1,21 @@
-import time
-import logging
 import argparse
-import json
-import os.path
 import ConfigParser
+import json
+import logging
+import os.path
+import pprint
+import re
 import shutil
+import time
 from xml.etree import ElementTree
 
-from bioblend.galaxy.objects import GalaxyInstance
 from bioblend import galaxy
+from bioblend.galaxy.objects import GalaxyInstance
 from requests_oauthlib import OAuth2Session
 
 from sample import Sample
 from sample_file import SampleFile
+from sample_pair import SamplePair
 
 
 # FOR DEVELOPMENT ONLY!!
@@ -36,51 +39,125 @@ class IridaImport:
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
 
-    def get_samples(self, samples_dict):
+
+    def make_irida_request(self, request_url):
         """
-        Create sample objects from a dictionary.
+        Requests json object from IRIDA REST API.
 
-        :type json_params_dict: dict
-        :param json_params__dict: a dictionary to parse. See one of the test
-        json files for formating information (the format will likely
-        change soon)
-        :return: a list of output samples
+        :type request_url: str
+        :param request_url: a url to make a get request to. See IRIDA REST API 
+        docs for more information
+        :return: a list of either single output samples(string) or paired output
+        samples(tuple)
         """
-        samples = []
-        for sample_input in samples_dict:
-            sample_name = sample_input['name']
-            sample_path = sample_input['_links']['self']['href']
-
-            sample = Sample(sample_name, sample_path)
-
-            for sample_file_input in sample_input['_embedded']['sample_files']:
-                sample_file_url = sample_file_input['_links']['self']['href']
-
-                sample_file = self.get_sample_file(sample_file_url)
-                sample.sample_files.append(sample_file)
-
-            samples.append(sample)
-        return samples
-
-    def get_sample_file(self, sample_file_url):
-        """
-        From an IRIDA REST API URL, get a sample file
-        :type str
-        :param sample_file_url: the URL to get the sample file representation
-        :return: a sample file with a name and path
-        """
-        response = self.irida.get(sample_file_url)
+        response = self.irida.get(request_url)
 
         # Raise an exception if we get 4XX or 5XX server response
         response.raise_for_status()
 
         resource = response.json()['resource']
         self.logger.debug("The JSON parameters from the IRIDA API are:\n" +
-                          json.dumps(resource, indent=2))
+                          self.pp.pformat(json.dumps(dict(resource), indent=2)))
 
+        return resource
+
+
+    def get_sample_meta(self, samples_dict):
+        """
+        Gets Sample object meta information.
+
+        :type samples_dict: dict
+        :param samples_dict: a dictionary to parse. See one of the test
+        json files for formating information (the format will likely
+        change soon)
+        :return: a list of Sample objects with it's name and paired/unpaired
+        path
+        """
+        samples = []
+
+        for sample_input in samples_dict:
+            sample_dir_paths = sample_input['_embedded']['sample_files']
+            sample_name = sample_input['name']
+
+            for sample_file_path in sample_dir_paths:
+                sample_path = sample_file_path['_links']['self']['href']
+
+            sample_resource = self.make_irida_request(sample_path)
+            paths = sample_resource['links']
+            paired_path = ""
+            unpaired_path = ""
+
+            for link in paths:
+                if link['rel'] == "sample/sequenceFiles/pairs":
+                    paired_path = link['href']
+                elif link['rel'] == "sample/sequenceFiles/unpaired":
+                    unpaired_path = link['href']
+
+            samples.append(Sample(sample_name, paired_path, unpaired_path))
+
+        return samples
+
+
+    def get_sample_file(self, file_dict):
+        """
+        From a dictionary, get file information
+
+        :type file_dict: dict
+        :param file_dict: the URL to get the sample file representation
+        :return: a sample file with a name and path
+        """
+        resource = file_dict
         name = resource['fileName']
         path = resource['file']
+
         return SampleFile(name, path)
+
+    def get_samples(self, samples_dict):
+        """
+        Gets sample objects from a dictionary.
+
+        :type samples_dict: dict
+        :param samples_dict: a dictionary to parse. See one of the test
+        json files for formating information (the format will likely
+        change soon)
+        :return: a list of Samples with all necessary information
+        """
+        samples = self.get_sample_meta(samples_dict)
+
+        for sample in samples:
+
+            # Add a tuple of sample_file objects for each pair
+            paired_resource =  self.make_irida_request(sample.paired_path)
+            for pair in paired_resource['resources']:
+                curr_pair = dict()
+                pair_name = "pair_" + str(pair['identifier'])
+                for pair_file in pair['files']:
+                    pair_sample_file = self.get_sample_file(pair_file)
+
+                    if re.search( r".*_R1.*", pair_sample_file.name):
+                        if re.search( r".*_R2.*", pair_sample_file.name):
+                            error = "Found _R1 and _R2 in file name: "
+                            error += pair_sample_file.name
+                            self.print_logged(error)
+                            raise TypeError(error)
+                        else:
+                            curr_pair['forward'] = pair_sample_file
+                    elif re.search( r".*_R2.*", pair_sample_file.name):
+                        curr_pair['reverse'] = pair_sample_file
+                    else:
+                        error = "_R1 nor _R2 found in file name: "
+                        error += pair_sample_file.name
+                        self.print_logged(error)
+                        raise TypeError(error)
+                sample.add_pair(SamplePair(pair_name, curr_pair))
+
+            # Add a sample_file object for each single end read
+            unpaired_resource =  self.make_irida_request(sample.unpaired_path)
+            for single in unpaired_resource['resources']:
+                sample.add_file(self.get_sample_file(single))
+
+        return samples
+
 
     def get_first_or_make_lib(self, desired_lib_name, email):
         """"
@@ -117,6 +194,7 @@ class IridaImport:
             self.reg_gi.libraries.set_library_permissions(
                 lib.id, access_in=[rid], modify_in=[rid], add_in=[rid])
         return lib
+
 
     def create_folder_if_nec(self, folder_path):
         """
@@ -156,6 +234,7 @@ class IridaImport:
             self.logger.debug('Made folder with path:' + '\'%s\'' % folder_path)
         return made_folder
 
+
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
         """
         Find if an item of given type and attribute exists in the library
@@ -181,6 +260,7 @@ class IridaImport:
                     break
         return ans
 
+
     def unique_file(self, sample_file_path, galaxy_name):
         """
         Find out if a sample file is unique
@@ -191,7 +271,7 @@ class IridaImport:
         :param galaxy_name: the full path to the sample file as it would
         exist in Galaxy
         :rtype: Boolean
-        :return: whether a file with this name and size does not exist in Galaxy
+        :return: True for unique or the id of the existing dataset
         """
         self.logger.debug(
             "Doing a basic check for already existing sample file at: " +
@@ -202,48 +282,164 @@ class IridaImport:
         datasets = self.library.get_datasets(name=galaxy_name)
         for dataset in datasets:
             # Galaxy sometimes appends a newline, see:
-            # https://bitbucket.org/galaxy/galaxy-dist/src/7e4d21621ce12e13ebbdf9fd3259df58c3ef124c/lib/galaxy/datatypes/data.py?at=stable#cl-673
+            # https://bitbucket.org/galaxy/galaxy-dist/src/
+            # 7e4d21621ce12e13ebbdf9fd3259df58c3ef124c/lib/
+            # galaxy/datatypes/data.py?at=stable#cl-673
             if dataset.file_size in (size, size + 1):
-                unique = False
+                unique = dataset.id
                 break
         return unique
 
-    def add_sample_if_nec(self, sample):
-        """
-        Upload a sample's sample files if they are not already present in Galaxy
 
-        :type sample: Sample
-        :param sample: the sample to upload
+    def add_samples_if_nec(self, samples=[]):
         """
-        added_to_galaxy = []
-        for sample_file in sample.sample_files:
-            sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
-            galaxy_sample_file_name = sample_folder_path+'/'+sample_file.name
+        Uploads a list of samples if they are not already present in Galaxy
 
-            if os.path.isfile(sample_file.path):
-                if self.unique_file(sample_file.path, galaxy_sample_file_name):
-                    self.logger.debug(
-                        "  Sample file does not exist so uploading/linking it")
-                    added = self.link(
-                        sample_file, sample_folder_path)
-                    if(added):
-                        added_to_galaxy.extend(added)
-                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                          ' Imported file with Galaxy path: ' +
-                                          galaxy_sample_file_name)
-                        self.uploaded_files_log.append(
-                            {'galaxy_name': galaxy_sample_file_name})
-                else:
+        :type samples: list
+        :param samples: the list of samples to upload
+        :return: A tuple with a dict of the collection and the number of single
+                 files uploaded
+        """
+        collection_array = []
+        file_sum = 0
+        hist = self.histories
+
+        for sample in samples:
+            self.logger.debug("sample name is" + sample.name)
+            self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
+
+            added_to_galaxy = []
+
+            for sample_item in sample.get_reads():
+                sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
+                try:
+                    files = sample_item.files
+                    pair_path = sample_folder_path + "/" + sample_item.name
+
+                    datasets = dict()
+                    collection_name = "/" + str(sample.name) + "/" + str(sample_item.name)
+                    for file_key in files.keys():
+                        _file = files[file_key]
+                        self.create_folder_if_nec(pair_path)
+                        added_to_galaxy = self._add_file(added_to_galaxy,
+                                                         pair_path,
+                                                         _file)
+
+                        if file_key == "forward":
+                            datasets["forward"] = added_to_galaxy[0]['id']
+                        elif file_key == "reverse":
+                            datasets["reverse"] = added_to_galaxy[0]['id']
+                        else:
+                            error = "File type " + str(file_key) 
+                            error += " not recognized."
+                            raise TypeError(error)
+
+                    # Add datasets to the current history
+                    datasets['forward'] = hist.upload_dataset_from_library(
+                        hist.get_most_recently_used_history()['id'],
+                        datasets['forward']
+                    )['id']
+
+                    datasets['reverse'] = hist.upload_dataset_from_library(
+                        hist.get_most_recently_used_history()['id'],
+                        datasets['reverse']
+                    )['id']
+
+                    # Put datasets into the collection
+                    collection_elem_ids = [{ 
+                            "src": "hda",
+                            "name": "forward",
+                            "id": datasets["forward"]
+                        }, { 
+                            "src": "hda",
+                            "name": "reverse",
+                            "id": datasets["reverse"]
+                        }]
+                    collection_array.append({
+                        'src': 'new_collection',
+                        'name': collection_name,
+                        'collection_type': 'paired',
+                        'element_identifiers': collection_elem_ids,
+                    })
+
+                    # Hide datasets in history
+                    hist.update_dataset(
+                        hist.get_most_recently_used_history()['id'],
+                        datasets['forward'],
+                        visible=False
+                    )
+                    hist.update_dataset(
+                        hist.get_most_recently_used_history()['id'],
+                        datasets['reverse'],
+                        visible=False
+                    )
+                except AttributeError:
+                    added_to_galaxy = self._add_file(added_to_galaxy,
+                                                     sample_folder_path,
+                                                     sample_item)
+                    dataset = self.reg_gi.datasets.show_dataset(
+                            added_to_galaxy[0]['id']
+                        )
+                    hist.upload_dataset_from_library(
+                        hist.get_most_recently_used_history()['id'],
+                        dataset['id']
+                    )
+                    file_sum += 1
+        
+        if collection_array != []:
+            collection_desc = {
+                "name": 'Billy Bob',
+                "collection_type": "list:paired",
+                "element_identifiers": collection_array
+            }
+            added_to_history = hist.create_dataset_collection(
+                hist.get_most_recently_used_history()['id'],
+                collection_desc
+            )
+
+        return [collection_array, file_sum]
+
+    def _add_file(self, added_to_galaxy, sample_folder_path, sample_file=None):
+        """
+        Upload a sample's sample files into Galaxy
+
+        :type sample_folder_path: str
+        :param sample_folder_path: A directory path for where the sample get_roles
+        :type sample_file: SampleFile
+        :param sample_file: A file object containing the file to upload
+        :return: dataset object or the id of an existing dataset
+        """
+        galaxy_sample_file_name = sample_folder_path+'/'+sample_file.name
+        if os.path.isfile(sample_file.path):
+            if self.unique_file(sample_file.path, galaxy_sample_file_name) is True:
+                self.logger.debug(
+                    "  Sample file does not exist so uploading/linking it")
+                added = self.link(
+                    sample_file, sample_folder_path)
+                if(added):
+                    added_to_galaxy = added
                     self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                      ' Skipped file with Galaxy path: ' +
+                                      ' Exported file with Galaxy path: ' +
                                       galaxy_sample_file_name)
-                    self.skipped_files_log.append(
+                    self.uploaded_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
             else:
-                error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
-                         ).format(galaxy_sample_file_name, sample_file.path)
-                raise ValueError(error)
+                # Return dataset id of existing file
+                dataset_id = self.unique_file(sample_file.path, 
+                                              galaxy_sample_file_name)
+                added_to_galaxy = [{'id': dataset_id}]
+                self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                  ' Skipped file with Galaxy path: ' +
+                                  galaxy_sample_file_name)
+                self.skipped_files_log.append(
+                    {'galaxy_name': galaxy_sample_file_name})
+        else:
+            error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
+                     ).format(galaxy_sample_file_name, sample_file.path)
+            raise ValueError(error)
+
         return added_to_galaxy
+
 
     def link(self, sample_file, sample_folder_path):
         """
@@ -275,7 +471,9 @@ class IridaImport:
             link_data_only='link_to_files',
             file_type=file_type
         )
+
         return added
+
 
     def print_summary(self, failed=False):
         """
@@ -290,21 +488,23 @@ class IridaImport:
                                       .format(file_log['galaxy_name']))
 
         if failed:
-            self.print_logged('Import failed.')
+            self.print_logged('Export failed.')
         else:
-            self.print_logged('Import completed successfully.')
+            self.print_logged('Export completed successfully.')
         self.print_logged('Final summary:\n'
-                          '{0} file(s) imported and {1} file(s) skipped.'
+                          '{0} file(s) exported and {1} file(s) skipped.'
                           .format(len(self.uploaded_files_log),
                                   len(self.skipped_files_log)))
         print_files_log(
             '\nSome files were skipped because they were not unique:',
             self.skipped_files_log)
 
+
     def print_logged(self, message):
         """Print a message and log it"""
         self.logger.info(message)
         print message
+
 
     def get_IRIDA_session(self, oauth_dict):
         """
@@ -327,6 +527,7 @@ class IridaImport:
         if PRINT_TOKEN_INSECURELY:
             self.print_logged(irida.token)
         return irida
+
 
     def configure(self):
         """
@@ -386,6 +587,7 @@ class IridaImport:
 
             tree.write(xml_path)
 
+
     def import_to_galaxy(self, json_parameter_file, log, token=None,
                          config_file=None):
         """
@@ -411,7 +613,7 @@ class IridaImport:
             param_dict = full_param_dict['param_dict']
             json_params_dict = json.loads(param_dict['json_params'])
 
-            self.print_logged("Importing files from IRIDA to Galaxy...")
+            self.print_logged("Exporting files from IRIDA to Galaxy...")
 
             self.uploaded_files_log = []
             self.skipped_files_log = []
@@ -423,6 +625,7 @@ class IridaImport:
 
             self.token = token
             self.irida = self.get_IRIDA_session(oauth_dict)
+            self.pp = pprint.PrettyPrinter(indent=4)
 
             self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
 
@@ -431,6 +634,8 @@ class IridaImport:
             self.reg_gi = galaxy.GalaxyInstance(
                 url=self.GALAXY_URL,
                 key=self.ADMIN_KEY)
+
+            self.histories = self.reg_gi.histories
 
             # Each sample contains a list of sample files
             samples = self.get_samples(samples_dict)
@@ -441,10 +646,10 @@ class IridaImport:
             self.create_folder_if_nec(self.REFERENCE_PATH)
 
             # Add each sample's files to the library
-            for sample in samples:
-                self.logger.debug("sample name is" + sample.name)
-                self.create_folder_if_nec(self.ILLUMINA_PATH+'/'+sample.name)
-                self.add_sample_if_nec(sample)
+            status = self.add_samples_if_nec(samples)
+            self.logger.debug("Collection items: \n" + self.pp.pformat(status[0]))
+            self.logger.debug("Number of files on galaxy: " + str(status[1]))
+
             self.print_summary()
 
 """

@@ -10,12 +10,17 @@ import pytest
 import subprocess32
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
 from ...irida_import import IridaImport
 from . import util
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import LegacyApplicationClient
 from bioblend import galaxy
 
+os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL'] = "1"
+os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY'] = "1"
+os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY'] = "1"
+os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA'] = "1"
 
 @pytest.mark.integration
 class TestIridaImportInt:
@@ -26,13 +31,13 @@ class TestIridaImportInt:
     must be disabled, in addition to Galaxy starting/stopping
     """
 
-    TIMEOUT = 600  # seconds
+    TIMEOUT = 15  # seconds
 
     USER = getpass.getuser()
-    EMAIL = 'irida@irida.ca'
+    EMAIL = 'daniel.bouchard@phac-aspc.gc.ca'
 
-    GALAXY_PASSWORD = 'Password1'
-    GALAXY_DOMAIN = 'localhost'
+    GALAXY_PASSWORD = 'Python'
+    GALAXY_DOMAIN = 'jchan.corefacility.ca'
     GALAXY_CMD = ['bash', 'run.sh']
     GALAXY_STOP = 'pkill -u '+USER+' -f "python ./scripts/paster.py"'
     GALAXY_DB_RESET = 'echo "drop database if exists external_galaxy_test;'\
@@ -40,7 +45,7 @@ class TestIridaImportInt:
         '"| mysql -u test -ptest'
 
     IRIDA_DOMAIN = 'localhost'
-    IRIDA_PORT = 8080
+    IRIDA_PORT = 8081
     IRIDA_URL = 'http://'+IRIDA_DOMAIN+':'+str(IRIDA_PORT)
     IRIDA_CMD = ['mvn', 'clean', 'jetty:run',
                  '-Djdbc.url=jdbc:mysql://localhost:3306/irida_test',
@@ -56,7 +61,7 @@ class TestIridaImportInt:
     IRIDA_PASSWORD_ID = 'password_client'
     IRIDA_AUTH_CODE_ID = 'auth_code_client'
     IRIDA_USER = 'admin'
-    IRIDA_PASSWORD = 'Password1'
+    IRIDA_PASSWORD = 'password1'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
     IRIDA_PROJECTS = IRIDA_URL + '/api/projects'
 
@@ -87,8 +92,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']
-            self.GALAXY_PORT = 8080
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN
         except KeyError:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('', 0))
@@ -157,8 +161,11 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
     def setup_galaxy(self, request, driver):
         """Set up Galaxy for tests (Start if required, register, log in)"""
         def stop_galaxy():
-            print 'Killing Galaxy'
-            subprocess32.call(self.GALAXY_STOP, shell=True)
+            try:
+                os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY']
+            except KeyError:
+                print 'Killing Galaxy'
+                subprocess32.call(self.GALAXY_STOP, shell=True)
 
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY']
@@ -199,8 +206,8 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         driver.find_element_by_link_text("Register").click()
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
         driver.find_element_by_id("email_input").send_keys(self.EMAIL)
-        driver.find_element_by_id("password_input").send_keys("Password1")
-        driver.find_element_by_id("password_check_input").send_keys("Password1")
+        driver.find_element_by_id("password_input").send_keys("password1")
+        driver.find_element_by_id("password_check_input").send_keys("password1")
         driver.find_element_by_id("name_input").send_keys("irida-test")
         driver.find_element_by_id("send").click()
 
@@ -210,7 +217,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             driver.find_element_by_link_text("Login").click()
             driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
             driver.find_element_by_name("email").send_keys(self.EMAIL)
-            driver.find_element_by_name("password").send_keys("Password1")
+            driver.find_element_by_name("password").send_keys("password1")
             driver.find_element_by_name("login_button").click()
         except NoSuchElementException:
             pass
@@ -248,10 +255,14 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
     def login_irida(self, driver, username, password):
         """Log in to IRIDA (assumes the login page is opened by the driver)"""
-        driver.find_element_by_id("emailTF").send_keys(username)
-        driver.find_element_by_id(
-            "passwordTF").send_keys(password)
-        driver.find_element_by_id("submitBtn").click()
+        try:
+            driver.find_element_by_id("emailTF").send_keys(username)
+            driver.find_element_by_id(
+                "passwordTF").send_keys(password)
+            driver.find_element_by_id("submitBtn").click()
+        except NoSuchElementException:
+            # If already logged in
+            pass
 
     def add_irida_client_auth_code(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
@@ -340,7 +351,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         initially_succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
         driver.find_element_by_css_selector("#title_getext > a > span").click()
         driver.find_element_by_link_text("IRIDA").click()
-#         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
+        # driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
 
         # Sometimes a login is required
         try:
@@ -353,14 +364,23 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
         # These checkbox elements cannot be clicked directly
         # Using IDs would complicate running the tests without restarting IRIDA
-        el1 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[1]/td/div/label")
-        el2 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[2]/td/div/label")
+
         action = webdriver.common.action_chains.ActionChains(driver)
-        action.move_to_element_with_offset(el1, 5, 5)
-        action.click()
-        action.move_to_element_with_offset(el2, 5, 5)
-        action.click()
-        action.perform()
+
+        stale = True
+        while stale:
+            try:
+                table = driver.find_element_by_xpath("//table[@id='samplesTable']")
+
+                action.move_to_element_with_offset(table, 30, 55)
+                action.click()
+                action.move_to_element_with_offset(table, 30, 100)
+                action.click()
+                action.perform()
+
+                stale = False
+            except (StaleElementReferenceException, NoSuchElementException):
+                pass
 
         driver.find_element_by_id('exportOptionsBtn').click()
 

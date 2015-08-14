@@ -14,3 +14,17 @@ class SampleFile:
 
         self.path = path
         self.name = name
+
+    def __eq__(self, sample_file):
+        equal = False
+
+        try:
+            if self.path == sample_file.path:
+                equal = True
+        except AttributeError:
+            pass
+
+        return equal
+
+    def __repr__(self):
+        return self.name + " @ " + self.path
