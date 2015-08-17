@@ -105,7 +105,7 @@ class IridaImport:
 
         resource = response.json()['resource']
         self.logger.debug("The JSON parameters from the IRIDA API are:\n" +
-                          pp.pformat(json.dumps(resource, indent=2)))
+                          self.pp.pformat(json.dumps(resource, indent=2)))
 
         return resource
 
@@ -325,7 +325,7 @@ class IridaImport:
         return found
 
 
-    def add_samples_if_nec(self, samples, hist_id):
+    def add_samples_if_nec(self, samples=[], hist_id=None):
         """
         Uploads a list of samples if they are not already present in Galaxy
 
@@ -438,7 +438,7 @@ class IridaImport:
 
         return [collection_array, file_sum]
 
-    def _add_file(self, added_to_galaxy, sample_folder_path, sample_file):
+    def _add_file(self, added_to_galaxy=None, sample_folder_path=None, sample_file=None):
         """
         Upload a sample's sample files into Galaxy
 
@@ -643,6 +643,7 @@ class IridaImport:
         :type config_file: str
         :param config_file: the name of a file to configure from
         """
+        self.pp = pprint.PrettyPrinter(indent=4)
         self.logger = logging.getLogger('irida_import')
         self.logger.setLevel(logging.INFO)
         self.configure()
@@ -674,7 +675,7 @@ class IridaImport:
                 key=self.ADMIN_KEY)
 
             self.histories = self.reg_gi.histories
-            if hist_id == None:
+            if not hist_id:
                 hist_id = self.histories.get_most_recently_used_history()['id']
 
             # Each sample contains a list of sample files
@@ -687,7 +688,7 @@ class IridaImport:
 
             # Add each sample's files to the library
             status = self.add_samples_if_nec(samples, hist_id)
-            self.logger.debug("Collection items: \n" + pp.pformat(status[0]))
+            self.logger.debug("Collection items: \n" + self.pp.pformat(status[0]))
             self.logger.debug("Number of files on galaxy: " + str(status[1]))
 
             self.print_summary()
@@ -713,11 +714,10 @@ if __name__ == '__main__':
         help='The tool must configure itself before Galaxy can be started '
         'Use this option to do so')
     parser.add_argument(
-        '-i', '--history-id', dest='hist_id', default=None,
+        '-i', '--history-id', dest='hist_id', default=False,
         help='The tool needs a history to store the output in, this passes '
         'in an id')
 
-    pp = pprint.PrettyPrinter(indent=4)
     args = parser.parse_args()
     log_format = "%(levelname)s: %(message)s"
     logging.basicConfig(filename=args.log,
