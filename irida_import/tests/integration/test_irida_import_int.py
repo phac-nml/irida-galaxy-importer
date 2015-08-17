@@ -31,13 +31,13 @@ class TestIridaImportInt:
     must be disabled, in addition to Galaxy starting/stopping
     """
 
-    TIMEOUT = 15  # seconds
+    TIMEOUT = 600  # seconds
 
     USER = getpass.getuser()
-    EMAIL = 'daniel.bouchard@phac-aspc.gc.ca'
+    EMAIL = 'irida@irida.ca'
 
-    GALAXY_PASSWORD = 'Python'
-    GALAXY_DOMAIN = 'jchan.corefacility.ca'
+    GALAXY_PASSWORD = 'Password1'
+    GALAXY_DOMAIN = 'localhost'
     GALAXY_CMD = ['bash', 'run.sh']
     GALAXY_STOP = 'pkill -u '+USER+' -f "python ./scripts/paster.py"'
     GALAXY_DB_RESET = 'echo "drop database if exists external_galaxy_test;'\
@@ -45,7 +45,7 @@ class TestIridaImportInt:
         '"| mysql -u test -ptest'
 
     IRIDA_DOMAIN = 'localhost'
-    IRIDA_PORT = 8081
+    IRIDA_PORT = 8080
     IRIDA_URL = 'http://'+IRIDA_DOMAIN+':'+str(IRIDA_PORT)
     IRIDA_CMD = ['mvn', 'clean', 'jetty:run',
                  '-Djdbc.url=jdbc:mysql://localhost:3306/irida_test',
@@ -61,7 +61,7 @@ class TestIridaImportInt:
     IRIDA_PASSWORD_ID = 'password_client'
     IRIDA_AUTH_CODE_ID = 'auth_code_client'
     IRIDA_USER = 'admin'
-    IRIDA_PASSWORD = 'password1'
+    IRIDA_PASSWORD = 'Password1'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
     IRIDA_PROJECTS = IRIDA_URL + '/api/projects'
 
@@ -92,13 +92,11 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN
+            self.GALAXY_PORT = 8080
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
         except KeyError:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('', 0))
-            self.GALAXY_PORT = sock.getsockname()[1]
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
-
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
@@ -206,8 +204,8 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         driver.find_element_by_link_text("Register").click()
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
         driver.find_element_by_id("email_input").send_keys(self.EMAIL)
-        driver.find_element_by_id("password_input").send_keys("password1")
-        driver.find_element_by_id("password_check_input").send_keys("password1")
+        driver.find_element_by_id("password_input").send_keys("Password1")
+        driver.find_element_by_id("password_check_input").send_keys("Password1")
         driver.find_element_by_id("name_input").send_keys("irida-test")
         driver.find_element_by_id("send").click()
 
@@ -217,7 +215,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             driver.find_element_by_link_text("Login").click()
             driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
             driver.find_element_by_name("email").send_keys(self.EMAIL)
-            driver.find_element_by_name("password").send_keys("password1")
+            driver.find_element_by_name("password").send_keys("Password1")
             driver.find_element_by_name("login_button").click()
         except NoSuchElementException:
             pass
@@ -241,7 +239,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
     def register_irida(self, driver):
         """Register with IRIDA if neccessary, and then log in"""
         driver.get(self.IRIDA_URL)
-        self.login_irida(driver, 'admin', 'password1')
+        self.login_irida(driver, 'admin', 'Password1')
 
         # Set a new password if necessary
         try:
@@ -364,9 +362,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
         # These checkbox elements cannot be clicked directly
         # Using IDs would complicate running the tests without restarting IRIDA
-
         action = webdriver.common.action_chains.ActionChains(driver)
-
         stale = True
         while stale:
             try:
@@ -380,7 +376,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
                 stale = False
             except (StaleElementReferenceException, NoSuchElementException):
-                pass
+                time.sleep(1)
 
         driver.find_element_by_id('exportOptionsBtn').click()
 

@@ -4,7 +4,7 @@
         <requirement type="package" version="1.0.0">irida-galaxy-importer</requirement>
     </requirements>
     <command interpreter="python">irida_import.py
-	    --json_parameter_file "${output}" --log-file $log_file
+	    --json_parameter_file "${output}" --log-file $log_file --history-id "$__app__.security.encode_id($output.history.id)"
     </command>
     <inputs action="http://localhost:8080/projects" check_values="False" method="post"> 
         <display>import data from IRIDA to Galaxy</display>
