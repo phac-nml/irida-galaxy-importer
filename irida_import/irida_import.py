@@ -105,7 +105,7 @@ class IridaImport:
 
         resource = response.json()['resource']
         self.logger.debug("The JSON parameters from the IRIDA API are:\n" +
-                          self.pp.pformat(json.dumps(resource, indent=2)))
+                          self.pp.pformat(json.dumps(dict(resource), indent=2)))
 
         return resource
 

@@ -342,7 +342,6 @@ class TestIridaImport:
 
     def test_import_to_galaxy(self, setup_json, mocker):
         """Test reading a file and running apropriate methods"""
-        pp = pprint.PrettyPrinter(indent=4)
         mocker.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
         mocked_open_function = mock.mock_open(read_data=setup_json)
         with mock.patch("__builtin__.open", mocked_open_function):
