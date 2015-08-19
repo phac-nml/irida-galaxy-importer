@@ -17,10 +17,13 @@ from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import LegacyApplicationClient
 from bioblend import galaxy
 
-os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL'] = "1"
-os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY'] = "1"
-os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY'] = "1"
-os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA'] = "1"
+# These variables are to stop Galaxy and Irida from being changed
+# during script execution. This is required if you are using your
+# own instance of Galaxy and Irida.
+# os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL'] = "1"
+# os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY'] = "1"
+# os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY'] = "1"
+# os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA'] = "1"
 
 @pytest.mark.integration
 class TestIridaImportInt:
