@@ -245,7 +245,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
     def register_irida(self, driver):
         """Register with IRIDA if neccessary, and then log in"""
         driver.get(self.IRIDA_URL)
-        self.login_irida(driver, 'admin', 'password1')
+        self.login_irida(driver, 'admin', 'Password1')
 
         # Set a new password if necessary
         try:
@@ -370,6 +370,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         # Using IDs would complicate running the tests without restarting IRIDA
         action = webdriver.common.action_chains.ActionChains(driver)
         stale = True
+        timeout = 0
         while stale:
             try:
                 el1 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[1]/td/div/label")  
@@ -385,6 +386,10 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
                 stale = False
             except (StaleElementReferenceException, NoSuchElementException):
                 time.sleep(1)
+                timeout += 1
+
+                if timeout == 60:
+                    raise
 
         driver.find_element_by_id('exportOptionsBtn').click()
 
