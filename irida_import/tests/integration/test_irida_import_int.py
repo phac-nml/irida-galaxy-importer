@@ -245,7 +245,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
     def register_irida(self, driver):
         """Register with IRIDA if neccessary, and then log in"""
         driver.get(self.IRIDA_URL)
-        self.login_irida(driver, 'admin', 'Password1')
+        self.login_irida(driver, 'admin', 'password1')
 
         # Set a new password if necessary
         try:
