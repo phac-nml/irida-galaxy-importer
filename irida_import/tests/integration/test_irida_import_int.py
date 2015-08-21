@@ -100,6 +100,9 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         except KeyError:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('', 0))
+            self.GALAXY_PORT = sock.getsockname()[1]
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
+
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
@@ -242,7 +245,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
     def register_irida(self, driver):
         """Register with IRIDA if neccessary, and then log in"""
         driver.get(self.IRIDA_URL)
-        self.login_irida(driver, 'admin', 'Password1')
+        self.login_irida(driver, 'admin', 'password1')
 
         # Set a new password if necessary
         try:
@@ -371,7 +374,7 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             try:
                 el1 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[1]/td/div/label")  
                 el2 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[2]/td/div/label")
-                
+
                 action = webdriver.common.action_chains.ActionChains(driver)
                 action.move_to_element_with_offset(el1, 5, 5)
                 action.click()
