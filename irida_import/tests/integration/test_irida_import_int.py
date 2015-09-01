@@ -376,12 +376,8 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
                 el1 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[1]/td/div/label")  
                 el2 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[2]/td/div/label")
 
-                action = webdriver.common.action_chains.ActionChains(driver)
-                action.move_to_element_with_offset(el1, 5, 5)
-                action.click()
-                action.move_to_element_with_offset(el2, 5, 5)
-                action.click()
-                action.perform()
+                el1.click()
+                el2.click()
 
                 stale = False
             except (StaleElementReferenceException, NoSuchElementException):
