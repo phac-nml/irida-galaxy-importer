@@ -286,15 +286,15 @@ class TestIridaImport:
         sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
         sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
         samplePair1 = SamplePair(
-            'pair1', 
+            'pair1',
             {
                 'forward':sampleFile1,
-                'reverse':sampleFile2 
+                'reverse':sampleFile2
             }
         )
 
         num_files = 4
-        sample = Sample("bobname", 
+        sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
                         "/imaginary/path/Samples/1/unpaired")
         sample.add_file(sampleFile1)
@@ -362,8 +362,11 @@ class TestIridaImport:
             imp.make_irida_request = Mock()
             self.add_irida_constants(imp)
 
+            # Create a history first
+            history = imp.reg_gi.histories.create_history()
+
             # Config data to come
-            imp.import_to_galaxy("any_string", None, None)
+            imp.import_to_galaxy("any_string", None, history['id'])
 
             assert(isinstance(imp.gi, type(GalaxyInstance)),
                    'A GalaxyInstance must be created')
