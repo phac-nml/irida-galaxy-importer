@@ -69,13 +69,13 @@ class TestIridaImport:
 
     def add_irida_constants(self, irida_instance):
         """Add constants to a passed IRIDA instance"""
-        irida_instance.ADMIN_KEY = "cc96082a20a16ed797ec4eead4474761"
-        irida_instance.GALAXY_URL = "http://localhost:8080/"
+        irida_instance.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
+        irida_instance.GALAXY_URL = "http://localhost:8888/"
         irida_instance.ILLUMINA_PATH = '/illumina_reads'
         irida_instance.REFERENCE_PATH = '/references'
-        irida_instance.CLIENT_ID = 'testClient'
-        irida_instance.CLIENT_SECRET = 'testClientSecret'
-        irida_instance.TOKEN_ENDPOINT = 'http://localhost:8081/api/oauth/token'
+        irida_instance.CLIENT_ID = 'webClient'
+        irida_instance.CLIENT_SECRET = 'webClientSecret'
+        irida_instance.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
 
     @pytest.fixture(scope='class')
     def file_list(self):
