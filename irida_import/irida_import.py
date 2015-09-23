@@ -336,7 +336,6 @@ class IridaImport:
         """
         Configure the tool using the configuration file
 
-        The
         """
         this_module_path = os.path.abspath(__file__)
         parent_folder = os.path.dirname(this_module_path)
@@ -348,6 +347,7 @@ class IridaImport:
             shutil.copyfile(src, dest)
         except:
             pass
+
 
         config_path = os.path.join(parent_folder, self.CONFIG_FILE)
         with open(config_path, 'r') as config_file:
@@ -484,10 +484,15 @@ if __name__ == '__main__':
     logging.debug("Reading from passed file")
 
     if args.config:
-        importer.configure()
-        message = 'Configured XML file'
-        logging.info(message)
-        print message
+        if os.path.isfile('config.ini'):
+            importer.configure()
+            message = 'Successfully configured the XML file!'
+            logging.info(message)
+            print message
+        else:
+            message = 'Error: Could not find config.ini in the irida_importer directory!'
+            logging.info(message)
+            print message
     else:
         try:
             file_to_open = args.json_parameter_file
