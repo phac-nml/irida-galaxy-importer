@@ -475,20 +475,19 @@ if __name__ == '__main__':
                         level=logging.ERROR,
                         filemode="w")
 
-    try:
-        importer = IridaImport()
+    importer = IridaImport()
+    logging.debug("Reading from passed file")
 
-        logging.debug("Reading from passed file")
-        file_to_open = args.json_parameter_file
-        if args.config:
-            importer.configure()
-            message = 'Configured XML file'
-            logging.info(message)
-            print message
-        else:
+    if args.config:
+        importer.configure()
+        message = 'Configured XML file'
+        logging.info(message)
+        print message
+    else:
+        try:
+            file_to_open = args.json_parameter_file
             importer.import_to_galaxy(file_to_open, args.log, token=args.token)
-
-    except Exception:
-        logging.exception('')
-        importer.print_summary(failed=True)
-        raise
+        except Exception:
+            logging.exception('')
+            importer.print_summary(failed=True)
+            raise
