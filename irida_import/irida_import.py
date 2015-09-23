@@ -468,7 +468,7 @@ if __name__ == '__main__':
         help='The tool can use a supplied access token instead of querying IRIDA', metavar='token')
     parser.add_argument(
         '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started. Use this option to do so.')
+        help='The tool must configure itself before Galaxy can be started. Use this option to do so. config.ini should be in the main irida_import folder.')
 
     args = parser.parse_args()
     if len(sys.argv)==1:
