@@ -5,6 +5,7 @@ import json
 import os.path
 import ConfigParser
 import shutil
+import sys
 from xml.etree import ElementTree
 
 from bioblend.galaxy.objects import GalaxyInstance
@@ -35,6 +36,9 @@ class IridaImport:
     XML_FILE_SAMPLE = 'irida_import.xml.sample'
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
+
+    def __init__(self):
+        self.logger = logging.getLogger('irida_import')
 
     def get_samples(self, samples_dict):
         """
@@ -402,7 +406,7 @@ class IridaImport:
         :type config_file: str
         :param config_file: the name of a file to configure from
         """
-        self.logger = logging.getLogger('irida_import')
+        #self.logger = logging.getLogger('irida_import')
         self.logger.setLevel(logging.INFO)
         self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
@@ -455,20 +459,21 @@ if __name__ == '__main__':
     parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
         default='sample.dat',
-        help='A JSON formatted parameter file from Galaxy')
+        help='A JSON formatted parameter file from Galaxy', metavar='json_parameter_file')
     parser.add_argument(
         '-l', '--log-file', dest='log', default='log_file',
-        help="The file to log the tool's output to")
+        help="The file to log the tool's output to", metavar='log')
     parser.add_argument(
         '-t', '--token', dest='token',
-        help='The tool can use a supplied access token' +
-        'instead of querying IRIDA')
+        help='The tool can use a supplied access token instead of querying IRIDA', metavar='token')
     parser.add_argument(
         '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started '
-        'Use this option to do so')
+        help='The tool must configure itself before Galaxy can be started. Use this option to do so.')
 
     args = parser.parse_args()
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(1)
     log_format = "%(levelname)s: %(message)s"
     logging.basicConfig(filename=args.log,
                         format=log_format,
