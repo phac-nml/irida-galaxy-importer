@@ -46,7 +46,7 @@ class IridaImport:
 
         :type json_params_dict: dict
         :param json_params__dict: a dictionary to parse. See one of the test
-        json files for formating information (the format will likely
+        json files for formatting information (the format will likely
         change soon)
         :return: a list of output samples
         """
