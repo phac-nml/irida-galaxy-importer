@@ -73,11 +73,11 @@ class TestIridaImportInt:
     # Sequence files accessed by IRIDA's REST API will not exist when the
     # tool attempts to access them if they were not uploaded as valid sequence
     # files
-    FASTQ_CONTENTS =
-        "@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50" +
-        "TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT:" +
-        "+SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50" +
-        "hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"
+    FASTQ_CONTENTS = (
+        "@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50\n" +
+        "TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT\n" +
+        "+SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50\n" +
+        "hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y")
 
     def setup_class(self):
         """Initialize class variables, install IRIDA, Galaxy, and the tool"""

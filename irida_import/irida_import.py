@@ -751,7 +751,7 @@ if __name__ == '__main__':
             logging.info(message)
             print message
         else:
-            message = 'Error: Could not find config.ini in the irida_importer'+
+            message = 'Error: Could not find config.ini in the irida_importer' +
                 'directory!'
             logging.info(message)
             print message
