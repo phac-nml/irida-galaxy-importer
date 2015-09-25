@@ -688,6 +688,8 @@ class IridaImport:
                 url=self.GALAXY_URL,
                 key=self.ADMIN_KEY)
 
+            self.histories = self.reg_gi.histories
+
             # Each sample contains a list of sample files
             samples = self.get_samples(samples_dict)
 
