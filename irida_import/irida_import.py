@@ -22,7 +22,8 @@ from sample_pair import SamplePair
 
 
 # FOR DEVELOPMENT ONLY!!
-# This value only exists for this process and processes that fork from it (none)
+# This value only exists for this process and processes that fork from it
+# (none)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 # Print the token so that it can be used to call the tool from the command line
@@ -100,8 +101,8 @@ class IridaImport:
         :type request_url: str
         :param request_url: a url to make a get request to. See IRIDA REST API
         docs for more information
-        :return: a list of either single output samples(string) or paired output
-        samples(tuple)
+        :return: a list of either single output samples(string) or paired
+        output samples(tuple)
         """
         response = self.irida.get(request_url)
 
@@ -110,7 +111,8 @@ class IridaImport:
 
         resource = response.json()['resource']
         self.logger.debug("The JSON parameters from the IRIDA API are:\n" +
-                          self.pp.pformat(json.dumps(dict(resource), indent=2)))
+                          self.pp.pformat(json.dumps(dict(resource),
+                          indent=2)))
 
         return resource
 
@@ -177,8 +179,9 @@ class IridaImport:
         :rtype: :class:`~.LibraryDataset`
         :return: the obtained or created library
 
-        This method should never make a library with the same name as an already
-        existing library that is accessible using the administrator API key
+        This method should never make a library with the same name as an
+        already existing library that is accessible using the administrator
+        API key
 
         """
         lib = None
@@ -229,7 +232,8 @@ class IridaImport:
                 name=base_folder_path)
 
             if len(base_folder_list) > 0:
-                base_folder = self.library.get_folder(base_folder_list[0]['id'])
+                base_folder = self.library.get_folder(
+                    base_folder_list[0]['id'])
                 made_folder = self.library.create_folder(
                     folder_name,
                     base_folder=base_folder)
@@ -238,7 +242,8 @@ class IridaImport:
             else:
                 raise IOError('base_folder_path must include an existing base'
                               'folder, or nothing')
-            self.logger.debug('Made folder with path:' + '\'%s\'' % folder_path)
+            self.logger.debug(
+            'Made folder with path:' + '\'%s\'' % folder_path)
         return made_folder
 
 
@@ -278,7 +283,8 @@ class IridaImport:
         :param galaxy_name: the full path to the sample file as it would
         exist in Galaxy
         :rtype: Boolean
-        :return: whether a file with this name and size does not exist in Galaxy
+        :return: whether a file with this name and size does not exist in
+        Galaxy
         """
         self.logger.debug(
             "Doing a basic check for already existing sample file at: " +
@@ -359,7 +365,8 @@ class IridaImport:
                     pair_path = sample_folder_path + "/" + sample_item.name
 
                     datasets = dict()
-                    collection_name = "/" + str(sample.name) + "/" + str(sample_item.name)
+                    collection_name = "/" + str(sample.name) + "/" + str(
+                        sample_item.name)
                     for file_key in files.keys():
                         _file = files[file_key]
                         self.create_folder_if_nec(pair_path)
@@ -443,12 +450,14 @@ class IridaImport:
 
         return [collection_array, file_sum]
 
-    def _add_file(self, added_to_galaxy=None, sample_folder_path=None, sample_file=None):
+    def _add_file(self, added_to_galaxy=None, sample_folder_path=None,
+        sample_file=None):
         """
         Upload a sample's sample files into Galaxy
 
         :type sample_folder_path: str
-        :param sample_folder_path: A directory path for where the sample get_roles
+        :param sample_folder_path: A directory path for where the sample
+        get_roles
         :type sample_file: SampleFile
         :param sample_file: A file object containing the file to upload
         :return: dataset object or the id of an existing dataset
@@ -605,7 +614,7 @@ class IridaImport:
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
             self.INITIAL_ENDPOINT_SUFFIX = config.get('IRIDA',
-                                                      'initial_endpoint_suffix')
+                                                     'initial_endpoint_suffix')
 
             irida_loc = config.get('IRIDA', 'irida_url')
             self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFIX
@@ -626,7 +635,7 @@ class IridaImport:
             inputs.set('action', irida_endpoint)
             params = inputs.findall('param')
             client_id_param = next(param for param in params
-                                   if param.get('name') == self.CLIENT_ID_PARAM)
+                                  if param.get('name') == self.CLIENT_ID_PARAM)
             client_id_param.set('value', self.CLIENT_ID)
 
             tree.write(xml_path)
@@ -689,7 +698,8 @@ class IridaImport:
 
             # Add each sample's files to the library
             status = self.add_samples_if_nec(samples, hist_id)
-            self.logger.debug("Collection items: \n" + self.pp.pformat(status[0]))
+            self.logger.debug("Collection items: \n" + self.pp.pformat(
+                status[0]))
             self.logger.debug("Number of files on galaxy: " + str(status[1]))
 
             self.print_summary()
@@ -702,20 +712,23 @@ if __name__ == '__main__':
     parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
         default='sample.dat',
-        help='A JSON formatted parameter file from Galaxy', metavar='json_parameter_file')
+        help='A JSON formatted parameter file from Galaxy.',
+            metavar='json_parameter_file')
     parser.add_argument(
         '-l', '--log-file', dest='log', default='log_file',
-        help="The file to log the tool's output to", metavar='log')
+        help="The file to which the tool will output the log.", metavar='log')
     parser.add_argument(
         '-t', '--token', dest='token',
-        help='The tool can use a supplied access token instead of querying IRIDA', metavar='token')
+        help='The tool can use a supplied access token instead of querying ' +
+            'IRIDA.', metavar='token')
     parser.add_argument(
         '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started. Use this option to do so. config.ini should be in the main irida_import folder.')
+        help='The tool must configure itself before Galaxy can be started. ' +
+            'Use this option to do so. config.ini should be in the main' +
+            'irida_import folder.')
     parser.add_argument(
         '-i', '--history-id', dest='hist_id', default=False,
-        help='The tool needs a history to store the output in, this passes '
-        'in an id')
+        help='The tool requires a History ID.')
 
 
     args = parser.parse_args()
@@ -738,13 +751,15 @@ if __name__ == '__main__':
             logging.info(message)
             print message
         else:
-            message = 'Error: Could not find config.ini in the irida_importer directory!'
+            message = 'Error: Could not find config.ini in the irida_importer'+
+                'directory!'
             logging.info(message)
             print message
     else:
         try:
             file_to_open = args.json_parameter_file
-            importer.import_to_galaxy(file_to_open, args.log, args.hist_id, token=args.token)
+            importer.import_to_galaxy(file_to_open, args.log, args.hist_id,
+                token=args.token)
         except Exception:
             logging.exception('')
             importer.print_summary(failed=True)
