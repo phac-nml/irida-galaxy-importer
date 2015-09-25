@@ -406,7 +406,6 @@ class IridaImport:
         :type config_file: str
         :param config_file: the name of a file to configure from
         """
-        #self.logger = logging.getLogger('irida_import')
         self.logger.setLevel(logging.INFO)
         self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
