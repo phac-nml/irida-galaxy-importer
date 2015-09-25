@@ -5,6 +5,7 @@ import json
 import os.path
 import ConfigParser
 import shutil
+import sys
 from xml.etree import ElementTree
 
 from bioblend.galaxy.objects import GalaxyInstance
@@ -36,13 +37,16 @@ class IridaImport:
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
 
+    def __init__(self):
+        self.logger = logging.getLogger('irida_import')
+
     def get_samples(self, samples_dict):
         """
         Create sample objects from a dictionary.
 
         :type json_params_dict: dict
         :param json_params__dict: a dictionary to parse. See one of the test
-        json files for formating information (the format will likely
+        json files for formatting information (the format will likely
         change soon)
         :return: a list of output samples
         """
@@ -332,7 +336,6 @@ class IridaImport:
         """
         Configure the tool using the configuration file
 
-        The
         """
         this_module_path = os.path.abspath(__file__)
         parent_folder = os.path.dirname(this_module_path)
@@ -344,6 +347,7 @@ class IridaImport:
             shutil.copyfile(src, dest)
         except:
             pass
+
 
         config_path = os.path.join(parent_folder, self.CONFIG_FILE)
         with open(config_path, 'r') as config_file:
@@ -402,7 +406,6 @@ class IridaImport:
         :type config_file: str
         :param config_file: the name of a file to configure from
         """
-        self.logger = logging.getLogger('irida_import')
         self.logger.setLevel(logging.INFO)
         self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
@@ -455,40 +458,45 @@ if __name__ == '__main__':
     parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
         default='sample.dat',
-        help='A JSON formatted parameter file from Galaxy')
+        help='A JSON formatted parameter file from Galaxy', metavar='json_parameter_file')
     parser.add_argument(
         '-l', '--log-file', dest='log', default='log_file',
-        help="The file to log the tool's output to")
+        help="The file to log the tool's output to", metavar='log')
     parser.add_argument(
         '-t', '--token', dest='token',
-        help='The tool can use a supplied access token' +
-        'instead of querying IRIDA')
+        help='The tool can use a supplied access token instead of querying IRIDA', metavar='token')
     parser.add_argument(
         '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started '
-        'Use this option to do so')
+        help='The tool must configure itself before Galaxy can be started. Use this option to do so. config.ini should be in the main irida_import folder.')
 
     args = parser.parse_args()
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(1)
     log_format = "%(levelname)s: %(message)s"
     logging.basicConfig(filename=args.log,
                         format=log_format,
                         level=logging.ERROR,
                         filemode="w")
 
-    try:
-        importer = IridaImport()
+    importer = IridaImport()
+    logging.debug("Reading from passed file")
 
-        logging.debug("Reading from passed file")
-        file_to_open = args.json_parameter_file
-        if args.config:
+    if args.config:
+        if os.path.isfile('config.ini'):
             importer.configure()
-            message = 'Configured XML file'
+            message = 'Successfully configured the XML file!'
             logging.info(message)
             print message
         else:
+            message = 'Error: Could not find config.ini in the irida_importer directory!'
+            logging.info(message)
+            print message
+    else:
+        try:
+            file_to_open = args.json_parameter_file
             importer.import_to_galaxy(file_to_open, args.log, token=args.token)
-
-    except Exception:
-        logging.exception('')
-        importer.print_summary(failed=True)
-        raise
+        except Exception:
+            logging.exception('')
+            importer.print_summary(failed=True)
+            raise
