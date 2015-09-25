@@ -679,10 +679,6 @@ class IridaImport:
                 url=self.GALAXY_URL,
                 key=self.ADMIN_KEY)
 
-            self.histories = self.reg_gi.histories
-            if not hist_id:
-                hist_id = self.histories.get_most_recently_used_history()['id']
-
             # Each sample contains a list of sample files
             samples = self.get_samples(samples_dict)
 
