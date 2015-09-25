@@ -278,7 +278,7 @@ class IridaImport:
         :param galaxy_name: the full path to the sample file as it would
         exist in Galaxy
         :rtype: Boolean
-        :return: True for unique or the id of the existing dataset
+        :return: whether a file with this name and size does not exist in Galaxy
         """
         self.logger.debug(
             "Doing a basic check for already existing sample file at: " +
