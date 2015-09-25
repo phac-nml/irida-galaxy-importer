@@ -7,7 +7,9 @@ import os.path
 import pprint
 import re
 import shutil
+import sys
 import time
+
 from xml.etree import ElementTree
 
 from bioblend import galaxy
@@ -40,6 +42,9 @@ class IridaImport:
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
 
+    def __init__(self):
+        self.logger = logging.getLogger('irida_import')
+
 
     def get_samples(self, samples_dict):
         """
@@ -47,7 +52,7 @@ class IridaImport:
 
         :type samples_dict: dict
         :param samples_dict: a dictionary to parse. See one of the test
-        json files for formating information (the format will likely
+        json files for formatting information (the format will likely
         change soon)
         :return: a list of Samples with all necessary information
         """
@@ -93,7 +98,7 @@ class IridaImport:
         Requests json object from IRIDA REST API.
 
         :type request_url: str
-        :param request_url: a url to make a get request to. See IRIDA REST API 
+        :param request_url: a url to make a get request to. See IRIDA REST API
         docs for more information
         :return: a list of either single output samples(string) or paired output
         samples(tuple)
@@ -301,7 +306,7 @@ class IridaImport:
         :type sample_file_path: str
         :param sample_file_path: the local file path to the file
         :type galaxy_name: str
-        :param galaxy_name: the full path to the sample file as it 
+        :param galaxy_name: the full path to the sample file as it
         exists in Galaxy
         :rtype: Boolean
         :return: True for unique or the id of the existing dataset
@@ -367,7 +372,7 @@ class IridaImport:
                         elif file_key == "reverse":
                             datasets["reverse"] = added_to_galaxy[0]['id']
                         else:
-                            error = "File type " + str(file_key) 
+                            error = "File type " + str(file_key)
                             error += " not recognized."
                             raise TypeError(error)
 
@@ -383,11 +388,11 @@ class IridaImport:
                     )['id']
 
                     # Put datasets into the collection
-                    collection_elem_ids = [{ 
+                    collection_elem_ids = [{
                             "src": "hda",
                             "name": "forward",
                             "id": datasets["forward"]
-                        }, { 
+                        }, {
                             "src": "hda",
                             "name": "reverse",
                             "id": datasets["reverse"]
@@ -464,7 +469,7 @@ class IridaImport:
                         {'galaxy_name': galaxy_sample_file_name})
             else:
                 # Return dataset id of existing file
-                dataset_id = self.existing_file(sample_file.path, 
+                dataset_id = self.existing_file(sample_file.path,
                                               galaxy_sample_file_name)
                 added_to_galaxy = [{'id': dataset_id}]
                 self.print_logged(time.strftime("[%D %H:%M:%S]:") +
@@ -572,7 +577,6 @@ class IridaImport:
         """
         Configure the tool using the configuration file
 
-        The
         """
         this_module_path = os.path.abspath(__file__)
         parent_folder = os.path.dirname(this_module_path)
@@ -584,6 +588,7 @@ class IridaImport:
             shutil.copyfile(src, dest)
         except:
             pass
+
 
         config_path = os.path.join(parent_folder, self.CONFIG_FILE)
         with open(config_path, 'r') as config_file:
@@ -644,7 +649,7 @@ class IridaImport:
         :param config_file: the name of a file to configure from
         """
         self.pp = pprint.PrettyPrinter(indent=4)
-        self.logger = logging.getLogger('irida_import')
+
         self.logger.setLevel(logging.INFO)
         self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
@@ -701,47 +706,51 @@ if __name__ == '__main__':
     parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
         default='sample.dat',
-        help='A JSON formatted parameter file from Galaxy')
+        help='A JSON formatted parameter file from Galaxy', metavar='json_parameter_file')
     parser.add_argument(
         '-l', '--log-file', dest='log', default='log_file',
-        help="The file to log the tool's output to")
+        help="The file to log the tool's output to", metavar='log')
     parser.add_argument(
         '-t', '--token', dest='token',
-        help='The tool can use a supplied access token' +
-        'instead of querying IRIDA')
+        help='The tool can use a supplied access token instead of querying IRIDA', metavar='token')
     parser.add_argument(
         '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started '
+        help='The tool must configure itself before Galaxy can be started. Use this option to do so. config.ini should be in the main irida_import folder.')
         'Use this option to do so')
     parser.add_argument(
         '-i', '--history-id', dest='hist_id', default=False,
         help='The tool needs a history to store the output in, this passes '
         'in an id')
 
+
     args = parser.parse_args()
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(1)
     log_format = "%(levelname)s: %(message)s"
     logging.basicConfig(filename=args.log,
                         format=log_format,
                         level=logging.ERROR,
                         filemode="w")
 
-    try:
-        importer = IridaImport()
+    importer = IridaImport()
+    logging.debug("Reading from passed file")
 
-        logging.debug("Reading from passed file")
-        file_to_open = args.json_parameter_file
-        if args.config:
+    if args.config:
+        if os.path.isfile('config.ini'):
             importer.configure()
-            message = 'Configured XML file'
+            message = 'Successfully configured the XML file!'
             logging.info(message)
             print message
         else:
-            importer.import_to_galaxy(file_to_open,
-                                      args.log,
-                                      args.hist_id,
-                                      token=args.token)
-
-    except Exception:
-        logging.exception('')
-        importer.print_summary(failed=True)
-        raise
+            message = 'Error: Could not find config.ini in the irida_importer directory!'
+            logging.info(message)
+            print message
+    else:
+        try:
+            file_to_open = args.json_parameter_file
+            importer.import_to_galaxy(file_to_open, args.log, args.hist_id, token=args.token)
+        except Exception:
+            logging.exception('')
+            importer.print_summary(failed=True)
+            raise
