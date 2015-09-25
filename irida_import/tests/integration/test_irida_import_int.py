@@ -73,10 +73,10 @@ class TestIridaImportInt:
     # Sequence files accessed by IRIDA's REST API will not exist when the
     # tool attempts to access them if they were not uploaded as valid sequence
     # files
-    FASTQ_CONTENTS = """@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50
-TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT
-+SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50
-hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
+    FASTQ_CONTENTS = """@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:
+        1109 length=50 TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT
+        +SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50
+        hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
     def setup_class(self):
         """Initialize class variables, install IRIDA, Galaxy, and the tool"""
@@ -96,12 +96,14 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']
             self.GALAXY_PORT = 8080
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(
+                self.GALAXY_PORT)
         except KeyError:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('', 0))
             self.GALAXY_PORT = sock.getsockname()[1]
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(
+                self.GALAXY_PORT)
 
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
@@ -148,7 +150,8 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             stop_irida()
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
             subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
-            util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT, self.TIMEOUT)
+            util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT,
+                self.TIMEOUT)
 
             def finalize_irida():
                 stop_irida()
@@ -211,7 +214,8 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
         driver.find_element_by_id("email_input").send_keys(self.EMAIL)
         driver.find_element_by_id("password_input").send_keys("Password1")
-        driver.find_element_by_id("password_check_input").send_keys("Password1")
+        driver.find_element_by_id("password_check_input").send_keys(
+            "Password1")
         driver.find_element_by_id("name_input").send_keys("irida-test")
         driver.find_element_by_id("send").click()
 
@@ -270,7 +274,8 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
     def add_irida_client_auth_code(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
-        driver.find_element_by_id("clientId").send_keys(self.IRIDA_AUTH_CODE_ID)
+        driver.find_element_by_id("clientId").send_keys(
+            self.IRIDA_AUTH_CODE_ID)
         driver.find_element_by_id('s2id_authorizedGrantTypes').click()
         driver.find_element_by_xpath(
             "//*[contains(text(), 'authorization_code')]").click()
@@ -333,18 +338,21 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         # Pytest manages the temporary directory
         seq1 = tmpdir.join("seq1.fastq")
         seq1.write(self.FASTQ_CONTENTS)
-        sequence1 = irida.post(sequences1, files={'file': open(str(seq1), 'rb')})
+        sequence1 = irida.post(sequences1, files={'file': open(str(seq1),
+            'rb')})
 
         seq2 = tmpdir.join("seq2.fastq")
         seq2.write(self.FASTQ_CONTENTS)
-        sequence2 = irida.post(sequences1, files={'file': open(str(seq2), 'rb')})
+        sequence2 = irida.post(sequences1, files={'file': open(str(seq2),
+            'rb')})
 
         sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
                                              'sequencerSampleId': 'PS_2'})
         sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
         seq3 = tmpdir.join("seq3.fastq")
         seq3.write(self.FASTQ_CONTENTS)
-        sequence3 = irida.post(sequences2, files={'file': open(str(seq3), 'rb')})
+        sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
+            'rb')})
 
         print project.text
         print sample1.text
@@ -352,10 +360,10 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         # Export to Galaxy using the button on the dropdown menu
         driver.get(self.GALAXY_URL)
         history_panel = driver.find_element_by_id('current-history-panel')
-        initially_succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+        initially_succeeded = len(history_panel.find_elements_by_class_name(
+            'state-ok'))
         driver.find_element_by_css_selector("#title_getext > a > span").click()
         driver.find_element_by_link_text("IRIDA").click()
-        # driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
 
         # Sometimes a login is required
         try:
@@ -373,8 +381,10 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         timeout = 0
         while stale:
             try:
-                el1 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[1]/td/div")
-                el2 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[2]/td/div")
+                el1 = driver.find_element_by_xpath(
+                    "//table[@id='samplesTable']/tbody/tr[1]/td/div")
+                el2 = driver.find_element_by_xpath(
+                    "//table[@id='samplesTable']/tbody/tr[2]/td/div")
 
                 el1.click()
                 el2.click()
@@ -399,8 +409,10 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         time.sleep(120) #  Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
-        assert succeeded - initially_succeeded > 0, "Import did not complete successfully"
+        assert succeeded - initially_succeeded > 0,
+            "Import did not complete successfully"
 
-    def test_cart_import_multi_project(self, setup_irida, setup_galaxy, driver):
+    def test_cart_import_multi_project(self, setup_irida, setup_galaxy,
+        driver):
         """Using the cart, import multiple projects from IRIDA to Galaxy"""
         return True
