@@ -719,13 +719,13 @@ if __name__ == '__main__':
         help="The file to which the tool will output the log.", metavar='log')
     parser.add_argument(
         '-t', '--token', dest='token',
-        help='The tool can use a supplied access token instead of querying ' +
-            'IRIDA.', metavar='token')
+        help='The tool can use a supplied access token instead of querying '
+            + 'IRIDA.', metavar='token')
     parser.add_argument(
         '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started. ' +
-            'Use this option to do so. config.ini should be in the main' +
-            'irida_import folder.')
+        help='The tool must configure itself before Galaxy can be started. '
+            + 'Use this option to do so. config.ini should be in the main'
+            + 'irida_import folder.')
     parser.add_argument(
         '-i', '--history-id', dest='hist_id', default=False,
         help='The tool requires a History ID.')
@@ -751,8 +751,8 @@ if __name__ == '__main__':
             logging.info(message)
             print message
         else:
-            message = 'Error: Could not find config.ini in the irida_importer' +
-                'directory!'
+            message = ('Error: Could not find config.ini in the irida_importer '
+                + 'directory!')
             logging.info(message)
             print message
     else:
