@@ -197,7 +197,7 @@ class IridaImport:
                            for role in roles if role['name'] == email)
             except StopIteration:
                 error = "No Galaxy role could be found for the email: '{0}', "\
-                    "quiting".format(email)
+                    "quitting".format(email)
                 raise Exception(error)
 
             lib = self.gi.libraries.create(desired_lib_name)
@@ -211,7 +211,7 @@ class IridaImport:
         Add a folder to a library, if it does not already exist.
 
         :type folder_path: str
-        :param folder_patht: The folder's path e.g. '/bobfolder/bobfolder2'
+        :param folder_path: The folder's path e.g. '/bobfolder/bobfolder2'
         """
         made_folder = None
         # Get the folder name from the path, e.g. 'bobfolder2' from
@@ -240,8 +240,8 @@ class IridaImport:
             elif base_folder_path == '':
                 made_folder = self.library.create_folder(folder_name)
             else:
-                raise IOError('base_folder_path must include an existing base'
-                              'folder, or nothing')
+                raise IOError('base_folder_path must include an existing base '
+                             + 'folder, or nothing')
             self.logger.debug(
             'Made folder with path:' + '\'%s\'' % folder_path)
         return made_folder
@@ -342,10 +342,8 @@ class IridaImport:
 
         :type samples: list
         :param samples: the list of samples to upload
-        :return: A tuple with a dict of the collection and the number of single
-                 files uploaded
+        :return: The number of single files uploaded
         """
-        collection_array = []
         file_sum = 0
         hist = self.histories
 
@@ -365,14 +363,85 @@ class IridaImport:
                     pair_path = sample_folder_path + "/" + sample_item.name
 
                     datasets = dict()
-                    collection_name = "/" + str(sample.name) + "/" + str(
-                        sample_item.name)
                     for file_key in files.keys():
                         _file = files[file_key]
                         self.create_folder_if_nec(pair_path)
                         added_to_galaxy = self._add_file(added_to_galaxy,
                                                          pair_path,
                                                          _file)
+
+                        if file_key == "forward":
+                            datasets["forward"] = added_to_galaxy[0]['id']
+                        elif file_key == "reverse":
+                            datasets["reverse"] = added_to_galaxy[0]['id']
+                        else:
+                            error = "File type " + str(file_key)
+                            error += " not recognized."
+                            raise TypeError(error)
+
+                    # Add datasets to the current history
+                    datasets['forward'] = hist.upload_dataset_from_library(
+                        hist_id,
+                        datasets['forward']
+                    )['id']
+
+                    datasets['reverse'] = hist.upload_dataset_from_library(
+                        hist_id,
+                        datasets['reverse']
+                    )['id']
+
+                    # Hide datasets in history
+                    hist.update_dataset(
+                        hist_id,
+                        datasets['forward'],
+                        visible=False
+                    )
+                    hist.update_dataset(
+                        hist_id,
+                        datasets['reverse'],
+                        visible=False
+                    )
+                except AttributeError:
+                    # Processing for a SampleFile
+                    added_to_galaxy = self._add_file(added_to_galaxy,
+                                                     sample_folder_path,
+                                                     sample_item)
+                    dataset = self.reg_gi.datasets.show_dataset(
+                            added_to_galaxy[0]['id']
+                        )
+                    hist.upload_dataset_from_library(
+                        hist_id,
+                        dataset['id']
+                    )
+                    file_sum += 1
+
+        return file_sum
+
+    def add_samples_to_history(samples, hist_id):
+        collection_array = []
+        hist = self.histories
+
+        for sample in samples:
+            self.logger.debug("sample name is" + sample.name)
+
+            for sample_item in sample.get_reads():
+                sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
+                try:
+                    # Processing for a SamplePair
+                    # If sample_item does not have a files attribute
+                    # it is a SampleFile rather than a SamplePair.
+                    files = sample_item.files
+                    pair_path = sample_folder_path + "/" + sample_item.name
+
+                    datasets = dict()
+                    collection_name = "/" + str(sample.name) + "/" + str(
+                        sample_item.name)
+                    for file_key in files.keys():
+                        _file = files[file_key]
+
+                        dataset_id = self.existing_file(sample_file.path,
+                                                      galaxy_sample_file_name)
+                        added_to_galaxy = [{'id': dataset_id}]
 
                         if file_key == "forward":
                             datasets["forward"] = added_to_galaxy[0]['id']
@@ -434,7 +503,6 @@ class IridaImport:
                         hist_id,
                         dataset['id']
                     )
-                    file_sum += 1
 
         if collection_array != []:
             collection_title = 'IridaImport - ' + str(datetime.datetime.now())
@@ -448,7 +516,7 @@ class IridaImport:
                 collection_desc
             )
 
-        return [collection_array, file_sum]
+        return collection_array
 
     def _add_file(self, added_to_galaxy=None, sample_folder_path=None,
         sample_file=None):
@@ -657,6 +725,8 @@ class IridaImport:
         :type config_file: str
         :param config_file: the name of a file to configure from
         """
+        collection_array = []
+        num_files = 0
         self.pp = pprint.PrettyPrinter(indent=4)
 
         self.logger.setLevel(logging.INFO)
@@ -699,10 +769,12 @@ class IridaImport:
             self.create_folder_if_nec(self.REFERENCE_PATH)
 
             # Add each sample's files to the library
-            status = self.add_samples_if_nec(samples, hist_id)
+            num_files = self.add_samples_if_nec(samples, hist_id)
+            collection_array = self.add_samples_to_history(samples, hist_id)
+
             self.logger.debug("Collection items: \n" + self.pp.pformat(
-                status[0]))
-            self.logger.debug("Number of files on galaxy: " + str(status[1]))
+                collection_array))
+            self.logger.debug("Number of files on galaxy: " + str(num_files))
 
             self.print_summary()
 
@@ -726,7 +798,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-c', '--config', action='store_true', default=False, dest='config',
         help='The tool must configure itself before Galaxy can be started. '
-            + 'Use this option to do so. config.ini should be in the main'
+            + 'Use this option to do so. config.ini should be in the main '
             + 'irida_import folder.')
     parser.add_argument(
         '-i', '--history-id', dest='hist_id', default=False,
