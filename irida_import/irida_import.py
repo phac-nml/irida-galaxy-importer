@@ -417,7 +417,7 @@ class IridaImport:
 
         return file_sum
 
-    def add_samples_to_history(samples, hist_id):
+    def add_samples_to_history(self, samples, hist_id=None):
         collection_array = []
         hist = self.histories
 
