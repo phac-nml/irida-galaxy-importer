@@ -417,12 +417,14 @@ class IridaImport:
 
         return file_sum
 
-    def add_samples_to_history(self, samples, hist_id=None):
+    def add_samples_to_history(self, samples=[], hist_id=None):
         collection_array = []
         hist = self.histories
 
         for sample in samples:
             self.logger.debug("sample name is" + sample.name)
+
+            added_to_galaxy = []
 
             for sample_item in sample.get_reads():
                 sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
