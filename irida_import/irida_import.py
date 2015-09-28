@@ -441,7 +441,7 @@ class IridaImport:
                     for file_key in files.keys():
                         _file = files[file_key]
 
-                        dataset_id = self.existing_file(sample_file.path,
+                        dataset_id = self.existing_file(_file.path,
                                                       galaxy_sample_file_name)
                         added_to_galaxy = [{'id': dataset_id}]
 
