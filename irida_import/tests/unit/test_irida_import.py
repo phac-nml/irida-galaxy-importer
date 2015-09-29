@@ -335,7 +335,7 @@ class TestIridaImport:
             }
         )
 
-        num_files = 4
+        num_files = 2
         sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
                         "/imaginary/path/Samples/1/unpaired")
