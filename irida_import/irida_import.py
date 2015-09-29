@@ -440,6 +440,7 @@ class IridaImport:
                         sample_item.name)
                     for file_key in files.keys():
                         _file = files[file_key]
+                        galaxy_sample_file_name = sample_folder_path+'/'+_file.name
 
                         dataset_id = self.existing_file(_file.path,
                                                       galaxy_sample_file_name)
