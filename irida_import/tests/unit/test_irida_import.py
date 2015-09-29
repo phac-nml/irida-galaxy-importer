@@ -303,14 +303,14 @@ class TestIridaImport:
 
         samples = [sample]
 
-        added = imp.add_samples_if_nec(samples)
+        numAdded = imp.add_samples_if_nec(samples)
         collection = imp.add_samples_to_history(samples)
 
-        assert added, 'a file must be added'
+        assert numAdded, 'a file must be added'
         assert imp._add_file.call_count is num_files, \
             'The %s files should be uploaded once each' % num_files
 
-        file_tally = len(collection) + added
+        file_tally = len(collection) + numAdded
         assert file_tally==4, "The correct amount of files need to be uploaded"
 
     def test_link(self, imp, folder_list):
