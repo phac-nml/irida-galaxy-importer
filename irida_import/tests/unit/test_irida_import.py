@@ -311,6 +311,45 @@ class TestIridaImport:
 
         assert num_added==2, "The correct amount of files need to be uploaded"
 
+    def test_add_samples_to_history(self, imp, file_list):
+        """ Test if a new sample file is added to the library """
+        imp.exists_in_lib = Mock(return_value=False)
+        imp.link = mock.create_autospec(IridaImport.link)
+        imp._add_file = mock.create_autospec(IridaImport._add_file)
+        imp._add_file.return_value = [{'id': '321'}]
+        side_effect_list = [[file_dict] for file_dict in file_list]
+        imp.link.side_effect = side_effect_list
+        os.path.isfile = Mock(return_value=True)
+        imp.unique_file = Mock(return_value=True)
+
+        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
+        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
+        samplePair1 = SamplePair(
+            'pair1',
+            {
+                'forward':sampleFile1,
+                'reverse':sampleFile2
+            }
+        )
+
+        num_files = 4
+        sample = Sample("bobname",
+                        "/imaginary/path/Samples/1/paired",
+                        "/imaginary/path/Samples/1/unpaired")
+        sample.add_file(sampleFile1)
+        sample.add_file(sampleFile2)
+        sample.add_pair(samplePair1)
+
+        samples = [sample]
+
+        collection = imp.add_samples_to_history(samples)
+
+        assert collection, 'a file must be added'
+        assert imp._add_file.call_count is num_files, \
+            'The %s files should be uploaded once each' % num_files
+
+        assert len(collection)==2, "The correct amount of files need to be uploaded"
+
     def test_link(self, imp, folder_list):
         """Test uploading a local sample file to Galaxy as a link"""
         imp.library = mock.create_autospec(Library)
