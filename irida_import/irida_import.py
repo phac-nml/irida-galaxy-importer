@@ -20,7 +20,6 @@ from sample import Sample
 from sample_file import SampleFile
 from sample_pair import SamplePair
 
-
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
 # (none)
@@ -45,7 +44,6 @@ class IridaImport:
 
     def __init__(self):
         self.logger = logging.getLogger('irida_import')
-
 
     def get_samples(self, samples_dict):
         """
@@ -378,41 +376,11 @@ class IridaImport:
                             error = "File type " + str(file_key)
                             error += " not recognized."
                             raise TypeError(error)
-
-                    # Add datasets to the current history
-                    datasets['forward'] = hist.upload_dataset_from_library(
-                        hist_id,
-                        datasets['forward']
-                    )['id']
-
-                    datasets['reverse'] = hist.upload_dataset_from_library(
-                        hist_id,
-                        datasets['reverse']
-                    )['id']
-
-                    # Hide datasets in history
-                    hist.update_dataset(
-                        hist_id,
-                        datasets['forward'],
-                        visible=False
-                    )
-                    hist.update_dataset(
-                        hist_id,
-                        datasets['reverse'],
-                        visible=False
-                    )
                 else:
                     # Processing for a SampleFile
                     added_to_galaxy = self._add_file(added_to_galaxy,
                                                      sample_folder_path,
                                                      sample_item)
-                    dataset = self.reg_gi.datasets.show_dataset(
-                            added_to_galaxy[0]['id']
-                        )
-                    hist.upload_dataset_from_library(
-                        hist_id,
-                        dataset['id']
-                    )
                     file_sum += 1
 
         return file_sum
@@ -710,7 +678,7 @@ class IridaImport:
             tree.write(xml_path)
 
 
-    def import_to_galaxy(self, json_parameter_file, log, hist_id, token=None,
+    def import_to_galaxy(self, json_parameter_file, log, hist_id, add_to_history=False, token=None,
                          config_file=None):
         """
         Import samples and their sample files into Galaxy from IRIDA
@@ -771,10 +739,12 @@ class IridaImport:
 
             # Add each sample's files to the library
             num_files = self.add_samples_if_nec(samples, hist_id)
-            collection_array = self.add_samples_to_history(samples, hist_id)
 
-            self.logger.debug("Collection items: \n" + self.pp.pformat(
-                collection_array))
+            if add_to_history:
+                collection_array = self.add_samples_to_history(samples, hist_id)
+                self.logger.debug("Collection items: \n" + self.pp.pformat(
+                    collection_array))
+
             self.logger.debug("Number of files on galaxy: " + str(num_files))
 
             self.print_summary()
@@ -783,6 +753,7 @@ class IridaImport:
 From the command line, pass JSON files to IridaImport, and set up the logger
 """
 if __name__ == '__main__':
+    global save_to_history
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
@@ -805,6 +776,10 @@ if __name__ == '__main__':
         '-i', '--history-id', dest='hist_id', default=False,
         help='The tool requires a History ID.')
 
+    parser.add_argument(
+        '-a', '--addtohistory', dest='add_to_history',
+        help='Specify whether or not you want to add the samples to the'
+        + ' history')
 
     args = parser.parse_args()
     if len(sys.argv)==1:
@@ -834,7 +809,7 @@ if __name__ == '__main__':
         try:
             file_to_open = args.json_parameter_file
             importer.import_to_galaxy(file_to_open, args.log, args.hist_id,
-                token=args.token)
+                args.addtohistory, token=args.token)
         except Exception:
             logging.exception('')
             importer.print_summary(failed=True)
