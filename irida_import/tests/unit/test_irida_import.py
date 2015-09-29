@@ -278,6 +278,7 @@ class TestIridaImport:
         imp.link = mock.create_autospec(IridaImport.link)
         imp._add_file = mock.create_autospec(IridaImport._add_file)
         imp._add_file.return_value = [{'id': '321'}]
+        imp.existing_file = mock.create_autospec(IridaImport.existing_file)
         side_effect_list = [[file_dict] for file_dict in file_list]
         imp.link.side_effect = side_effect_list
         os.path.isfile = Mock(return_value=True)
@@ -354,6 +355,7 @@ class TestIridaImport:
             imp.get_first_or_make_lib = Mock(return_value=lib)
             imp.create_folder_if_nec = Mock()
             imp.add_samples_if_nec = mock.create_autospec(IridaImport.add_samples_if_nec)
+            imp.add_samples_to_history = mock.create_autospec(IridaImport.add_samples_to_history)
             imp.assign_ownership_if_nec = Mock()
             imp.get_IRIDA_session = Mock()
             imp.get_sample_file = Mock()
