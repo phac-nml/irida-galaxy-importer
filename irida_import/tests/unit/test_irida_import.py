@@ -320,7 +320,10 @@ class TestIridaImport:
         side_effect_list = [[file_dict] for file_dict in file_list]
         imp.link.side_effect = side_effect_list
         os.path.isfile = Mock(return_value=True)
+        os.path.getsize = Mock(return_value=5678)
         imp.unique_file = Mock(return_value=True)
+
+        history = imp.reg_gi.histories.create_history())
 
         sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
         sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
@@ -342,7 +345,7 @@ class TestIridaImport:
 
         samples = [sample]
 
-        collection = imp.add_samples_to_history(samples)
+        collection = imp.add_samples_to_history(samples, history['id'])
 
         assert collection, 'a file must be added'
         assert imp._add_file.call_count is num_files, \
