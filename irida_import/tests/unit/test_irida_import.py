@@ -323,7 +323,7 @@ class TestIridaImport:
         os.path.getsize = Mock(return_value=5678)
         imp.unique_file = Mock(return_value=True)
 
-        history = imp.reg_gi.histories.create_history())
+        history = imp.reg_gi.histories.create_history()
 
         sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
         sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
