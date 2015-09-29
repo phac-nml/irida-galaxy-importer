@@ -355,7 +355,7 @@ class IridaImport:
 
             for sample_item in sample.get_reads():
                 sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
-                try:
+                if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
                     # If sample_item does not have a files attribute
                     # it is a SampleFile rather than a SamplePair.
@@ -401,7 +401,7 @@ class IridaImport:
                         datasets['reverse'],
                         visible=False
                     )
-                except AttributeError:
+                else:
                     # Processing for a SampleFile
                     added_to_galaxy = self._add_file(added_to_galaxy,
                                                      sample_folder_path,
@@ -428,7 +428,7 @@ class IridaImport:
 
             for sample_item in sample.get_reads():
                 sample_folder_path = self.ILLUMINA_PATH+'/'+sample.name
-                try:
+                if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
                     # If sample_item does not have a files attribute
                     # it is a SampleFile rather than a SamplePair.
@@ -444,12 +444,11 @@ class IridaImport:
 
                         dataset_id = self.existing_file(_file.path,
                                                       galaxy_sample_file_name)
-                        added_to_galaxy = [{'id': dataset_id}]
 
                         if file_key == "forward":
-                            datasets["forward"] = added_to_galaxy[0]['id']
+                            datasets["forward"] = dataset_id
                         elif file_key == "reverse":
-                            datasets["reverse"] = added_to_galaxy[0]['id']
+                            datasets["reverse"] = dataset_id
                         else:
                             error = "File type " + str(file_key)
                             error += " not recognized."
@@ -494,17 +493,14 @@ class IridaImport:
                         datasets['reverse'],
                         visible=False
                     )
-                except AttributeError:
+                else:
                     # Processing for a SampleFile
-                    added_to_galaxy = self._add_file(added_to_galaxy,
-                                                     sample_folder_path,
-                                                     sample_item)
-                    dataset = self.reg_gi.datasets.show_dataset(
-                            added_to_galaxy[0]['id']
-                        )
+
+                    dataset_id = self.existing_file(_file.path,
+                                                  galaxy_sample_file_name)
                     hist.upload_dataset_from_library(
                         hist_id,
-                        dataset['id']
+                        dataset_id
                     )
 
         if collection_array != []:
