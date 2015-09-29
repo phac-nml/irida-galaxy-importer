@@ -348,9 +348,9 @@ class TestIridaImport:
         collection_array = imp.add_samples_to_history(samples, history['id'])
 
         assert collection_array, 'a pair must be added'
-        assert collection_array[0]['collection_type'] is 'paired'
-        assert len(collection_array) is num_pairs, \
-            'The %s pair should be uploaded once' % num_pairs
+        assert collection_array[0]['collection_type'] is 'paired' and len(
+            collection_array) is num_pairs, ('The %s pair should be uploaded'
+            + 'once') % num_pairs
 
 
     def test_link(self, imp, folder_list):
