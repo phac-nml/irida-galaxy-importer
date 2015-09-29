@@ -335,7 +335,7 @@ class TestIridaImport:
             }
         )
 
-        num_files = 2
+        num_pairs = 1
         sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
                         "/imaginary/path/Samples/1/unpaired")
@@ -345,13 +345,13 @@ class TestIridaImport:
 
         samples = [sample]
 
-        collection = imp.add_samples_to_history(samples, history['id'])
+        collection_array = imp.add_samples_to_history(samples, history['id'])
 
-        assert collection, 'a file must be added'
-        assert imp._add_file.call_count is num_files, \
-            'The %s files should be uploaded once each' % num_files
+        assert collection_array, 'a pair must be added'
+        assert collection_array[0]['collection_type'] is 'paired'
+        assert len(collection_array) is num_pairs, \
+            'The %s pair should be uploaded once' % num_pairs
 
-        assert len(collection)==2, "The correct amount of files need to be uploaded"
 
     def test_link(self, imp, folder_list):
         """Test uploading a local sample file to Galaxy as a link"""

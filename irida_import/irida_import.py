@@ -495,8 +495,10 @@ class IridaImport:
                     )
                 else:
                     # Processing for a SampleFile
+                    galaxy_sample_file_name = sample_folder_path+'/'+sample_item.name
                     dataset_id = self.existing_file(sample_item.path,
-                                                  sample_item.name)
+                                                  galaxy_sample_file_name)
+
                     dataset = self.reg_gi.datasets.show_dataset(dataset_id)
                     hist.upload_dataset_from_library(
                         hist_id,
