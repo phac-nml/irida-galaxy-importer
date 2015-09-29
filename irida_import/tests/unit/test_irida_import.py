@@ -278,7 +278,6 @@ class TestIridaImport:
         imp.link = mock.create_autospec(IridaImport.link)
         imp._add_file = mock.create_autospec(IridaImport._add_file)
         imp._add_file.return_value = [{'id': '321'}]
-        imp.existing_file = mock.create_autospec(IridaImport.existing_file)
         side_effect_list = [[file_dict] for file_dict in file_list]
         imp.link.side_effect = side_effect_list
         os.path.isfile = Mock(return_value=True)
@@ -304,15 +303,13 @@ class TestIridaImport:
 
         samples = [sample]
 
-        numAdded = imp.add_samples_if_nec(samples)
-        collection = imp.add_samples_to_history(samples)
+        num_added = imp.add_samples_if_nec(samples)
 
-        assert numAdded, 'a file must be added'
+        assert num_added, 'a file must be added'
         assert imp._add_file.call_count is num_files, \
             'The %s files should be uploaded once each' % num_files
 
-        file_tally = len(collection) + numAdded
-        assert file_tally==4, "The correct amount of files need to be uploaded"
+        assert num_added==2, "The correct amount of files need to be uploaded"
 
     def test_link(self, imp, folder_list):
         """Test uploading a local sample file to Galaxy as a link"""
