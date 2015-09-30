@@ -775,11 +775,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-i', '--history-id', dest='hist_id', default=False,
         help='The tool requires a History ID.')
-
     parser.add_argument(
         '-a', '--addtohistory', dest='add_to_history',
-        help='Specify whether or not you want to add the samples to the'
-        + ' history')
+        help='Use this option if you want to add the samples to history.')
 
     args = parser.parse_args()
     if len(sys.argv)==1:
