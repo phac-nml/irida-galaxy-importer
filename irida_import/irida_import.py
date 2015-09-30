@@ -687,8 +687,8 @@ class IridaImport:
             tree.write(xml_path)
 
 
-    def import_to_galaxy(self, json_parameter_file, log, hist_id,
-        add_to_history=False, token=None, config_file=None):
+    def import_to_galaxy(self, json_parameter_file, log, hist_id, token=None,
+        config_file=None):
         """
         Import samples and their sample files into Galaxy from IRIDA
 
@@ -723,6 +723,7 @@ class IridaImport:
             self.skipped_files_log = []
 
             samples_dict = json_params_dict['_embedded']['samples']
+            add_to_history = json_params_dict['_embedded']['addtohistory']
             email = json_params_dict['_embedded']['user']['email']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
@@ -788,9 +789,6 @@ if __name__ == '__main__':
     parser.add_argument(
         '-i', '--history-id', dest='hist_id', default=False,
         help='The tool requires a History ID.')
-    parser.add_argument(
-        '-a', '--addtohistory', dest='add_to_history',
-        help='Use this option if you want to add the samples to history.')
 
     args = parser.parse_args()
     if len(sys.argv)==1:
@@ -820,7 +818,7 @@ if __name__ == '__main__':
         try:
             file_to_open = args.json_parameter_file
             importer.import_to_galaxy(file_to_open, args.log, args.hist_id,
-                args.addtohistory, token=args.token)
+                token=args.token)
         except Exception:
             logging.exception('')
             importer.print_summary(failed=True)
