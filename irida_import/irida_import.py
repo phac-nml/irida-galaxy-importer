@@ -408,7 +408,8 @@ class IridaImport:
                         sample_item.name)
                     for file_key in files.keys():
                         _file = files[file_key]
-                        galaxy_sample_file_name = sample_folder_path+'/'+_file.name
+                        galaxy_sample_file_name = (sample_folder_path+'/'
+                            +_file.name)
 
                         dataset_id = self.existing_file(_file.path,
                                                       galaxy_sample_file_name)
@@ -463,7 +464,8 @@ class IridaImport:
                     )
                 else:
                     # Processing for a SampleFile
-                    galaxy_sample_file_name = sample_folder_path+'/'+sample_item.name
+                    galaxy_sample_file_name = (sample_folder_path+'/'
+                        +sample_item.name)
                     dataset_id = self.existing_file(sample_item.path,
                                                   galaxy_sample_file_name)
 
@@ -678,8 +680,8 @@ class IridaImport:
             tree.write(xml_path)
 
 
-    def import_to_galaxy(self, json_parameter_file, log, hist_id, add_to_history=False, token=None,
-                         config_file=None):
+    def import_to_galaxy(self, json_parameter_file, log, hist_id,
+        add_to_history=False, token=None, config_file=None):
         """
         Import samples and their sample files into Galaxy from IRIDA
 
@@ -742,8 +744,11 @@ class IridaImport:
 
             if add_to_history:
                 collection_array = self.add_samples_to_history(samples, hist_id)
+                self.logger.debug("Samples added to history!")
                 self.logger.debug("Collection items: \n" + self.pp.pformat(
                     collection_array))
+            else:
+                self.logger.debug("Samples not added to history!")
 
             self.logger.debug("Number of files on galaxy: " + str(num_files))
 
@@ -799,8 +804,8 @@ if __name__ == '__main__':
             logging.info(message)
             print message
         else:
-            message = ('Error: Could not find config.ini in the irida_importer '
-                + 'directory!')
+            message = ('Error: Could not find config.ini in the irida_importer'
+                + ' directory!')
             logging.info(message)
             print message
     else:
