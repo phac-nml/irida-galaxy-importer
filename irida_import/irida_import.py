@@ -386,6 +386,13 @@ class IridaImport:
         return file_sum
 
     def add_samples_to_history(self, samples=[], hist_id=None):
+        """
+        Adds samples to history in Galaxy
+
+        :type samples: list
+        :param samples: the list of samples to upload to history
+        :return: The collection array of added samples
+        """
         collection_array = []
         hist = self.histories
 
@@ -690,6 +697,8 @@ class IridaImport:
         to the stub datasource it created
         :type log: str
         :param log: the name of a file to write the tool's log to.
+        :type add_to_history: Boolean
+        :param add_to_history: True when the user wants samples added to history
         :type token: str
         :param token: An access token that can be passed to the tool when it
         is manually run.
