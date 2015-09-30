@@ -767,7 +767,6 @@ class IridaImport:
 From the command line, pass JSON files to IridaImport, and set up the logger
 """
 if __name__ == '__main__':
-    global save_to_history
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-p', '--json_parameter_file', dest='json_parameter_file',
