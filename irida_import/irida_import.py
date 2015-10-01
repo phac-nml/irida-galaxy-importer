@@ -697,8 +697,6 @@ class IridaImport:
         to the stub datasource it created
         :type log: str
         :param log: the name of a file to write the tool's log to.
-        :type add_to_history: Boolean
-        :param add_to_history: True when the user wants samples added to history
         :type token: str
         :param token: An access token that can be passed to the tool when it
         is manually run.
@@ -723,12 +721,13 @@ class IridaImport:
             self.skipped_files_log = []
 
             samples_dict = json_params_dict['_embedded']['samples']
-            add_to_history = json_params_dict['_embedded']['addtohistory']
             email = json_params_dict['_embedded']['user']['email']
+            addtohistory = json_params_dict['_embedded']['addtohistory']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
             self.token = token
+            self.print_logged(oauth_dict)
             self.irida = self.get_IRIDA_session(oauth_dict)
 
             self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
@@ -752,13 +751,13 @@ class IridaImport:
             # Add each sample's files to the library
             num_files = self.add_samples_if_nec(samples, hist_id)
 
-            if add_to_history:
+            if addtohistory:
                 collection_array = self.add_samples_to_history(samples, hist_id)
-                self.logger.debug("Samples added to history!")
+                self.print_logged("Samples added to history!")
                 self.logger.debug("Collection items: \n" + self.pp.pformat(
                     collection_array))
             else:
-                self.logger.debug("Samples not added to history!")
+                self.print_logged("Samples not added to history!")
 
             self.logger.debug("Number of files on galaxy: " + str(num_files))
 
