@@ -727,6 +727,7 @@ class IridaImport:
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
             self.token = token
+            self.print_logged(oauth_dict)
             self.irida = self.get_IRIDA_session(oauth_dict)
 
             self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
