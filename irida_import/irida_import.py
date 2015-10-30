@@ -60,37 +60,24 @@ class IridaImport:
         for sample in samples:
 
             # Add a tuple of sample_file objects for each pair
-            paired_resource =  self.make_irida_request(sample.paired_path)
+            paired_resource = self.make_irida_request(sample.paired_path)
             for pair in paired_resource['resources']:
                 curr_pair = dict()
                 pair_name = "pair_" + str(pair['identifier'])
-                for pair_file in pair['files']:
-                    pair_sample_file = self.get_sample_file(pair_file)
+                for link in pair['links']:
+                    if link['rel'] == "pair/forward":
+                        curr_pair['forward'] = self.get_sample_file(self.make_irida_request(link['href']))
+                    elif link['rel'] == "pair/reverse":
+                        curr_pair['reverse'] = self.get_sample_file(self.make_irida_request(link['href']))
 
-                    if re.search( r".*_R1_.*", pair_sample_file.name):
-                        if re.search( r".*_R2_.*", pair_sample_file.name):
-                            error = "Found _R1_ and _R2_ in file name: "
-                            error += pair_sample_file.name
-                            self.print_logged(error)
-                            raise TypeError(error)
-                        else:
-                            curr_pair['forward'] = pair_sample_file
-                    elif re.search( r".*_R2_.*", pair_sample_file.name):
-                        curr_pair['reverse'] = pair_sample_file
-                    else:
-                        error = "_R1_ nor _R2_ found in file name: "
-                        error += pair_sample_file.name
-                        self.print_logged(error)
-                        raise TypeError(error)
                 sample.add_pair(SamplePair(pair_name, curr_pair))
 
             # Add a sample_file object for each single end read
-            unpaired_resource =  self.make_irida_request(sample.unpaired_path)
+            unpaired_resource = self.make_irida_request(sample.unpaired_path)
             for single in unpaired_resource['resources']:
                 sample.add_file(self.get_sample_file(single))
 
         return samples
-
 
     def make_irida_request(self, request_url):
         """
@@ -369,9 +356,9 @@ class IridaImport:
                                                          _file)
 
                         if file_key == "forward":
-                            datasets["forward"] = added_to_galaxy[0]['id']
+                            _file.library_dataset_id = added_to_galaxy[0]['id']
                         elif file_key == "reverse":
-                            datasets["reverse"] = added_to_galaxy[0]['id']
+                            _file.library_dataset_id = added_to_galaxy[0]['id']
                         else:
                             error = "File type " + str(file_key)
                             error += " not recognized."
@@ -381,6 +368,7 @@ class IridaImport:
                     added_to_galaxy = self._add_file(added_to_galaxy,
                                                      sample_folder_path,
                                                      sample_item)
+                    sample_item.library_dataset_id = added_to_galaxy[0]['id']
                     file_sum += 1
 
         return file_sum
@@ -413,32 +401,17 @@ class IridaImport:
                     datasets = dict()
                     collection_name = "/" + str(sample.name) + "/" + str(
                         sample_item.name)
-                    for file_key in files.keys():
-                        _file = files[file_key]
-                        galaxy_sample_file_name = (sample_folder_path+'/'
-                            +_file.name)
-
-                        dataset_id = self.existing_file(_file.path,
-                                                      galaxy_sample_file_name)
-
-                        if file_key == "forward":
-                            datasets["forward"] = dataset_id
-                        elif file_key == "reverse":
-                            datasets["reverse"] = dataset_id
-                        else:
-                            error = "File type " + str(file_key)
-                            error += " not recognized."
-                            raise TypeError(error)
 
                     # Add datasets to the current history
                     datasets['forward'] = hist.upload_dataset_from_library(
                         hist_id,
-                        datasets['forward']
+                        files['forward'].library_dataset_id
                     )['id']
-
+                    # add attributes forward and reverse in sample_pair..we'd be calling sample_item.forward
+                    #
                     datasets['reverse'] = hist.upload_dataset_from_library(
                         hist_id,
-                        datasets['reverse']
+                        files['reverse'].library_dataset_id
                     )['id']
 
                     # Put datasets into the collection
@@ -471,15 +444,10 @@ class IridaImport:
                     )
                 else:
                     # Processing for a SampleFile
-                    galaxy_sample_file_name = (sample_folder_path+'/'
-                        +sample_item.name)
-                    dataset_id = self.existing_file(sample_item.path,
-                                                  galaxy_sample_file_name)
 
-                    dataset = self.reg_gi.datasets.show_dataset(dataset_id)
                     hist.upload_dataset_from_library(
                         hist_id,
-                        dataset_id
+                        sample_item.library_dataset_id
                     )
 
         if collection_array != []:
