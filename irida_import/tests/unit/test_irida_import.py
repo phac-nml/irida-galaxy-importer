@@ -287,10 +287,8 @@ class TestIridaImport:
         sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
         samplePair1 = SamplePair(
             'pair1',
-            {
-                'forward':sampleFile1,
-                'reverse':sampleFile2
-            }
+            sampleFile1,
+            sampleFile2
         )
 
         num_files = 4
@@ -329,10 +327,8 @@ class TestIridaImport:
         sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
         samplePair1 = SamplePair(
             'pair1',
-            {
-                'forward':sampleFile1,
-                'reverse':sampleFile2
-            }
+            sampleFile1,
+            sampleFile2
         )
 
         num_pairs = 1
