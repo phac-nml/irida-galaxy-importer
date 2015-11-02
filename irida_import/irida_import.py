@@ -64,12 +64,15 @@ class IridaImport:
             for pair in paired_resource['resources']:
                 pair_name = "pair_" + str(pair['identifier'])
                 for link in pair['links']:
-                    if link['rel'] == "pair/forward":
-                        forward = self.get_sample_file(
-                            self.make_irida_request(link['href']))
-                    elif link['rel'] == "pair/reverse":
-                        reverse = self.get_sample_file(
-                            self.make_irida_request(link['href']))
+                    self.print_logged("Link HREF: " + str(link['href']))
+                    for curr_file in pair['files']:
+                        self.print_logged("File HREF: " + str(
+                            curr_file['links'][0]['href']))
+                        if curr_file['links'][0]['href'] == link['href']:
+                            if link['rel'] == "pair/forward":
+                                forward = self.get_sample_file(curr_file)
+                            elif link['rel'] == "pair/reverse":
+                                reverse = self.get_sample_file(curr_file)
 
                 sample.add_pair(SamplePair(pair_name, forward, reverse))
 
