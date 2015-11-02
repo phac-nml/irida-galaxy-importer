@@ -2,7 +2,7 @@ class SamplePair:
 
     """A representation of a sample pair obtained from IRIDA"""
 
-    def __init__(self, name, files):
+    def __init__(self, name, forward, reverse):
         """
         Create a sample file instance.
 
@@ -12,7 +12,8 @@ class SamplePair:
         :param path: the URI of the sample file
         """
 
-        self.files = files
+        self.forward = forward
+        self.reverse = reverse
         self.name = name
 
     def __repr__(self):
