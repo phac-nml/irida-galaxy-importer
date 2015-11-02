@@ -67,7 +67,7 @@ class IridaImport:
                     temp_link = dict()
                     temp_link['rel'] = "self"
                     temp_link["href"] = link['href']
-            
+
                     for curr_file in pair['files']:
                         if temp_link in curr_file['links']:
                             if link['rel'] == "pair/forward":
@@ -385,27 +385,20 @@ class IridaImport:
                 sample_folder_path = self.ILLUMINA_PATH + '/' + sample.name
                 if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
-                    forward = sample_item.forward
-                    reverse = sample_item.reverse
                     pair_path = sample_folder_path + "/" + sample_item.name
 
-                    datasets = dict()
                     collection_name = "/" + str(sample.name) + "/" + str(
                         sample_item.name)
-
-                    # Add datasets to the current history
-                    datasets['forward'] = forward.library_dataset_id
-                    datasets['reverse'] = reverse.library_dataset_id
 
                     # Put datasets into the collection
                     collection_elem_ids = [{
                         "src": "hda",
                         "name": "forward",
-                        "id": datasets["forward"]
+                        "id": sample_item.forward.library_dataset_id
                     }, {
                         "src": "hda",
                         "name": "reverse",
-                        "id": datasets["reverse"]
+                        "id": sample_item.reverse.library_dataset_id
                     }]
                     collection_array.append({
                         'src': 'new_collection',
@@ -417,12 +410,12 @@ class IridaImport:
                     # Hide datasets in history
                     hist.update_dataset(
                         hist_id,
-                        datasets['forward'],
+                        sample_item.forward.library_dataset_id,
                         visible=False
                     )
                     hist.update_dataset(
                         hist_id,
-                        datasets['reverse'],
+                        sample_item.reverse.library_dataset_id,
                         visible=False
                     )
                 else:
