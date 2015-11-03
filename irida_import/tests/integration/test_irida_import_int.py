@@ -405,6 +405,10 @@ class TestIridaImportInt:
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
+
+        # true by default, so this is disabling it
+        driver.find_element_by_id('addtohistory').click()
+
         driver.find_element_by_css_selector('button.btn.btn-primary').click()
 
         time.sleep(120) #  Wait for import to complete
