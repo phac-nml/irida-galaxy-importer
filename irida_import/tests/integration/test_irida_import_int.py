@@ -496,7 +496,6 @@ class TestIridaImportInt:
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
-        driver.find_element_by_id('addtohistory').click()
 
         driver.find_element_by_css_selector('button.btn.btn-primary').click()
 
