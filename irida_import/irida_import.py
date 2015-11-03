@@ -387,18 +387,31 @@ class IridaImport:
                     # Processing for a SamplePair
                     pair_path = sample_folder_path + "/" + sample_item.name
 
+                    datasets = dict()
                     collection_name = str(sample.name) + "__" + str(
                         sample_item.name)
+
+                    # Add datasets to the current history
+                    datasets['forward'] = hist.upload_dataset_from_library(
+                        hist_id,
+                        sample_item.forward.library_dataset_id
+                    )['id']
+                    # add attributes forward and reverse in sample_pair..we'd be calling sample_item.forward
+                    #
+                    datasets['reverse'] = hist.upload_dataset_from_library(
+                        hist_id,
+                        sample_item.reverse.library_dataset_id
+                    )['id']
 
                     # Put datasets into the collection
                     collection_elem_ids = [{
                         "src": "hda",
                         "name": "forward",
-                        "id": sample_item.forward.library_dataset_id
+                        "id": datasets['forward']
                     }, {
                         "src": "hda",
                         "name": "reverse",
-                        "id": sample_item.reverse.library_dataset_id
+                        "id": datasets['reverse']
                     }]
                     collection_array.append({
                         'src': 'new_collection',
@@ -410,12 +423,12 @@ class IridaImport:
                     # Hide datasets in history
                     hist.update_dataset(
                         hist_id,
-                        sample_item.forward.library_dataset_id,
+                        datasets['forward'],
                         visible=False
                     )
                     hist.update_dataset(
                         hist_id,
-                        sample_item.reverse.library_dataset_id,
+                        datasets['reverse'],
                         visible=False
                     )
                 else:
