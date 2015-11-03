@@ -62,7 +62,7 @@ class IridaImport:
             # Add a tuple of sample_file objects for each pair
             paired_resource = self.make_irida_request(sample.paired_path)
             for pair in paired_resource['resources']:
-                pair_name = "pair_" + str(pair['identifier'])
+                pair_name = str(pair['identifier'])
                 for link in pair['links']:
                     temp_link = dict()
                     temp_link['rel'] = "self"
