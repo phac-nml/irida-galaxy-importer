@@ -387,7 +387,7 @@ class IridaImport:
                     # Processing for a SamplePair
                     pair_path = sample_folder_path + "/" + sample_item.name
 
-                    collection_name = "/" + str(sample.name) + "/" + str(
+                    collection_name = str(sample.name) + "__" + str(
                         sample_item.name)
 
                     # Put datasets into the collection
