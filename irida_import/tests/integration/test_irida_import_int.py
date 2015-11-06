@@ -10,12 +10,20 @@ import pytest
 import subprocess32
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
 from ...irida_import import IridaImport
 from . import util
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import LegacyApplicationClient
 from bioblend import galaxy
 
+# These variables are to stop Galaxy and Irida from being changed
+# during script execution. This is required if you are using your
+# own instance of Galaxy and Irida.
+# os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL'] = "1"
+# os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY'] = "1"
+# os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY'] = "1"
+# os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA'] = "1"
 
 @pytest.mark.integration
 class TestIridaImportInt:
@@ -65,10 +73,11 @@ class TestIridaImportInt:
     # Sequence files accessed by IRIDA's REST API will not exist when the
     # tool attempts to access them if they were not uploaded as valid sequence
     # files
-    FASTQ_CONTENTS = """@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50
-TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT
-+SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50
-hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
+    FASTQ_CONTENTS = (
+        "@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50\n" +
+        "TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT\n" +
+        "+SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50\n" +
+        "hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y")
 
     def setup_class(self):
         """Initialize class variables, install IRIDA, Galaxy, and the tool"""
@@ -88,12 +97,14 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']
             self.GALAXY_PORT = 8080
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(
+                self.GALAXY_PORT)
         except KeyError:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('', 0))
             self.GALAXY_PORT = sock.getsockname()[1]
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(self.GALAXY_PORT)
+            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(
+                self.GALAXY_PORT)
 
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
@@ -140,7 +151,8 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
             stop_irida()
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
             subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
-            util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT, self.TIMEOUT)
+            util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT,
+                self.TIMEOUT)
 
             def finalize_irida():
                 stop_irida()
@@ -157,8 +169,11 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
     def setup_galaxy(self, request, driver):
         """Set up Galaxy for tests (Start if required, register, log in)"""
         def stop_galaxy():
-            print 'Killing Galaxy'
-            subprocess32.call(self.GALAXY_STOP, shell=True)
+            try:
+                os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY']
+            except KeyError:
+                print 'Killing Galaxy'
+                subprocess32.call(self.GALAXY_STOP, shell=True)
 
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY']
@@ -200,7 +215,8 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
         driver.find_element_by_id("email_input").send_keys(self.EMAIL)
         driver.find_element_by_id("password_input").send_keys("Password1")
-        driver.find_element_by_id("password_check_input").send_keys("Password1")
+        driver.find_element_by_id("password_check_input").send_keys(
+            "Password1")
         driver.find_element_by_id("name_input").send_keys("irida-test")
         driver.find_element_by_id("send").click()
 
@@ -248,14 +264,19 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
     def login_irida(self, driver, username, password):
         """Log in to IRIDA (assumes the login page is opened by the driver)"""
-        driver.find_element_by_id("emailTF").send_keys(username)
-        driver.find_element_by_id(
-            "passwordTF").send_keys(password)
-        driver.find_element_by_id("submitBtn").click()
+        try:
+            driver.find_element_by_id("emailTF").send_keys(username)
+            driver.find_element_by_id(
+                "passwordTF").send_keys(password)
+            driver.find_element_by_id("submitBtn").click()
+        except NoSuchElementException:
+            # If already logged in
+            pass
 
     def add_irida_client_auth_code(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
-        driver.find_element_by_id("clientId").send_keys(self.IRIDA_AUTH_CODE_ID)
+        driver.find_element_by_id("clientId").send_keys(
+            self.IRIDA_AUTH_CODE_ID)
         driver.find_element_by_id('s2id_authorizedGrantTypes').click()
         driver.find_element_by_xpath(
             "//*[contains(text(), 'authorization_code')]").click()
@@ -318,18 +339,21 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         # Pytest manages the temporary directory
         seq1 = tmpdir.join("seq1.fastq")
         seq1.write(self.FASTQ_CONTENTS)
-        sequence1 = irida.post(sequences1, files={'file': open(str(seq1), 'rb')})
+        sequence1 = irida.post(sequences1, files={'file': open(str(seq1),
+            'rb')})
 
         seq2 = tmpdir.join("seq2.fastq")
         seq2.write(self.FASTQ_CONTENTS)
-        sequence2 = irida.post(sequences1, files={'file': open(str(seq2), 'rb')})
+        sequence2 = irida.post(sequences1, files={'file': open(str(seq2),
+            'rb')})
 
         sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
                                              'sequencerSampleId': 'PS_2'})
         sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
         seq3 = tmpdir.join("seq3.fastq")
         seq3.write(self.FASTQ_CONTENTS)
-        sequence3 = irida.post(sequences2, files={'file': open(str(seq3), 'rb')})
+        sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
+            'rb')})
 
         print project.text
         print sample1.text
@@ -337,10 +361,10 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
         # Export to Galaxy using the button on the dropdown menu
         driver.get(self.GALAXY_URL)
         history_panel = driver.find_element_by_id('current-history-panel')
-        initially_succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+        initially_succeeded = len(history_panel.find_elements_by_class_name(
+            'state-ok'))
         driver.find_element_by_css_selector("#title_getext > a > span").click()
         driver.find_element_by_link_text("IRIDA").click()
-#         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
 
         # Sometimes a login is required
         try:
@@ -353,14 +377,26 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
         # These checkbox elements cannot be clicked directly
         # Using IDs would complicate running the tests without restarting IRIDA
-        el1 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[1]/td/div/label")
-        el2 = driver.find_element_by_xpath("//table[@id='samplesTable']/tbody/tr[2]/td/div/label")
         action = webdriver.common.action_chains.ActionChains(driver)
-        action.move_to_element_with_offset(el1, 5, 5)
-        action.click()
-        action.move_to_element_with_offset(el2, 5, 5)
-        action.click()
-        action.perform()
+        stale = True
+        timeout = 0
+        while stale:
+            try:
+                el1 = driver.find_element_by_xpath(
+                    "//table[@id='samplesTable']/tbody/tr[1]/td/div")
+                el2 = driver.find_element_by_xpath(
+                    "//table[@id='samplesTable']/tbody/tr[2]/td/div")
+
+                el1.click()
+                el2.click()
+
+                stale = False
+            except (StaleElementReferenceException, NoSuchElementException):
+                time.sleep(1)
+                timeout += 1
+
+                if timeout == 60:
+                    raise
 
         driver.find_element_by_id('exportOptionsBtn').click()
 
@@ -369,13 +405,111 @@ hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y"""
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
+
+        # true by default, so this is disabling it
+        driver.find_element_by_id('addtohistory').click()
+
         driver.find_element_by_css_selector('button.btn.btn-primary').click()
 
-        time.sleep(20) #  Wait for import to complete
+        time.sleep(120) #  Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
-        assert succeeded - initially_succeeded > 0, "Import did not complete successfully"
+        assert (succeeded - initially_succeeded > 0,
+            "Import did not complete successfully")
 
-    def test_cart_import_multi_project(self, setup_irida, setup_galaxy, driver):
+    def test_project_samples_import_with_history(self, setup_irida, setup_galaxy,
+                                        driver, tmpdir):
+        """Verify that sequence files can be imported from IRIDA to Galaxy,"""
+        """with the addtohistory option checked"""
+        irida = setup_irida
+        project_name = 'ImportProjectSamples'
+        project = irida.post(self.IRIDA_PROJECTS,
+                                json={'name': project_name})
+
+        samples = self.get_href(project, 'project/samples')
+        sample1 = irida.post(samples, json={'sampleName': 'PS_Sample1',
+                                            'sequencerSampleId': 'PS_1'})
+        sequences1 = self.get_href(sample1, 'sample/sequenceFiles')
+
+        # Pytest manages the temporary directory
+        seq1 = tmpdir.join("seq1.fastq")
+        seq1.write(self.FASTQ_CONTENTS)
+        sequence1 = irida.post(sequences1, files={'file': open(str(seq1),
+            'rb')})
+
+        seq2 = tmpdir.join("seq2.fastq")
+        seq2.write(self.FASTQ_CONTENTS)
+        sequence2 = irida.post(sequences1, files={'file': open(str(seq2),
+            'rb')})
+
+        sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
+                                             'sequencerSampleId': 'PS_2'})
+        sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
+        seq3 = tmpdir.join("seq3.fastq")
+        seq3.write(self.FASTQ_CONTENTS)
+        sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
+            'rb')})
+
+        print project.text
+        print sample1.text
+        print sequence1.text
+        # Export to Galaxy using the button on the dropdown menu
+        driver.get(self.GALAXY_URL)
+        history_panel = driver.find_element_by_id('current-history-panel')
+        initially_succeeded = len(history_panel.find_elements_by_class_name(
+            'state-ok'))
+        driver.find_element_by_css_selector("#title_getext > a > span").click()
+        driver.find_element_by_link_text("IRIDA").click()
+
+        # Sometimes a login is required
+        try:
+            self.login_irida(driver, self.IRIDA_USER, self.IRIDA_PASSWORD)
+        except NoSuchElementException:
+            pass
+
+        # Pick the last matching project on this page
+        driver.find_elements_by_link_text(project_name)[-1].click()
+
+        # These checkbox elements cannot be clicked directly
+        # Using IDs would complicate running the tests without restarting IRIDA
+        action = webdriver.common.action_chains.ActionChains(driver)
+        stale = True
+        timeout = 0
+        while stale:
+            try:
+                el1 = driver.find_element_by_xpath(
+                    "//table[@id='samplesTable']/tbody/tr[1]/td/div")
+                el2 = driver.find_element_by_xpath(
+                    "//table[@id='samplesTable']/tbody/tr[2]/td/div")
+
+                el1.click()
+                el2.click()
+
+                stale = False
+            except (StaleElementReferenceException, NoSuchElementException):
+                time.sleep(1)
+                timeout += 1
+
+                if timeout == 60:
+                    raise
+
+        driver.find_element_by_id('exportOptionsBtn').click()
+
+        # This should be changed to an ID:
+        driver.find_element_by_xpath("//div[4]/ul/li[3]/a/span[2]").click()
+
+        driver.find_element_by_id('email').clear()
+        driver.find_element_by_id('email').send_keys(self.EMAIL)
+
+        driver.find_element_by_css_selector('button.btn.btn-primary').click()
+
+        time.sleep(120) #  Wait for import to complete
+        history_panel = driver.find_element_by_id('current-history-panel')
+        succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+        assert (succeeded - initially_succeeded == 4,
+            "Import did not complete successfully")
+
+    def test_cart_import_multi_project(self, setup_irida, setup_galaxy,
+        driver):
         """Using the cart, import multiple projects from IRIDA to Galaxy"""
         return True
