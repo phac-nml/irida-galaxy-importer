@@ -32,8 +32,8 @@ git clone https://github.com/galaxyproject/galaxy/ > galaxy-clone.log 2>&1
 pushd galaxy
 git checkout master > galaxy-checkout.log 2>&1
 git fetch
-git reset --hard 
-git clean -fd 
+git reset --hard
+git clean -fd
 git pull
 echo "Preparing Galaxy for first execution (installing eggs)..."
 ./scripts/common_startup.sh > galaxy-common-startup.log 2>&1
