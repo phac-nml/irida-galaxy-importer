@@ -12,8 +12,7 @@ pushd repos
 echo "Downloading IRIDA..."
 git clone http://gitlab-ci-token:b71f6552f4cbe6f7d3f6faad8939b9@irida.corefacility.ca/gitlab/irida/irida.git
 pushd irida
-#TODO: revert branch to development before merging
-git checkout hotfix/sample-link-structure-galaxy-export > irida-checkout.log 2>&1
+git checkout development > irida-checkout.log 2>&1
 git fetch
 git reset --hard
 git clean -fd
@@ -33,8 +32,8 @@ git clone https://github.com/galaxyproject/galaxy/ > galaxy-clone.log 2>&1
 pushd galaxy
 git checkout master > galaxy-checkout.log 2>&1
 git fetch
-git reset --hard 
-git clean -fd 
+git reset --hard
+git clean -fd
 git pull
 echo "Preparing Galaxy for first execution (installing eggs)..."
 ./scripts/common_startup.sh > galaxy-common-startup.log 2>&1

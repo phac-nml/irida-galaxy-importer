@@ -396,8 +396,7 @@ class IridaImport:
                         hist_id,
                         sample_item.forward.library_dataset_id
                     )['id']
-                    # add attributes forward and reverse in sample_pair..we'd be calling sample_item.forward
-                    #
+
                     datasets['reverse'] = hist.upload_dataset_from_library(
                         hist_id,
                         sample_item.reverse.library_dataset_id
