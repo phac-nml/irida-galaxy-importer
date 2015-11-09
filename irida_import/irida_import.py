@@ -45,7 +45,7 @@ class IridaImport:
     def __init__(self):
         self.logger = logging.getLogger('irida_import')
 
-    def get_samples(self, samples_dict):
+    def get_samples(self, samples_dict, make_paired_collection=False):
         """
         Gets sample objects from a dictionary.
 
@@ -57,30 +57,42 @@ class IridaImport:
         """
         samples = self.get_sample_meta(samples_dict)
 
-        for sample in samples:
-
-            # Add a tuple of sample_file objects for each pair
-            paired_resource = self.make_irida_request(sample.paired_path)
-            for pair in paired_resource['resources']:
-                pair_name = str(pair['identifier'])
-                for link in pair['links']:
-                    temp_link = dict()
-                    temp_link['rel'] = "self"
-                    temp_link["href"] = link['href']
-
+        if not make_paired_collection:
+            for sample in samples:
+                paired_resource = self.make_irida_request(sample.paired_path)
+                for pair in paired_resource['resources']:
                     for curr_file in pair['files']:
-                        if temp_link in curr_file['links']:
-                            if link['rel'] == "pair/forward":
-                                forward = self.get_sample_file(curr_file)
-                            elif link['rel'] == "pair/reverse":
-                                reverse = self.get_sample_file(curr_file)
+                        sample.add_file(self.get_sample_file(curr_file))
 
-                sample.add_pair(SamplePair(pair_name, forward, reverse))
+                unpaired_resource = self.make_irida_request(sample.unpaired_path)
+                for single in unpaired_resource['resources']:
+                    sample.add_file(self.get_sample_file(single))
 
-            # Add a sample_file object for each single end read
-            unpaired_resource = self.make_irida_request(sample.unpaired_path)
-            for single in unpaired_resource['resources']:
-                sample.add_file(self.get_sample_file(single))
+        else:
+            for sample in samples:
+
+                # Add a tuple of sample_file objects for each pair
+                paired_resource = self.make_irida_request(sample.paired_path)
+                for pair in paired_resource['resources']:
+                    pair_name = str(pair['identifier'])
+                    for link in pair['links']:
+                        temp_link = dict()
+                        temp_link['rel'] = "self"
+                        temp_link["href"] = link['href']
+
+                        for curr_file in pair['files']:
+                            if temp_link in curr_file['links']:
+                                if link['rel'] == "pair/forward":
+                                    forward = self.get_sample_file(curr_file)
+                                elif link['rel'] == "pair/reverse":
+                                    reverse = self.get_sample_file(curr_file)
+
+                    sample.add_pair(SamplePair(pair_name, forward, reverse))
+
+                # Add a sample_file object for each single end read
+                unpaired_resource = self.make_irida_request(sample.unpaired_path)
+                for single in unpaired_resource['resources']:
+                    sample.add_file(self.get_sample_file(single))
 
         return samples
 
@@ -672,6 +684,7 @@ class IridaImport:
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             addtohistory = json_params_dict['_embedded']['addtohistory']
+            make_paired_collection = json_params_dict['_embedded']['makepairedcollection']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
@@ -689,7 +702,10 @@ class IridaImport:
             self.histories = self.reg_gi.histories
 
             # Each sample contains a list of sample files
-            samples = self.get_samples(samples_dict)
+            if make_paired_collection:
+                samples = self.get_samples(samples_dict, make_paired_collection=True)
+            else:
+                samples = self.get_samples(samples_dict)
 
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name, email)
