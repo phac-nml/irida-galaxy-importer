@@ -45,7 +45,7 @@ class IridaImport:
     def __init__(self):
         self.logger = logging.getLogger('irida_import')
 
-    def get_samples(self, samples_dict, make_paired_collection=False):
+    def get_samples(self, samples_dict):
         """
         Gets sample objects from a dictionary.
 
@@ -57,42 +57,30 @@ class IridaImport:
         """
         samples = self.get_sample_meta(samples_dict)
 
-        if not make_paired_collection:
-            for sample in samples:
-                paired_resource = self.make_irida_request(sample.paired_path)
-                for pair in paired_resource['resources']:
+        for sample in samples:
+
+            # Add a tuple of sample_file objects for each pair
+            paired_resource = self.make_irida_request(sample.paired_path)
+            for pair in paired_resource['resources']:
+                pair_name = str(pair['identifier'])
+                for link in pair['links']:
+                    temp_link = dict()
+                    temp_link['rel'] = "self"
+                    temp_link["href"] = link['href']
+
                     for curr_file in pair['files']:
-                        sample.add_file(self.get_sample_file(curr_file))
+                        if temp_link in curr_file['links']:
+                            if link['rel'] == "pair/forward":
+                                forward = self.get_sample_file(curr_file)
+                            elif link['rel'] == "pair/reverse":
+                                reverse = self.get_sample_file(curr_file)
 
-                unpaired_resource = self.make_irida_request(sample.unpaired_path)
-                for single in unpaired_resource['resources']:
-                    sample.add_file(self.get_sample_file(single))
+                sample.add_pair(SamplePair(pair_name, forward, reverse))
 
-        else:
-            for sample in samples:
-
-                # Add a tuple of sample_file objects for each pair
-                paired_resource = self.make_irida_request(sample.paired_path)
-                for pair in paired_resource['resources']:
-                    pair_name = str(pair['identifier'])
-                    for link in pair['links']:
-                        temp_link = dict()
-                        temp_link['rel'] = "self"
-                        temp_link["href"] = link['href']
-
-                        for curr_file in pair['files']:
-                            if temp_link in curr_file['links']:
-                                if link['rel'] == "pair/forward":
-                                    forward = self.get_sample_file(curr_file)
-                                elif link['rel'] == "pair/reverse":
-                                    reverse = self.get_sample_file(curr_file)
-
-                    sample.add_pair(SamplePair(pair_name, forward, reverse))
-
-                # Add a sample_file object for each single end read
-                unpaired_resource = self.make_irida_request(sample.unpaired_path)
-                for single in unpaired_resource['resources']:
-                    sample.add_file(self.get_sample_file(single))
+            # Add a sample_file object for each single end read
+            unpaired_resource = self.make_irida_request(sample.unpaired_path)
+            for single in unpaired_resource['resources']:
+                sample.add_file(self.get_sample_file(single))
 
         return samples
 
@@ -377,7 +365,8 @@ class IridaImport:
 
         return file_sum
 
-    def add_samples_to_history(self, samples=[], hist_id=None):
+    def add_samples_to_history(
+            self, samples=[], hist_id=None, make_paired_collection=False):
         """
         Adds samples to history in Galaxy
 
@@ -397,51 +386,62 @@ class IridaImport:
                 sample_folder_path = self.ILLUMINA_PATH + '/' + sample.name
                 if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
-                    pair_path = sample_folder_path + "/" + sample_item.name
 
-                    datasets = dict()
-                    collection_name = str(sample.name) + "__" + str(
-                        sample_item.name)
+                    if make_paired_collection:
+                        pair_path = sample_folder_path + "/" + sample_item.name
+                        datasets = dict()
+                        collection_name = str(sample.name) + "__" + str(
+                            sample_item.name)
 
-                    # Add datasets to the current history
-                    datasets['forward'] = hist.upload_dataset_from_library(
-                        hist_id,
-                        sample_item.forward.library_dataset_id
-                    )['id']
+                        # Add datasets to the current history
+                        datasets['forward'] = hist.upload_dataset_from_library(
+                            hist_id,
+                            sample_item.forward.library_dataset_id
+                        )['id']
 
-                    datasets['reverse'] = hist.upload_dataset_from_library(
-                        hist_id,
-                        sample_item.reverse.library_dataset_id
-                    )['id']
+                        datasets['reverse'] = hist.upload_dataset_from_library(
+                            hist_id,
+                            sample_item.reverse.library_dataset_id
+                        )['id']
 
-                    # Put datasets into the collection
-                    collection_elem_ids = [{
-                        "src": "hda",
-                        "name": "forward",
-                        "id": datasets['forward']
-                    }, {
-                        "src": "hda",
-                        "name": "reverse",
-                        "id": datasets['reverse']
-                    }]
-                    collection_array.append({
-                        'src': 'new_collection',
-                        'name': collection_name,
-                        'collection_type': 'paired',
-                        'element_identifiers': collection_elem_ids,
-                    })
+                        # Put datasets into the collection
+                        collection_elem_ids = [{
+                            "src": "hda",
+                            "name": "forward",
+                            "id": datasets['forward']
+                        }, {
+                            "src": "hda",
+                            "name": "reverse",
+                            "id": datasets['reverse']
+                        }]
+                        collection_array.append({
+                            'src': 'new_collection',
+                            'name': collection_name,
+                            'collection_type': 'paired',
+                            'element_identifiers': collection_elem_ids,
+                        })
 
-                    # Hide datasets in history
-                    hist.update_dataset(
-                        hist_id,
-                        datasets['forward'],
-                        visible=False
-                    )
-                    hist.update_dataset(
-                        hist_id,
-                        datasets['reverse'],
-                        visible=False
-                    )
+                        # Hide datasets in history
+                        hist.update_dataset(
+                            hist_id,
+                            datasets['forward'],
+                            visible=False
+                        )
+                        hist.update_dataset(
+                            hist_id,
+                            datasets['reverse'],
+                            visible=False
+                        )
+
+                    else:
+                        hist.upload_dataset_from_library(
+                            hist_id,
+                            sample_item.forward.library_dataset_id
+                        )
+                        hist.upload_dataset_from_library(
+                            hist_id,
+                            sample_item.reverse.library_dataset_id
+                        )
                 else:
                     # Processing for a SampleFile
 
@@ -702,10 +702,7 @@ class IridaImport:
             self.histories = self.reg_gi.histories
 
             # Each sample contains a list of sample files
-            if make_paired_collection:
-                samples = self.get_samples(samples_dict, make_paired_collection=True)
-            else:
-                samples = self.get_samples(samples_dict)
+            samples = self.get_samples(samples_dict)
 
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name, email)
@@ -716,10 +713,15 @@ class IridaImport:
             num_files = self.add_samples_if_nec(samples, hist_id)
 
             if addtohistory:
-                collection_array = self.add_samples_to_history(samples, hist_id)
-                self.print_logged("Samples added to history!")
-                self.logger.debug("Collection items: \n" + self.pp.pformat(
-                    collection_array))
+                if make_paired_collection:
+                    collection_array = self.add_samples_to_history(
+                        samples, hist_id, make_paired_collection=True)
+                    self.print_logged("Samples added to history!")
+                    self.logger.debug("Collection items: \n" + self.pp.pformat(
+                        collection_array))
+                else:
+                    collection_array = self.add_samples_to_history(samples, hist_id)
+                    self.print_logged("Samples added to history!")
             else:
                 self.print_logged("Samples not added to history!")
 
