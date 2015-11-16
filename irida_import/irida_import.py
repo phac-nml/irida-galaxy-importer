@@ -386,24 +386,24 @@ class IridaImport:
                 sample_folder_path = self.ILLUMINA_PATH + '/' + sample.name
                 if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
+                    datasets = dict()
+
+                    pair_path = sample_folder_path + "/" + sample_item.name
+                    collection_name = str(sample.name) + "__" + str(
+                        sample_item.name)
+
+                    # Add datasets to the current history
+                    datasets['forward'] = hist.upload_dataset_from_library(
+                        hist_id,
+                        sample_item.forward.library_dataset_id
+                    )['id']
+
+                    datasets['reverse'] = hist.upload_dataset_from_library(
+                        hist_id,
+                        sample_item.reverse.library_dataset_id
+                    )['id']
 
                     if make_paired_collection:
-                        pair_path = sample_folder_path + "/" + sample_item.name
-                        datasets = dict()
-                        collection_name = str(sample.name) + "__" + str(
-                            sample_item.name)
-
-                        # Add datasets to the current history
-                        datasets['forward'] = hist.upload_dataset_from_library(
-                            hist_id,
-                            sample_item.forward.library_dataset_id
-                        )['id']
-
-                        datasets['reverse'] = hist.upload_dataset_from_library(
-                            hist_id,
-                            sample_item.reverse.library_dataset_id
-                        )['id']
-
                         # Put datasets into the collection
                         collection_elem_ids = [{
                             "src": "hda",
@@ -433,15 +433,6 @@ class IridaImport:
                             visible=False
                         )
 
-                    else:
-                        hist.upload_dataset_from_library(
-                            hist_id,
-                            sample_item.forward.library_dataset_id
-                        )
-                        hist.upload_dataset_from_library(
-                            hist_id,
-                            sample_item.reverse.library_dataset_id
-                        )
                 else:
                     # Processing for a SampleFile
 
