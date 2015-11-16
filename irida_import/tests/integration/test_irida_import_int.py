@@ -407,6 +407,7 @@ class TestIridaImportInt:
         driver.find_element_by_id('email').send_keys(self.EMAIL)
 
         # true by default, so this is disabling it
+        driver.find_element_by_id('makepairedcollection').click()
         driver.find_element_by_id('addtohistory').click()
 
         driver.find_element_by_css_selector('button.btn.btn-primary').click()

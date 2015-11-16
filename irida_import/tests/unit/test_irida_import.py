@@ -285,7 +285,7 @@ class TestIridaImport:
 
         sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
         sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
-        samplePair1 = SamplePair(
+        /1 = SamplePair(
             'pair1',
             sampleFile1,
             sampleFile2
@@ -348,6 +348,11 @@ class TestIridaImport:
             collection_array) is num_pairs, ('The %s pair should be uploaded'
             + 'once') % num_pairs
 
+        collection_array = []
+
+        collection_array = imp.add_samples_to_history(samples, history['id'], make_paired_collection=False)
+
+        assert not collection_array, 'List should be empty since make_paired_collection was set to false'
 
     def test_link(self, imp, folder_list):
         """Test uploading a local sample file to Galaxy as a link"""
