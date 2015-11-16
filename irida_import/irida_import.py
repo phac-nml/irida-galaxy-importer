@@ -366,7 +366,7 @@ class IridaImport:
         return file_sum
 
     def add_samples_to_history(
-            self, samples=[], hist_id=None, make_paired_collection=False):
+            self, samples=[], hist_id=None, make_paired_collection=True):
         """
         Adds samples to history in Galaxy
 
@@ -705,13 +705,13 @@ class IridaImport:
 
             if addtohistory:
                 if make_paired_collection:
-                    collection_array = self.add_samples_to_history(
-                        samples, hist_id, make_paired_collection=True)
+                    collection_array = self.add_samples_to_history(samples, hist_id)
                     self.print_logged("Samples added to history!")
                     self.logger.debug("Collection items: \n" + self.pp.pformat(
                         collection_array))
                 else:
-                    collection_array = self.add_samples_to_history(samples, hist_id)
+                    collection_array = self.add_samples_to_history(
+                        samples, hist_id, make_paired_collection=False)
                     self.print_logged("Samples added to history!")
             else:
                 self.print_logged("Samples not added to history!")
