@@ -285,7 +285,7 @@ class TestIridaImport:
 
         sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
         sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
-        /1 = SamplePair(
+        samplePair1 = SamplePair(
             'pair1',
             sampleFile1,
             sampleFile2
