@@ -410,6 +410,13 @@ class TestIridaImportInt:
         driver.find_element_by_id('makepairedcollection').click()
         driver.find_element_by_id('addtohistory').click()
 
+        try:
+            driver.find_element_by_id('makepairedcollection').click()
+        except NoSuchElementException:
+            elementNotFound = True
+
+        assert elementNotFound
+
         driver.find_element_by_css_selector('button.btn.btn-primary').click()
 
         time.sleep(120) #  Wait for import to complete
