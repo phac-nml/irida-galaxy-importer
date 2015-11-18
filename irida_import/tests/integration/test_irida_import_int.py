@@ -10,6 +10,7 @@ import pytest
 import subprocess32
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import ElementNotVisibleException
 from selenium.common.exceptions import StaleElementReferenceException
 from ...irida_import import IridaImport
 from . import util
@@ -410,12 +411,8 @@ class TestIridaImportInt:
         driver.find_element_by_id('makepairedcollection').click()
         driver.find_element_by_id('addtohistory').click()
 
-        try:
+        with pytest.raises(ElementNotVisibleException):
             driver.find_element_by_id('makepairedcollection').click()
-        except NoSuchElementException:
-            elementNotFound = True
-
-        assert elementNotFound
 
         driver.find_element_by_css_selector('button.btn.btn-primary').click()
 
