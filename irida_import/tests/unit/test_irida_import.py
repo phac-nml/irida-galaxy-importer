@@ -52,7 +52,7 @@ class TestIridaImport:
         imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
         imp.reg_gi.datasets = mock.create_autospec(galaxy.datasets.DatasetClient)
         imp.reg_gi.libraries = mock.create_autospec(galaxy.libraries.LibraryClient)
-        imp.reg_gi.libraries.get_folders.return_value = [{'id': '321'},{}]
+        imp.reg_gi.libraries.get_folders.return_value = [{'id': '321'}, {}]
         imp.library = mock.create_autospec(galaxy.objects.wrappers.Library)
         imp.library.id = "123"
         imp.reg_gi.histories = mock.create_autospec(galaxy.histories.HistoryClient)
@@ -80,41 +80,43 @@ class TestIridaImport:
     @pytest.fixture(scope='class')
     def file_list(self):
         """Obtain a list of files as if read from Galaxy"""
-        file_list = [
+        file_list =
+        [
             {
                 'url': '/api/libraries/lala/contents/lala1',
                 'id': '59606d2a36c77a56',
                 'name': 'file1.fasta'
-                },
+            },
             {
                 'url': '/api/libraries/lala/contents/lala2',
                 'id': '59606d2a36c77a57',
                 'name': 'file2.fasta'
-                }
-            ]
+            }
+        ]
         return file_list
 
     @pytest.fixture(scope='class')
     def folder_list(self):
         """Obtain a list of folders as if read from Galaxy"""
         # TODO: doublecheck this dict is correct
-        folder_list = [
+        folder_list =
+        [
             {
                 'url': '/api/libraries/lala/contents/lala2',
                 'id': '59606d2a36c77a56',
                 'name': '/bobfolder1'
-                },
+            },
             {
                 'url': '/api/libraries/lala/contents/lala1',
                 'id': '59606d2a36c77a57',
                 'name': '/bobfolder/bobfolder2'
-                },
+            },
             {
                 'url': '/api/libraries/lala/contents/lala3',
                 'id': '59606d2a36c77a58',
                 'name': '/bobfolder1/bobfolder2/bobfolder3'
-                }
-            ]
+            }
+        ]
         return folder_list
 
     def test_get_samples(self, imp, setup_json):
@@ -307,7 +309,7 @@ class TestIridaImport:
         assert imp._add_file.call_count is num_files, \
             'The %s files should be uploaded once each' % num_files
 
-        assert num_added==2, "The correct amount of files need to be uploaded"
+        assert num_added == 2, "The correct amount of files need to be uploaded"
 
     def test_add_samples_to_history(self, imp, file_list):
         """ Test if a new sample file is added to the library """
@@ -346,13 +348,14 @@ class TestIridaImport:
         assert collection_array, 'a pair must be added'
         assert collection_array[0]['collection_type'] is 'paired' and len(
             collection_array) is num_pairs, ('The %s pair should be uploaded'
-            + 'once') % num_pairs
+                                             + 'once') % num_pairs
 
         collection_array = []
 
-        collection_array = imp.add_samples_to_history(samples, history['id'], make_paired_collection=False)
+        collection_array = imp.add_samples_to_history(samples, history['id'],
+                                                      make_paired_collection=False)
 
-        assert not collection_array, 'List should be empty since make_paired_collection was set to false'
+        assert not collection_array, 'List should be empty, collections was set to false'
 
     def test_link(self, imp, folder_list):
         """Test uploading a local sample file to Galaxy as a link"""
@@ -395,7 +398,8 @@ class TestIridaImport:
             imp.get_first_or_make_lib = Mock(return_value=lib)
             imp.create_folder_if_nec = Mock()
             imp.add_samples_if_nec = mock.create_autospec(IridaImport.add_samples_if_nec)
-            imp.add_samples_to_history = mock.create_autospec(IridaImport.add_samples_to_history)
+            imp.add_samples_to_history = (
+                mock.create_autospec(IridaImport.add_samples_to_history))
             imp.assign_ownership_if_nec = Mock()
             imp.get_IRIDA_session = Mock()
             imp.get_sample_file = Mock()

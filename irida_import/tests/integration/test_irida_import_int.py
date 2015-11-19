@@ -26,6 +26,7 @@ from bioblend import galaxy
 # os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY'] = "1"
 # os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA'] = "1"
 
+
 @pytest.mark.integration
 class TestIridaImportInt:
     """
@@ -43,14 +44,14 @@ class TestIridaImportInt:
     GALAXY_PASSWORD = 'Password1'
     GALAXY_DOMAIN = 'localhost'
     GALAXY_CMD = ['bash', 'run.sh']
-    GALAXY_STOP = 'pkill -u '+USER+' -f "python ./scripts/paster.py"'
+    GALAXY_STOP = 'pkill -u ' + USER + ' -f "python ./scripts/paster.py"'
     GALAXY_DB_RESET = 'echo "drop database if exists external_galaxy_test;'\
         ' create database external_galaxy_test;'\
         '"| mysql -u test -ptest'
 
     IRIDA_DOMAIN = 'localhost'
     IRIDA_PORT = 8080
-    IRIDA_URL = 'http://'+IRIDA_DOMAIN+':'+str(IRIDA_PORT)
+    IRIDA_URL = 'http://' + IRIDA_DOMAIN + ':' + str(IRIDA_PORT)
     IRIDA_CMD = ['mvn', 'clean', 'jetty:run',
                  '-Djdbc.url=jdbc:mysql://localhost:3306/irida_test',
                  '-Djdbc.username=test', '-Djdbc.password=test',
@@ -94,19 +95,17 @@ class TestIridaImportInt:
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
         self.IRIDA = os.path.join(self.REPOS, 'irida')
 
-
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_INSTALL']
             self.GALAXY_PORT = 8080
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(
+            self.GALAXY_URL = 'http://' + self.GALAXY_DOMAIN + ':' + str(
                 self.GALAXY_PORT)
         except KeyError:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('', 0))
             self.GALAXY_PORT = sock.getsockname()[1]
-            self.GALAXY_URL = 'http://'+self.GALAXY_DOMAIN+':'+str(
+            self.GALAXY_URL = 'http://' + self.GALAXY_DOMAIN + ':' + str(
                 self.GALAXY_PORT)
-
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
@@ -153,7 +152,7 @@ class TestIridaImportInt:
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
             subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
             util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT,
-                self.TIMEOUT)
+                               self.TIMEOUT)
 
             def finalize_irida():
                 stop_irida()
@@ -192,7 +191,7 @@ class TestIridaImportInt:
             request.addfinalizer(finalize_galaxy)
         self.register_galaxy(driver)
         self.configure_galaxy_api_key(driver)
-        self.configure_tool('Galaxy','galaxy_url', self.GALAXY_URL)
+        self.configure_tool('Galaxy', 'galaxy_url', self.GALAXY_URL)
 
     def test_galaxy_configured(self, setup_galaxy, driver):
         """Verify that Galaxy is accessible"""
@@ -306,7 +305,7 @@ class TestIridaImportInt:
         """Get an IRIDA client's secret given its client ID """
         driver.get(self.IRIDA_URL + '/clients')
         driver.find_element_by_xpath(
-            "//*[contains(text(), '"+client_id+"')]").click()
+            "//*[contains(text(), '" + client_id + "')]").click()
         secret = driver.find_element_by_id(
             'client-secret').get_attribute('textContent')
         return secret
@@ -325,12 +324,12 @@ class TestIridaImportInt:
         return href
 
     def test_project_samples_import(self, setup_irida, setup_galaxy,
-                                        driver, tmpdir):
+                                    driver, tmpdir):
         """Verify that sequence files can be imported from IRIDA to Galaxy"""
         irida = setup_irida
         project_name = 'ImportProjectSamples'
         project = irida.post(self.IRIDA_PROJECTS,
-                                json={'name': project_name})
+                             json={'name': project_name})
 
         samples = self.get_href(project, 'project/samples')
         sample1 = irida.post(samples, json={'sampleName': 'PS_Sample1',
@@ -341,20 +340,20 @@ class TestIridaImportInt:
         seq1 = tmpdir.join("seq1.fastq")
         seq1.write(self.FASTQ_CONTENTS)
         sequence1 = irida.post(sequences1, files={'file': open(str(seq1),
-            'rb')})
+                               'rb')})
 
         seq2 = tmpdir.join("seq2.fastq")
         seq2.write(self.FASTQ_CONTENTS)
         sequence2 = irida.post(sequences1, files={'file': open(str(seq2),
-            'rb')})
+                               'rb')})
 
         sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
-                                             'sequencerSampleId': 'PS_2'})
+                                            'sequencerSampleId': 'PS_2'})
         sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
         seq3 = tmpdir.join("seq3.fastq")
         seq3.write(self.FASTQ_CONTENTS)
         sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
-            'rb')})
+                               'rb')})
 
         print project.text
         print sample1.text
@@ -416,20 +415,20 @@ class TestIridaImportInt:
 
         driver.find_element_by_css_selector('button.btn.btn-primary').click()
 
-        time.sleep(120) #  Wait for import to complete
+        time.sleep(120)  # Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
         assert (succeeded - initially_succeeded > 0,
-            "Import did not complete successfully")
+                "Import did not complete successfully")
 
     def test_project_samples_import_with_history(self, setup_irida, setup_galaxy,
-                                        driver, tmpdir):
+                                                 driver, tmpdir):
         """Verify that sequence files can be imported from IRIDA to Galaxy,"""
         """with the addtohistory option checked"""
         irida = setup_irida
         project_name = 'ImportProjectSamples'
         project = irida.post(self.IRIDA_PROJECTS,
-                                json={'name': project_name})
+                             json={'name': project_name})
 
         samples = self.get_href(project, 'project/samples')
         sample1 = irida.post(samples, json={'sampleName': 'PS_Sample1',
@@ -440,20 +439,20 @@ class TestIridaImportInt:
         seq1 = tmpdir.join("seq1.fastq")
         seq1.write(self.FASTQ_CONTENTS)
         sequence1 = irida.post(sequences1, files={'file': open(str(seq1),
-            'rb')})
+                               'rb')})
 
         seq2 = tmpdir.join("seq2.fastq")
         seq2.write(self.FASTQ_CONTENTS)
         sequence2 = irida.post(sequences1, files={'file': open(str(seq2),
-            'rb')})
+                               'rb')})
 
         sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
-                                             'sequencerSampleId': 'PS_2'})
+                                            'sequencerSampleId': 'PS_2'})
         sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
         seq3 = tmpdir.join("seq3.fastq")
         seq3.write(self.FASTQ_CONTENTS)
         sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
-            'rb')})
+                               'rb')})
 
         print project.text
         print sample1.text
@@ -508,11 +507,11 @@ class TestIridaImportInt:
 
         driver.find_element_by_css_selector('button.btn.btn-primary').click()
 
-        time.sleep(120) #  Wait for import to complete
+        time.sleep(120)  # Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
         assert (succeeded - initially_succeeded == 4,
-            "Import did not complete successfully")
+                "Import did not complete successfully")
 
     def test_project_samples_import_with_history_no_collections(
             self, setup_irida, setup_galaxy, driver, tmpdir):
