@@ -30,7 +30,7 @@ class Sample:
         return_string += "\tPaired path: " + self.paired_path + "\n"
         return_string += "\tSingles path: " + self.unpaired_path + "\n"
         return_string += "\tNumber of files: " + str(num_files) + "\n"
-        return  return_string
+        return return_string
 
     def add_file(self, new_file):
         self._sample_reads.append(new_file)

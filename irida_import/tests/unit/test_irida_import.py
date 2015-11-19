@@ -80,8 +80,7 @@ class TestIridaImport:
     @pytest.fixture(scope='class')
     def file_list(self):
         """Obtain a list of files as if read from Galaxy"""
-        file_list =
-        [
+        file_list = [
             {
                 'url': '/api/libraries/lala/contents/lala1',
                 'id': '59606d2a36c77a56',
@@ -99,8 +98,7 @@ class TestIridaImport:
     def folder_list(self):
         """Obtain a list of folders as if read from Galaxy"""
         # TODO: doublecheck this dict is correct
-        folder_list =
-        [
+        folder_list = [
             {
                 'url': '/api/libraries/lala/contents/lala2',
                 'id': '59606d2a36c77a56',
