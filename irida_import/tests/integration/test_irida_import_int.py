@@ -605,7 +605,8 @@ class TestIridaImportInt:
         time.sleep(120)  # Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
-        assert (succeeded - initially_succeeded > 0,
+
+	assert (succeeded - initially_succeeded == 4,
                 "Import did not complete successfully")
 
     def test_cart_import_multi_project(self, setup_irida, setup_galaxy,
