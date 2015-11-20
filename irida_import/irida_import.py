@@ -679,6 +679,9 @@ class IridaImport:
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
+            if not make_paired_collection:
+                make_paired_collection = True  # default to true if not specified in JSON
+
             self.token = token
             self.irida = self.get_IRIDA_session(oauth_dict)
 
