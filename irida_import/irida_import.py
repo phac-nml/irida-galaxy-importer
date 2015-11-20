@@ -675,12 +675,13 @@ class IridaImport:
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             addtohistory = json_params_dict['_embedded']['addtohistory']
-            make_paired_collection = json_params_dict['_embedded']['makepairedcollection']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
-            if not make_paired_collection:
-                make_paired_collection = True  # default to true if not specified in JSON
+            make_paired_collection = True
+
+            if "makepairedcollection" in json_params_dict['_embedded']:
+                make_paired_collection = json_params_dict['_embedded']['makepairedcollection']
 
             self.token = token
             self.irida = self.get_IRIDA_session(oauth_dict)
