@@ -14,15 +14,15 @@ Install Instructions:
 This tool can be installed manually, or it can be archived to be added to Galaxy via a toolshed by running `make_tool_tarball.sh`
 In both cases, a tool configuration file will need to be modified, and `galaxy.ini` may need to be modified.
 
-If you are installing from a toolshed, note that because of how Galaxy uses virtualenv, 
-the tool may attempt to use the wrong versions of libraries. 
+If you are installing from a toolshed, note that because of how Galaxy uses virtualenv,
+the tool may attempt to use the wrong versions of libraries.
 To fix this, change the line in the `env.sh` that Galaxy creates for the tool that reads something like:
 ```bash
-PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
+PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.2.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
 ```
 to read:
 ```bash
-PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.0.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
+PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.2.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
 ```
 
 
@@ -78,19 +78,19 @@ Note: It is not neccessary to do any of the steps in this subsection in order to
 
 The tool reads configuration information from `config.ini`. There is a sample configuration file, `config.ini.sample`.
 
-The location at which the tool expects to find the IRIDA server 
+The location at which the tool expects to find the IRIDA server
 can be changed by modifying the following line in the configuration file:
 
 ```
-irida_url: http://localhost:8080 
+irida_url: http://localhost:8080
 ```
 
-The administrator API key, and the URL of the Galaxy web server must be defined. 
-Change the values for `admin_key` and `galaxy_url` appropriately. 
+The administrator API key, and the URL of the Galaxy web server must be defined.
+Change the values for `admin_key` and `galaxy_url` appropriately.
 Instructions for obtaining an API key can be found in the Galaxy documentation.
 
-Modify `client_id` and `client_secret` to values belonging to an IRIDA client. 
-To find out how to create or view an IRIDA client, consult the IRIDA documentation. 
+Modify `client_id` and `client_secret` to values belonging to an IRIDA client.
+To find out how to create or view an IRIDA client, consult the IRIDA documentation.
 The client must have read scope--auto approval is recomended though not required.
 
 It is also possible to configure the folders in which sample files and reference data are stored, and the endpoints at which the tool
@@ -159,8 +159,3 @@ Then, to generate a html line by line code coverage report for a file--for examp
 ```bash
 py.test --cov=irida_import.py --cov-report=html
 ```
-
-
-
-
-

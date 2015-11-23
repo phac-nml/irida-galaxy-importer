@@ -355,9 +355,6 @@ class TestIridaImportInt:
         sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
                                'rb')})
 
-        print project.text
-        print sample1.text
-        print sequence1.text
         # Export to Galaxy using the button on the dropdown menu
         driver.get(self.GALAXY_URL)
         history_panel = driver.find_element_by_id('current-history-panel')
@@ -454,9 +451,6 @@ class TestIridaImportInt:
         sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
                                'rb')})
 
-        print project.text
-        print sample1.text
-        print sequence1.text
         # Export to Galaxy using the button on the dropdown menu
         driver.get(self.GALAXY_URL)
         history_panel = driver.find_element_by_id('current-history-panel')
@@ -546,9 +540,6 @@ class TestIridaImportInt:
         sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
                                'rb')})
 
-        print project.text
-        print sample1.text
-        print sequence1.text
         # Export to Galaxy using the button on the dropdown menu
         driver.get(self.GALAXY_URL)
         history_panel = driver.find_element_by_id('current-history-panel')
