@@ -379,7 +379,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_element_by_css_selector(".sample-select")
+                checkboxes = driver.find_elements_by_class_name("sample-select")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -472,7 +472,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_element_by_css_selector(".sample-select")
+                checkboxes = driver.find_elements_by_class_name("sample-select")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -558,7 +558,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_element_by_css_selector(".sample-select")
+                checkboxes = driver.find_elements_by_class_name("sample-select")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
