@@ -475,13 +475,10 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                el1 = driver.find_element_by_xpath(
-                    "//table[@id='samplesTable']/tbody/tr[1]/td/div")
-                el2 = driver.find_element_by_xpath(
-                    "//table[@id='samplesTable']/tbody/tr[2]/td/div")
+                checkboxes = driver.find_element_by_css_selector(".sample-select")
 
-                el1.click()
-                el2.click()
+                checkboxes[0].click()
+                checkboxes[1].click()
 
                 stale = False
             except (StaleElementReferenceException, NoSuchElementException):
