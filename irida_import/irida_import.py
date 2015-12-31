@@ -317,7 +317,7 @@ class IridaImport:
 
         return found
 
-    def add_samples_if_nec(self, samples=[], hist_id=None):
+    def add_samples_if_nec(self, samples=[]):
         """
         Uploads a list of samples if they are not already present in Galaxy
 
@@ -705,7 +705,7 @@ class IridaImport:
             self.create_folder_if_nec(self.REFERENCE_PATH)
 
             # Add each sample's files to the library
-            num_files = self.add_samples_if_nec(samples, hist_id)
+            num_files = self.add_samples_if_nec(samples)
 
             if addtohistory:
                 if make_paired_collection:
