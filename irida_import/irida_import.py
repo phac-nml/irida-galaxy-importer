@@ -394,7 +394,10 @@ class IridaImport:
                         sample_item.name)
 
                     num_waits = 0
-                    while (self.reg_gi.datasets.show_dataset(sample_item.forward.library_dataset_id, hda_ldda='ldda')['state'] != 'ok' and num_waits <= MAX_WAITS):
+                    while (self.reg_gi.datasets.show_dataset(
+                            sample_item.forward.library_dataset_id,
+                            hda_ldda='ldda')['state'] != 'ok' and
+                            num_waits <= MAX_WAITS):
                         time.sleep(5)
                         num_waits += 1
 
@@ -405,7 +408,10 @@ class IridaImport:
                     )['id']
 
                     num_waits = 0
-                    while (self.reg_gi.datasets.show_dataset(sample_item.reverse.library_dataset_id, hda_ldda='ldda')['state'] != 'ok' and num_waits < MAX_WAITS):
+                    while (self.reg_gi.datasets.show_dataset(
+                            sample_item.reverse.library_dataset_id,
+                            hda_ldda='ldda')['state'] != 'ok' and
+                            num_waits <= MAX_WAITS):
                         time.sleep(5)
                         num_waits += 1
 
