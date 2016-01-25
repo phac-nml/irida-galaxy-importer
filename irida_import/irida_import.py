@@ -41,7 +41,8 @@ class IridaImport:
     XML_FILE_SAMPLE = 'irida_import.xml.sample'
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
-
+    CURRENT_LIBRARY_STATE = False
+    
     def __init__(self):
         self.logger = logging.getLogger('irida_import')
 
@@ -246,6 +247,14 @@ class IridaImport:
         :return: whether the item exists in the library
         """
         ans = False
+
+        # check cache before fetching from galaxy.
+        # current state of the library should only change between irida_import.py invocation
+        if not self.CURRENT_LIBRARY_STATE:
+            self.library = self.gi.libraries.get(self.library.id)
+            CURRENT_LIBRARY_STATE=True
+                                            
+        
         # check for an object of the desired type with the desired attribute
         self.library = self.gi.libraries.get(self.library.id)
         for con_inf in self.library.content_infos:
