@@ -6,6 +6,7 @@ galaxy_url: http://localhost:8888
 illumina_path: /illumina_reads
 reference_path: /references
 xml_file: irida_import.xml
+MAX_WAITS: 120
 
 [IRIDA]
 
