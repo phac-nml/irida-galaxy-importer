@@ -42,7 +42,7 @@ class IridaImport:
     XML_FILE_SAMPLE = 'irida_import.xml.sample'
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
-    MAX_WAITS = 120 # with waiting 5 seconds that is 600 seconds
+    MAX_WAITS = 5 # with waiting 5 seconds that is 600 seconds
     folds = {}
 
     def __init__(self):
