@@ -317,7 +317,7 @@ class IridaImport:
 
         return found
 
-    def add_samples_if_nec(self, samples=[], hist_id=None):
+    def add_samples_if_nec(self, samples=[]):
         """
         Uploads a list of samples if they are not already present in Galaxy
 
@@ -392,11 +392,27 @@ class IridaImport:
                     collection_name = str(sample.name) + "__" + str(
                         sample_item.name)
 
+                    num_waits = 0
+                    while (self.reg_gi.datasets.show_dataset(
+                            sample_item.forward.library_dataset_id,
+                            hda_ldda='ldda')['state'] != 'ok' and
+                            num_waits <= self.MAX_WAITS):
+                        time.sleep(5)
+                        num_waits += 1
+
                     # Add datasets to the current history
                     datasets['forward'] = hist.upload_dataset_from_library(
                         hist_id,
                         sample_item.forward.library_dataset_id
                     )['id']
+
+                    num_waits = 0
+                    while (self.reg_gi.datasets.show_dataset(
+                            sample_item.reverse.library_dataset_id,
+                            hda_ldda='ldda')['state'] != 'ok' and
+                            num_waits <= self.MAX_WAITS):
+                        time.sleep(5)
+                        num_waits += 1
 
                     datasets['reverse'] = hist.upload_dataset_from_library(
                         hist_id,
@@ -609,6 +625,7 @@ class IridaImport:
             self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
             self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
             self.XML_FILE = config.get('Galaxy', 'xml_file')
+            self.MAX_WAITS = config.get('Galaxy', 'max_waits')
 
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
@@ -705,7 +722,7 @@ class IridaImport:
             self.create_folder_if_nec(self.REFERENCE_PATH)
 
             # Add each sample's files to the library
-            num_files = self.add_samples_if_nec(samples, hist_id)
+            num_files = self.add_samples_if_nec(samples)
 
             if addtohistory:
                 if make_paired_collection:

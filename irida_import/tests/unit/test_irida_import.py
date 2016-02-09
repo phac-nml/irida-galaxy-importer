@@ -73,6 +73,7 @@ class TestIridaImport:
         irida_instance.GALAXY_URL = "http://localhost:8888/"
         irida_instance.ILLUMINA_PATH = '/illumina_reads'
         irida_instance.REFERENCE_PATH = '/references'
+        irida_instance.MAX_WAITS = 1
         irida_instance.CLIENT_ID = 'webClient'
         irida_instance.CLIENT_SECRET = 'webClientSecret'
         irida_instance.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
