@@ -45,7 +45,7 @@ cp galaxy.ini.sample galaxy.ini
 cp tool_conf.xml.sample tool_conf.xml
 
 # allow soft linking of file system files
-sed -i 's/#allow_library_path_paste = False/allow_library_path_paste = True/'  galaxy.ini
+sed -i 's/#allow_library_path_paste = False/allow_library_path_paste = True/' galaxy.ini
 
 # allow importing from the entire system
 sed -i 's/#library_import_dir.*/library_import_dir = \//'  galaxy.ini
@@ -69,7 +69,7 @@ rsync -rv --progress $tool_loc galaxy/tools --exclude tests
 echo "Initializing the tool's configuration file."
 pushd galaxy/tools/irida_import/
 cp config.ini.sample config.ini
-sed -i -e 's/^max_waits: .*$/max_waits: 1/g'
+sed -i "s/^max_waits: .*$/max_waits: 1/" config.ini
 
 echo "Configuring the tool's XML file"
 python irida_import.py --config
