@@ -394,8 +394,7 @@ class TestIridaImportInt:
 
         driver.find_element_by_id('exportOptionsBtn').click()
 
-        # This should be changed to an ID:
-        driver.find_element_by_xpath("//div[4]/ul/li[3]/a/span[2]").click()
+        driver.find_element_by_id('exportGalaxyButton').click()
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
@@ -487,8 +486,7 @@ class TestIridaImportInt:
 
         driver.find_element_by_id('exportOptionsBtn').click()
 
-        # This should be changed to an ID:
-        driver.find_element_by_xpath("//div[4]/ul/li[3]/a/span[2]").click()
+        driver.find_element_by_id('exportGalaxyButton').click()
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
@@ -573,8 +571,7 @@ class TestIridaImportInt:
 
         driver.find_element_by_id('exportOptionsBtn').click()
 
-        # This should be changed to an ID:
-        driver.find_element_by_xpath("//div[4]/ul/li[3]/a/span[2]").click()
+        driver.find_element_by_id('exportGalaxyButton').click()
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
