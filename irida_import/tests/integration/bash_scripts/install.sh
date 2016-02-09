@@ -69,6 +69,7 @@ rsync -rv --progress $tool_loc galaxy/tools --exclude tests
 echo "Initializing the tool's configuration file."
 pushd galaxy/tools/irida_import/
 cp config.ini.sample config.ini
+sed -i -e 's/^max_waits: .*$/max_waits: 1/g'
 
 echo "Configuring the tool's XML file"
 python irida_import.py --config

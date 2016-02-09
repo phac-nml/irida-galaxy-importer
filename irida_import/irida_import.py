@@ -27,7 +27,6 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 # Print the token so that it can be used to call the tool from the command line
 PRINT_TOKEN_INSECURELY = False
-MAX_WAITS = 120 # with waiting 5 seconds that is 600 seconds
 
 
 class IridaImport:
@@ -397,7 +396,7 @@ class IridaImport:
                     while (self.reg_gi.datasets.show_dataset(
                             sample_item.forward.library_dataset_id,
                             hda_ldda='ldda')['state'] != 'ok' and
-                            num_waits <= MAX_WAITS):
+                            num_waits <= self.MAX_WAITS):
                         time.sleep(5)
                         num_waits += 1
 
@@ -411,7 +410,7 @@ class IridaImport:
                     while (self.reg_gi.datasets.show_dataset(
                             sample_item.reverse.library_dataset_id,
                             hda_ldda='ldda')['state'] != 'ok' and
-                            num_waits <= MAX_WAITS):
+                            num_waits <= self.MAX_WAITS):
                         time.sleep(5)
                         num_waits += 1
 
@@ -626,6 +625,7 @@ class IridaImport:
             self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
             self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
             self.XML_FILE = config.get('Galaxy', 'xml_file')
+            self.MAX_WAITS = config.get('Galaxy', 'max_waits')
 
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
