@@ -28,8 +28,6 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 # Print the token so that it can be used to call the tool from the command line
 PRINT_TOKEN_INSECURELY = False
 
-
-
 class IridaImport:
 
     """
@@ -643,7 +641,7 @@ class IridaImport:
             self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
             self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
             self.XML_FILE = config.get('Galaxy', 'xml_file')
-            self.MAX_WAITS = config.get('Galaxy', 'MAX_WAITS')
+            self.MAX_WAITS = config.get('Galaxy', 'max_waits')
 
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
