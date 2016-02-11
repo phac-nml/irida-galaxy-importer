@@ -18,11 +18,11 @@ If you are installing from a toolshed, note that because of how Galaxy uses virt
 the tool may attempt to use the wrong versions of libraries.
 To fix this, change the line in the `env.sh` that Galaxy creates for the tool that reads something like:
 ```bash
-PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.2.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
+PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.3.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
 ```
 to read:
 ```bash
-PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.2.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
+PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.3.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
 ```
 
 
