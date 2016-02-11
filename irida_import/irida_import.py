@@ -229,30 +229,26 @@ class IridaImport:
         if not exist_id:
 
             base_folder_id = self.exists_in_lib('folder', 'name', base_folder_path)
-
+            ans = []
+            name = ''
+            
             if base_folder_id:
                 ans = self.reg_gi.libraries.create_folder(self.library.id,folder_name,base_folder_id=base_folder_id[0])
                 name = base_folder_path + "/" + ans[0]['name'] 
-                #add to the current state of the library
-                if not name in self.folds:
-                    self.folds[name]={}
-                    self.folds[name]['id']=ans[0]['id']
-                    self.folds[name]['type']='folder'
-                    self.folds[name]['name']=name
-                final_id=ans[0]['id']
             elif base_folder_path == '':
                 ans = self.reg_gi.libraries.create_folder(self.library.id,folder_name)
-                #add to the current state of the library
                 name = "/" + ans[0]['name']
-                if not name in self.folds:
-                    self.folds[name]={}
-                    self.folds[name]['id']=ans[0]['id']
-                    self.folds[name]['type']='folder'
-                    self.folds[name]['name']=name
-                final_id=ans[0]['id']
             else:
                 raise IOError('base_folder_path must include an existing base '
                               + 'folder, or nothing')
+
+            #add to the current state of the library
+            self.folds[name]={}
+            self.folds[name]['id']=ans[0]['id']
+            self.folds[name]['type']='folder'
+            self.folds[name]['name']=name
+            final_id=ans[0]['id']
+            
             self.logger.debug(
                 'Made folder with path:' + '\'%s\'' % folder_path)
         else:
@@ -317,7 +313,7 @@ class IridaImport:
             self.initial_lib_state()
 
         #found all datasets with the galaxy_name
-        #first crach will assume there is only one which is not right
+        #first attempt will assume there is only one which is not right
         datasets = self.exists_in_lib('file', 'name', galaxy_name)
 
         if datasets:
