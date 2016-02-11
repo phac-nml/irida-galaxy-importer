@@ -203,37 +203,26 @@ class TestIridaImport:
         folder_path = '/illumina_reads/' + folder_name
         folder = mock.create_autospec(Folder)
         folder.name = folder_path
+        folder_id = 123
 
         picked_f_id = 1234567
-        imp.reg_gi.libraries.get_folders = Mock(
-            return_value=[{'id': picked_f_id}])
-        imp.library = self.make_lib('wolib', False)
-        imp.library.id = 123
-        imp.library.get_folder = Mock(return_value=base_folder)
-        imp.library.create_folder = Mock(return_value=folder)
 
         # IridaImport.exists_in_lib(...) is tested
         # elsewhere
-        imp.exists_in_lib = Mock(
-            return_value=False)
+        imp.exists_in_lib = Mock()
+        imp.exists_in_lib.side_effect = [False, [picked_f_id]]
 
-        made_folder = imp.create_folder_if_nec(
+        imp.library = Mock(return_value=[2222])
+        
+        imp.reg_gi.libraries.create_folder = Mock(
+            return_value=[{'id': 123 , 'type':'folder', 'name':'/illumina_reads/sample1'}])
+
+        
+        made_folder_id = imp.create_folder_if_nec(
             folder_path)
 
-        assert imp.reg_gi.libraries.get_folders.call_count == 1, \
-            'Base folders should only be looked for once'
-        assert imp.library.get_folder.call_count == 1, \
-            'Only one base folder should be obtained'
-
-        # Can't add assertion message here--either inside the method, or
-        # by wrapping with an assert
-        imp.library.get_folder.assert_called_with(
-            picked_f_id)
-
-        assert imp.library.create_folder.call_count == 1, \
-            'Only 1 folder must be created'
-        assert made_folder.name == folder_path, \
-            'The created folder must have the correct name'
+        assert made_folder_id == folder_id, \
+            'The created folder has id'
 
     def test_create_folder_if_nec_wrong_base(self, imp):
         with pytest.raises(IOError):
@@ -255,27 +244,30 @@ class TestIridaImport:
         """ Test if a folder can be found in a library among chaff items """
         imp.library = self.make_lib('wolib', False)
         imp.gi.libraries.get = Mock(return_value=imp.library)
-        items = []
-        items.append(
-            self.make_content_info('file', 'name', 'sally.fastq'))
-        items.append(
-            self.make_content_info('folder', 'name', 'bob.fasta'))
-        items.append(
-            self.make_content_info('file', 'name', 'bob.fasta'))
-        imp.library.content_infos = items
+        
+       
+        items = {}
+        items['sally.fastq']={}
+        items['sally.fastq']['id']=123
+        items['sally.fastq']['type']='file'
+        items['sally.fastq']['name']='sally.fastq'
+
+        items['bob.fasta']={}
+        items['bob.fasta']['id']=234
+        items['bob.fasta']['type']='file'
+        items['bob.fasta']['name']='bob.fasta'
+        
+        imp.folds = items
+        
         exists = imp.exists_in_lib('file', 'name', 'bob.fasta')
         assert exists, 'file must exist in library'
 
-    def make_content_info(self, item_type, item_attr_name, item_attr_value):
-        """ Make a content info object for a mock library """
-        content_info = mock.create_autospec(LibraryContentInfo)
-        content_info.type = item_type
-        setattr(content_info, item_attr_name, item_attr_value)
-        return content_info
-
     def test_add_samples_if_nec(self, imp, file_list):
         """ Test if a new sample file is added to the library """
-        imp.exists_in_lib = Mock(return_value=False)
+        
+        imp.exists_in_lib = Mock()
+        imp.exists_in_lib.side_effect = [[123], [234]]
+        
         imp.link = mock.create_autospec(IridaImport.link)
         imp._add_file = mock.create_autospec(IridaImport._add_file)
         imp._add_file.return_value = [{'id': '321'}]
@@ -374,10 +366,6 @@ class TestIridaImport:
         sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta')
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
         uploaded = imp.link(sample_file, sample_folder_path)
-        assert imp.reg_gi.libraries.get_folders.call_count == 1, \
-            "get_folders should be called once"
-        assert imp.reg_gi.libraries.upload_from_galaxy_filesystem.call_count \
-            == 1, 'upload_from_galaxy_filesystem should only be called once'
         assert uploaded == single_file_list, 'The correct file must be made'
 
     def test_assign_ownership_if_nec(self, imp):

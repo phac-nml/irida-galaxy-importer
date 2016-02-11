@@ -28,7 +28,6 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 # Print the token so that it can be used to call the tool from the command line
 PRINT_TOKEN_INSECURELY = False
 
-
 class IridaImport:
 
     """
@@ -41,9 +40,24 @@ class IridaImport:
     XML_FILE_SAMPLE = 'irida_import.xml.sample'
     XML_FILE = 'irida_import.xml'
     CLIENT_ID_PARAM = 'galaxyClientID'
+    folds = {}
 
     def __init__(self):
         self.logger = logging.getLogger('irida_import')
+
+    def initial_lib_state(self):
+
+        if not self.folds:
+            library_info = self.reg_gi.libraries.show_library(self.library.id,contents=True)
+            for lib_item in library_info:
+                name = lib_item['name']
+                self.folds[name]={}
+                self.folds[name]['id']=lib_item['id']
+                self.folds[name]['type']=lib_item['type']
+                self.folds[name]['name']=name
+
+        return True
+
 
     def get_samples(self, samples_dict):
         """
@@ -198,7 +212,7 @@ class IridaImport:
         :type folder_path: str
         :param folder_path: The folder's path e.g. '/bobfolder/bobfolder2'
         """
-        made_folder = None
+        final_id=None
         # Get the folder name from the path, e.g. 'bobfolder2' from
         # '/bobfolder/bobfolder2'
         folder_name = folder_path.rsplit("/", 1)[1]
@@ -210,26 +224,40 @@ class IridaImport:
             '\'%s\' from folder path \'%s\'' %
             (folder_name, base_folder_path, folder_path))
 
-        if not self.exists_in_lib('folder', 'name', folder_path):
+        exist_id = self.exists_in_lib('folder', 'name', folder_path)
 
-            base_folder_list = self.reg_gi.libraries.get_folders(
-                self.library.id,
-                name=base_folder_path)
+        if not exist_id:
 
-            if len(base_folder_list) > 0:
-                base_folder = self.library.get_folder(
-                    base_folder_list[0]['id'])
-                made_folder = self.library.create_folder(
-                    folder_name,
-                    base_folder=base_folder)
+            base_folder_id = self.exists_in_lib('folder', 'name', base_folder_path)
+            ans = []
+            name = ''
+            
+            if base_folder_id:
+                ans = self.reg_gi.libraries.create_folder(self.library.id,folder_name,base_folder_id=base_folder_id[0])
+                name = base_folder_path + "/" + ans[0]['name'] 
             elif base_folder_path == '':
-                made_folder = self.library.create_folder(folder_name)
+                ans = self.reg_gi.libraries.create_folder(self.library.id,folder_name)
+                name = "/" + ans[0]['name']
             else:
                 raise IOError('base_folder_path must include an existing base '
                               + 'folder, or nothing')
+
+            #add to the current state of the library
+            self.folds[name]={}
+            self.folds[name]['id']=ans[0]['id']
+            self.folds[name]['type']='folder'
+            self.folds[name]['name']=name
+            final_id=ans[0]['id']
+            
             self.logger.debug(
                 'Made folder with path:' + '\'%s\'' % folder_path)
-        return made_folder
+        else:
+            #to ensure consistent results, always pick first entry
+            #we have no other way of knowing which one to use.
+            final_id=exist_id[0]
+            
+            
+        return final_id
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
         """
@@ -242,50 +270,24 @@ class IridaImport:
         :type desired_attr_value: str
         :param desired_attr_value: the desired attribute value e.g "Bob"
 
-        :rtype: Boolean
-        :return: whether the item exists in the library
+        :rtype: List of Ids or Empty list
+        :return: Return item unique IDs or empty list if item(s) does not exist in the library
         """
-        ans = False
-        # check for an object of the desired type with the desired attribute
-        self.library = self.gi.libraries.get(self.library.id)
-        for con_inf in self.library.content_infos:
-            if con_inf.type == item_type:
-                attr = getattr(con_inf, item_attr_name)
-                if attr == desired_attr_value:
-                    ans = True
-                    break
+        ans = []
+
+        # check cache before fetching from galaxy. 
+        # current state of the library should only change between irida_import.py invocation
+        if not self.folds:
+            self.initial_lib_state()
+            
+        for item_name in self.folds:
+            if item_type == self.folds[item_name]['type']:
+                if desired_attr_value == self.folds[item_name][item_attr_name]:
+                    ans.append(self.folds[item_name]['id'])
+
         return ans
 
-    def unique_file(self, sample_file_path, galaxy_name):
-        """
-        Find out if a sample file is unique
 
-        :type sample_file_path: str
-        :param sample_file_path: the local file path to the file to check
-        :type galaxy_name: str
-        :param galaxy_name: the full path to the sample file as it would
-        exist in Galaxy
-        :rtype: Boolean
-        :return: whether a file with this name and size does not exist in
-        Galaxy
-        """
-        self.logger.debug(
-            "Doing a basic check for already existing sample file at: " +
-            galaxy_name)
-        unique = True
-        size = os.path.getsize(sample_file_path)
-        self.library = self.gi.libraries.get(self.library.id)
-        datasets = self.library.get_datasets(name=galaxy_name)
-        for dataset in datasets:
-            # Galaxy sometimes appends a newline, see:
-            # https://bitbucket.org/galaxy/galaxy-dist/src/
-            # 7e4d21621ce12e13ebbdf9fd3259df58c3ef124c/lib/
-            # galaxy/datatypes/data.py?at=stable#cl-673
-            if dataset.file_size in (size, size + 1):
-                unique = False
-                break
-
-        return unique
 
     def existing_file(self, sample_file_path, galaxy_name):
         """
@@ -297,23 +299,30 @@ class IridaImport:
         :param galaxy_name: the full path to the sample file as it
         exists in Galaxy
         :rtype: Boolean
-        :return: True for unique or the id of the existing dataset
+        :return: Return file unique ID otherwise Boolean False
         """
         self.logger.debug(
             "Getting dataset ID for existing file: " +
             galaxy_name)
         found = False
         size = os.path.getsize(sample_file_path)
-        self.library = self.gi.libraries.get(self.library.id)
-        datasets = self.library.get_datasets(name=galaxy_name)
-        for dataset in datasets:
-            # Galaxy sometimes appends a newline, see:
-            # https://bitbucket.org/galaxy/galaxy-dist/src/
-            # 7e4d21621ce12e13ebbdf9fd3259df58c3ef124c/lib/
-            # galaxy/datatypes/data.py?at=stable#cl-673
-            if dataset.file_size in (size, size + 1):
-                found = dataset.id
-                break
+
+        # check cache before fetching from galaxy. 
+        # current state of the library should only change between irida_import.py invocation
+        if not self.folds:
+            self.initial_lib_state()
+
+        #found all datasets with the galaxy_name
+        #first attempt will assume there is only one which is not right
+        datasets = self.exists_in_lib('file', 'name', galaxy_name)
+
+        if datasets:
+            for data_id in datasets: 
+                item = self.reg_gi.libraries.show_dataset(self.library.id,data_id)
+                if item['file_size'] in (size, size + 1):
+                    found = item['id']
+                    break
+
 
         return found
 
@@ -330,7 +339,7 @@ class IridaImport:
 
         for sample in samples:
             self.logger.debug("sample name is" + sample.name)
-            self.create_folder_if_nec(self.ILLUMINA_PATH + '/' + sample.name)
+            sample_root_folder_id = self.create_folder_if_nec(self.ILLUMINA_PATH + '/' + sample.name)
 
             added_to_galaxy = []
 
@@ -342,15 +351,17 @@ class IridaImport:
                     reverse = sample_item.reverse
                     pair_path = sample_folder_path + "/" + sample_item.name
 
-                    self.create_folder_if_nec(pair_path)
+                    #since doing pair, will not be writting to the 'main' folder for the sample
+                    sample_folder_id  =self.create_folder_if_nec(pair_path)
+
                     added_to_galaxy = self._add_file(added_to_galaxy,
-                                                     pair_path,
+                                                     pair_path,sample_folder_id,
                                                      forward)
 
                     forward.library_dataset_id = added_to_galaxy[0]['id']
 
                     added_to_galaxy = self._add_file(added_to_galaxy,
-                                                     pair_path,
+                                                     pair_path,sample_folder_id,
                                                      reverse)
 
                     reverse.library_dataset_id = added_to_galaxy[0]['id']
@@ -358,7 +369,7 @@ class IridaImport:
                 else:
                     # Processing for a SampleFile
                     added_to_galaxy = self._add_file(added_to_galaxy,
-                                                     sample_folder_path,
+                                                     sample_folder_path,sample_root_folder_id,
                                                      sample_item)
                     sample_item.library_dataset_id = added_to_galaxy[0]['id']
                     file_sum += 1
@@ -471,7 +482,7 @@ class IridaImport:
 
         return collection_array
 
-    def _add_file(self, added_to_galaxy=None, sample_folder_path=None,
+    def _add_file(self, added_to_galaxy=None, sample_folder_path=None,sample_folder_id=None,
                   sample_file=None):
         """
         Upload a sample's sample files into Galaxy
@@ -485,11 +496,23 @@ class IridaImport:
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
         if os.path.isfile(sample_file.path):
-            if self.unique_file(sample_file.path, galaxy_sample_file_name):
+
+            #grab dataset_id if it does exist, if not will be given False      
+            dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
+            
+            if dataset_id:
+                # Return dataset id of existing file
+                added_to_galaxy = [{'id': dataset_id}]
+                self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                  ' Skipped file with Galaxy path: ' +
+                                  galaxy_sample_file_name)
+                self.skipped_files_log.append(
+                    {'galaxy_name': galaxy_sample_file_name})
+            else:
                 self.logger.debug(
                     "  Sample file does not exist so uploading/linking it")
                 added = self.link(
-                    sample_file, sample_folder_path)
+                    sample_file, sample_folder_id)
                 if(added):
                     added_to_galaxy = added
                     self.print_logged(time.strftime("[%D %H:%M:%S]:") +
@@ -497,16 +520,6 @@ class IridaImport:
                                       galaxy_sample_file_name)
                     self.uploaded_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
-            else:
-                # Return dataset id of existing file
-                dataset_id = self.existing_file(sample_file.path,
-                                                galaxy_sample_file_name)
-                added_to_galaxy = [{'id': dataset_id}]
-                self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                  ' Skipped file with Galaxy path: ' +
-                                  galaxy_sample_file_name)
-                self.skipped_files_log.append(
-                    {'galaxy_name': galaxy_sample_file_name})
         else:
             error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
                      ).format(galaxy_sample_file_name, sample_file.path)
@@ -514,13 +527,13 @@ class IridaImport:
 
         return added_to_galaxy
 
-    def link(self, sample_file, sample_folder_path):
+    def link(self, sample_file, folder_id):
         """
         Add a sample file to Galaxy, linking to it locally
 
         :type sample_file: SampleFile
         :param sample_file: the sample file to link
-        :type sample_folder_path: str
+        :type folder_id: ID of folder to link file to
         :param sample_folder_path: the folder in Galaxy to store the file in
         :return: a list containing a single dict with the file's
         url, id, and name.
@@ -535,8 +548,6 @@ class IridaImport:
         if os.path.splitext(file_path)[1] == '.fastq':
             file_type = 'fastqsanger'
 
-        folder_id = self.reg_gi.libraries.get_folders(
-            self.library.id, name=sample_folder_path)[0]['id']
         added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
             self.library.id,
             file_path,
