@@ -8,7 +8,7 @@
     </command>
     <inputs action="http://localhost:8080/projects" check_values="False" method="post">
         <display>import data from IRIDA to Galaxy</display>
-        <param name="galaxyCallbackUrl" type="baseurl" value="/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute" />
+        <param name="galaxyCallbackUrl" type="hidden" value="GALAXY_URL/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute" />
 	<param name="appName" type="hidden" value="Galaxy" />
 	<param name="galaxyClientID" type="hidden" value="webClient" />
     </inputs>

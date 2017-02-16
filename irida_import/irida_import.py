@@ -39,7 +39,6 @@ class IridaImport:
     CONFIG_FILE = 'config.ini'
     XML_FILE_SAMPLE = 'irida_import.xml.sample'
     XML_FILE = 'irida_import.xml'
-    CLIENT_ID_PARAM = 'galaxyClientID'
     folds = {}
 
     def __init__(self):
@@ -660,10 +659,17 @@ class IridaImport:
 
             inputs = tree.find('inputs')
             inputs.set('action', irida_endpoint)
+
             params = inputs.findall('param')
-            client_id_param = next(param for param in params
-                                   if param.get('name') == self.CLIENT_ID_PARAM)
-            client_id_param.set('value', self.CLIENT_ID)
+            for param in params:
+                if param.get('name') == 'galaxyClientID':
+                    param.set('value', self.CLIENT_ID)
+                # manually set GALAXY_URL instead of using galaxy's baseurl type
+                # so that sites with SSL will work
+                # https://github.com/phac-nml/irida-galaxy-importer/issues/1 
+                if param.get('name') == 'galaxyCallbackUrl':
+                    previous_value = param.get('value')
+                    param.set('value', re.sub(r'GALAXY_URL', self.GALAXY_URL, previous_value))
 
             tree.write(xml_path)
 
