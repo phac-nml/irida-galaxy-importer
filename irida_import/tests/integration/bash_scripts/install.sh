@@ -19,7 +19,7 @@ git clean -fd
 git pull
 echo "Preparing IRIDA for first excecution..."
 rm -rf /tmp/shed_tools/
-pkill -u gitlab_ci_runner -f "python ./scripts/paster.py" || true
+pkill -u $USER -f "python ./scripts/paster.py" || true
 
 pushd lib
 ./install-libs.sh
@@ -51,7 +51,7 @@ sed -i 's/#allow_library_path_paste = False/allow_library_path_paste = True/' ga
 sed -i 's/#library_import_dir.*/library_import_dir = \//'  galaxy.ini
 
 # use MySQL instead of sqlite; to be configured to use a database user and name specified in README.md
-sed  -i 's/#database_connection = sqlite:\/\/\/.\/database\/universe.sqlite?isolation_level=IMMEDIATE/database_connection = mysql:\/\/test:test@localhost\/external_galaxy_test?unix_socket=\/var\/run\/mysqld\/mysqld.sock/' galaxy.ini
+echo "database_connection = mysql://test:test@localhost/external_galaxy_test" | cat >> galaxy.ini
 
 # add admin e-mail user
 sed -i 's/#admin_users = None/admin_users=irida@irida.ca/' galaxy.ini
@@ -70,6 +70,7 @@ echo "Initializing the tool's configuration file."
 pushd galaxy/tools/irida_import/
 cp config.ini.sample config.ini
 sed -i "s/^max_waits: .*$/max_waits: 1/" config.ini
+sed -i "s|^galaxy_url: http://localhost:8888$|galaxy_url: http://localhost:$galaxy_port|" config.ini
 
 echo "Configuring the tool's XML file"
 python irida_import.py --config
