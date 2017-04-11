@@ -12,6 +12,9 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotVisibleException
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from ...irida_import import IridaImport
 from . import util
 from requests_oauthlib import OAuth2Session
@@ -69,6 +72,9 @@ class TestIridaImportInt:
     IRIDA_PASSWORD = 'Password1'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
     IRIDA_PROJECTS = IRIDA_URL + '/api/projects'
+
+    IRIDA_GALAXY_MODAL = 'galaxy-modal'
+    WAIT = 120
 
     INSTALL_EXEC = 'install.sh'
 
@@ -150,7 +156,7 @@ class TestIridaImportInt:
         except KeyError:
             stop_irida()
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
-            subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA)
+            subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ)
             util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT,
                                self.TIMEOUT)
 
@@ -277,7 +283,7 @@ class TestIridaImportInt:
         driver.get(self.IRIDA_URL + '/clients/create')
         driver.find_element_by_id("clientId").send_keys(
             self.IRIDA_AUTH_CODE_ID)
-        driver.find_element_by_id('s2id_authorizedGrantTypes').click()
+        driver.find_element_by_id('authorizedGrantTypes').click()
         driver.find_element_by_xpath(
             "//*[contains(text(), 'authorization_code')]").click()
         driver.find_element_by_id("scope_auto_read").click()
@@ -379,7 +385,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_class_name("sample-select")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -392,9 +398,13 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('exportOptionsBtn').click()
+        driver.find_element_by_id('export-samples-btn').click()
 
-        driver.find_element_by_id('exportGalaxyButton').click()
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
+        )
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
@@ -406,8 +416,11 @@ class TestIridaImportInt:
         with pytest.raises(ElementNotVisibleException):
             driver.find_element_by_id('makepairedcollection').click()
 
-        driver.find_element_by_css_selector('button.btn.btn-primary').click()
+        driver.find_element_by_xpath("//button[contains(@ng-click, 'gCtrl.upload()')]").click()
 
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.ID, 'current-history-panel'))
+        )
         time.sleep(120)  # Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
@@ -471,7 +484,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_class_name("sample-select")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -484,15 +497,22 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('exportOptionsBtn').click()
+        driver.find_element_by_id('export-samples-btn').click()
 
-        driver.find_element_by_id('exportGalaxyButton').click()
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
+        )
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
 
-        driver.find_element_by_css_selector('button.btn.btn-primary').click()
+        driver.find_element_by_xpath("//button[contains(@ng-click, 'gCtrl.upload()')]").click()
 
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.ID, 'current-history-panel'))
+        )
         time.sleep(120)  # Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
@@ -556,7 +576,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_class_name("sample-select")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -569,9 +589,13 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('exportOptionsBtn').click()
+        driver.find_element_by_id('export-samples-btn').click()
 
-        driver.find_element_by_id('exportGalaxyButton').click()
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
+        )
 
         driver.find_element_by_id('email').clear()
         driver.find_element_by_id('email').send_keys(self.EMAIL)
@@ -579,8 +603,11 @@ class TestIridaImportInt:
         # true by default, so this is disabling it
         driver.find_element_by_id('makepairedcollection').click()
 
-        driver.find_element_by_css_selector('button.btn.btn-primary').click()
+        driver.find_element_by_xpath("//button[contains(@ng-click, 'gCtrl.upload()')]").click()
 
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.ID, 'current-history-panel'))
+        )
         time.sleep(120)  # Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
