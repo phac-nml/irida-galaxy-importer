@@ -93,7 +93,7 @@ class IridaImport:
             # Add a sample_file object for each single end read
             unpaired_resource = self.make_irida_request(sample.unpaired_path)
             for single in unpaired_resource['resources']:
-                sample.add_file(self.get_sample_file(single))
+                sample.add_file(self.get_sample_file(single['sequenceFile']))
 
         return samples
 
