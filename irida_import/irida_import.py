@@ -230,10 +230,10 @@ class IridaImport:
             base_folder_id = self.exists_in_lib('folder', 'name', base_folder_path)
             ans = []
             name = ''
-            
+
             if base_folder_id:
                 ans = self.reg_gi.libraries.create_folder(self.library.id,folder_name,base_folder_id=base_folder_id[0])
-                name = base_folder_path + "/" + ans[0]['name'] 
+                name = base_folder_path + "/" + ans[0]['name']
             elif base_folder_path == '':
                 ans = self.reg_gi.libraries.create_folder(self.library.id,folder_name)
                 name = "/" + ans[0]['name']
@@ -247,15 +247,15 @@ class IridaImport:
             self.folds[name]['type']='folder'
             self.folds[name]['name']=name
             final_id=ans[0]['id']
-            
+
             self.logger.debug(
                 'Made folder with path:' + '\'%s\'' % folder_path)
         else:
             #to ensure consistent results, always pick first entry
             #we have no other way of knowing which one to use.
             final_id=exist_id[0]
-            
-            
+
+
         return final_id
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
@@ -274,11 +274,11 @@ class IridaImport:
         """
         ans = []
 
-        # check cache before fetching from galaxy. 
+        # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
         if not self.folds:
             self.initial_lib_state()
-            
+
         for item_name in self.folds:
             if item_type == self.folds[item_name]['type']:
                 if desired_attr_value == self.folds[item_name][item_attr_name]:
@@ -306,7 +306,7 @@ class IridaImport:
         found = False
         size = os.path.getsize(sample_file_path)
 
-        # check cache before fetching from galaxy. 
+        # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
         if not self.folds:
             self.initial_lib_state()
@@ -316,7 +316,7 @@ class IridaImport:
         datasets = self.exists_in_lib('file', 'name', galaxy_name)
 
         if datasets:
-            for data_id in datasets: 
+            for data_id in datasets:
                 item = self.reg_gi.libraries.show_dataset(self.library.id,data_id)
                 if item['file_size'] in (size, size + 1):
                     found = item['id']
@@ -324,6 +324,40 @@ class IridaImport:
 
 
         return found
+
+    def samples_uploaded_successfully(self, samples=[]):
+        """
+        Checks to see if all of our samples were uploaded successfully
+
+        :type samples: list
+        :param samples: the list of samples to verify upload
+        :return: boolean indicating whether all of the samples were uploaded successfully
+        """
+        samples_uploaded_successfully = True
+
+        # Check that samples have been added
+        for sample in samples:
+            for sample_item in sample.get_reads():
+                num_waits = 0
+                while num_waits <= self.MAX_WAITS:
+                    state = sample_item.state(self.reg_gi)
+                    if state == 'ok': # uploaded succesfully
+                        break
+                    elif state in ['new', 'upload', 'queued', 'running', 'setting_metadata']: # pending
+                        num_waits += 1
+                        time.sleep(5)
+                    else:
+                        samples_uploaded_successfully = False
+
+                        # delete the dataset from the library
+                        retries = 0
+                        while retries <= self.MAX_RETRIES:
+                            if sample_item.delete(self.reg_gi, self.library.id):
+                                sample_item.library_dataset_id = None
+                                break
+                        break
+
+        return samples_uploaded_succesffully
 
     def add_samples_if_nec(self, samples=[]):
         """
@@ -351,7 +385,7 @@ class IridaImport:
                     pair_path = sample_folder_path + "/" + sample_item.name
 
                     #since doing pair, will not be writting to the 'main' folder for the sample
-                    sample_folder_id  =self.create_folder_if_nec(pair_path)
+                    sample_folder_id = self.create_folder_if_nec(pair_path)
 
                     added_to_galaxy = self._add_file(added_to_galaxy,
                                                      pair_path,sample_folder_id,
@@ -496,9 +530,9 @@ class IridaImport:
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
         if os.path.isfile(sample_file.path):
 
-            #grab dataset_id if it does exist, if not will be given False      
+            #grab dataset_id if it does exist, if not will be given False
             dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
-            
+
             if dataset_id:
                 # Return dataset id of existing file
                 added_to_galaxy = [{'id': dataset_id}]
@@ -584,7 +618,7 @@ class IridaImport:
     def print_logged(self, message):
         """Print a message and log it"""
         self.logger.info(message)
-        print message
+        print(message)
 
     def get_IRIDA_session(self, oauth_dict):
         """
@@ -636,6 +670,7 @@ class IridaImport:
             self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
             self.XML_FILE = config.get('Galaxy', 'xml_file')
             self.MAX_WAITS = config.get('Galaxy', 'max_waits')
+            self.MAX_RETRIES = 3
 
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
@@ -666,7 +701,7 @@ class IridaImport:
                     param.set('value', self.CLIENT_ID)
                 # manually set GALAXY_URL instead of using galaxy's baseurl type
                 # so that sites with SSL will work
-                # https://github.com/phac-nml/irida-galaxy-importer/issues/1 
+                # https://github.com/phac-nml/irida-galaxy-importer/issues/1
                 if param.get('name') == 'galaxyCallbackUrl':
                     previous_value = param.get('value')
                     param.set('value', re.sub(r'GALAXY_URL', self.GALAXY_URL, previous_value))
@@ -739,7 +774,14 @@ class IridaImport:
             self.create_folder_if_nec(self.REFERENCE_PATH)
 
             # Add each sample's files to the library
-            num_files = self.add_samples_if_nec(samples)
+            retries = 0
+            while (retries <= self.MAX_RETRYS):
+                num_files = self.add_samples_if_nec(samples)
+
+                if self.samples.uploaded_successfully:
+                    break
+                else:
+                    retries += 1
 
             if addtohistory:
                 if make_paired_collection:
@@ -802,12 +844,12 @@ if __name__ == '__main__':
             importer.configure()
             message = 'Successfully configured the XML file!'
             logging.info(message)
-            print message
+            print(message)
         else:
             message = ('Error: Could not find config.ini in the irida_importer'
                        + ' directory!')
             logging.info(message)
-            print message
+            print(message)
     else:
         try:
             file_to_open = args.json_parameter_file
