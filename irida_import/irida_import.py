@@ -325,6 +325,37 @@ class IridaImport:
 
         return found
 
+    def sample_uploaded_successfully(self, sample_item):
+        """
+        Checks to see if a sample was uploaded successfully
+
+        :type samples: list
+        :param samples: the sample to verify upload
+        :return: boolean indicating whether the sample was uploaded successfully
+        """
+        sample_uploaded_successfully = True
+
+        num_waits = 0
+        while num_waits <= self.MAX_WAITS:
+            state = sample_item.state(self.reg_gi)
+            if state == 'ok': # uploaded succesfully
+                break
+            elif state in ['new', 'upload', 'queued', 'running', 'setting_metadata']: # pending
+                num_waits += 1
+                time.sleep(5)
+            else:
+                sample_uploaded_successfully = False
+
+                # delete the dataset from the library
+                retries = 0
+                while retries <= self.MAX_RETRIES:
+                    if sample_item.delete(self.reg_gi, self.library.id):
+                        sample_item.library_dataset_id = None
+                        break
+                break
+
+        return sample_uploaded_successfully
+
     def samples_uploaded_successfully(self, samples=[]):
         """
         Checks to see if all of our samples were uploaded successfully
@@ -338,24 +369,16 @@ class IridaImport:
         # Check that samples have been added
         for sample in samples:
             for sample_item in sample.get_reads():
-                num_waits = 0
-                while num_waits <= self.MAX_WAITS:
-                    state = sample_item.state(self.reg_gi)
-                    if state == 'ok': # uploaded succesfully
-                        break
-                    elif state in ['new', 'upload', 'queued', 'running', 'setting_metadata']: # pending
-                        num_waits += 1
-                        time.sleep(5)
-                    else:
+                sample_success = True
+                if isinstance(sample_item, SamplePair):
+                    forward_result = self.sample_uploaded_successfully(sample_item.forward)
+                    reverse_result = self.sample_uploaded_successfully(sample_item.reverse)
+                    if not forward_result or not reverse_result:
                         samples_uploaded_successfully = False
-
-                        # delete the dataset from the library
-                        retries = 0
-                        while retries <= self.MAX_RETRIES:
-                            if sample_item.delete(self.reg_gi, self.library.id):
-                                sample_item.library_dataset_id = None
-                                break
-                        break
+                else:
+                    sample_result = self.sample_uploaded_successfully(sample_item)
+                    if not sample_result:
+                        samples_uploaded_successfully = False
 
         return samples_uploaded_succesffully
 
@@ -780,7 +803,7 @@ class IridaImport:
             while (retries <= self.MAX_RETRIES):
                 num_files = self.add_samples_if_nec(samples)
 
-                if self.samples.uploaded_successfully:
+                if self.samples_uploaded_successfully(samples):
                     break
                 else:
                     retries += 1
