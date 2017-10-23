@@ -295,7 +295,7 @@ class IridaImport:
         :type sample_file_path: str
         :param sample_file_path: the local file path to the file
         :type galaxy_name: str
-        :param galaxy_name: the full path to the sample file as it
+        :param galaxy_name: the full path to the sample file as itd
         exists in Galaxy
         :rtype: Boolean
         :return: Return file unique ID otherwise Boolean False
@@ -392,12 +392,14 @@ class IridaImport:
                                                      forward)
 
                     forward.library_dataset_id = added_to_galaxy[0]['id']
+                    file_sum += 1
 
                     added_to_galaxy = self._add_file(added_to_galaxy,
                                                      pair_path,sample_folder_id,
                                                      reverse)
 
                     reverse.library_dataset_id = added_to_galaxy[0]['id']
+                    file_sum += 1
 
                 else:
                     # Processing for a SampleFile
@@ -776,7 +778,7 @@ class IridaImport:
             # Add each sample's files to the library
             retries = 0
             while (retries <= self.MAX_RETRYS):
-                num_files += self.add_samples_if_nec(samples)
+                num_files = self.add_samples_if_nec(samples)
 
                 if self.samples.uploaded_successfully:
                     break
