@@ -776,7 +776,7 @@ class IridaImport:
             # Add each sample's files to the library
             retries = 0
             while (retries <= self.MAX_RETRYS):
-                num_files = self.add_samples_if_nec(samples)
+                num_files += self.add_samples_if_nec(samples)
 
                 if self.samples.uploaded_successfully:
                     break
