@@ -31,7 +31,7 @@ class SampleFile:
         return self.name + " @ " + self.path
 
     def state(self, gi):
-        return gi.datasets.show_dataset(self.library_dataset.id, hda_ldda='ldda')['state']
+        return gi.datasets.show_dataset(self.library_dataset_id, hda_ldda='ldda')['state']
 
     def delete(self, gi, library_id):
-        return gi.libraries.delete_library_dataset(library_id, self.library_dataset.id, purged=True)['deleted']
+        return gi.libraries.delete_library_dataset(library_id, self.library_dataset_id, purged=True)['deleted']

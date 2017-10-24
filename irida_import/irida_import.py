@@ -380,7 +380,7 @@ class IridaImport:
                     if not sample_result:
                         samples_uploaded_successfully = False
 
-        return samples_uploaded_succesffully
+        return samples_uploaded_successfully
 
     def add_samples_if_nec(self, samples=[]):
         """
