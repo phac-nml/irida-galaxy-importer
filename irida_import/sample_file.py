@@ -30,8 +30,8 @@ class SampleFile:
     def __repr__(self):
         return self.name + " @ " + self.path
 
-    def state(self, gi):
-        return gi.datasets.show_dataset(self.library_dataset_id, hda_ldda='ldda')['state']
+    def state(self, gi, library_id):
+        return gi.libraries.show_dataset(library_id, self.library_dataset_id)['state']
 
     def delete(self, gi, library_id):
         return gi.libraries.delete_library_dataset(library_id, self.library_dataset_id, purged=True)['deleted']
