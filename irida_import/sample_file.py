@@ -15,7 +15,7 @@ class SampleFile:
         self.path = path
         self.name = name
         self.library_dataset_id = None
-        self.verfied = False
+        self.verified = False
 
     def __eq__(self, sample_file):
         equal = False
