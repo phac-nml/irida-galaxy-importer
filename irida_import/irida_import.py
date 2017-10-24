@@ -318,42 +318,49 @@ class IridaImport:
         if datasets:
             for data_id in datasets:
                 item = self.reg_gi.libraries.show_dataset(self.library.id,data_id)
-                if item['file_size'] in (size, size + 1):
+                if item['file_size'] in (size, size + 1) and item['state'] == 'ok':
                     found = item['id']
                     break
 
-
         return found
 
-    def sample_uploaded_successfully(self, sample_item):
+    def verify_sample_integrity(self, sample_file):
         """
         Checks to see if a sample was uploaded successfully
 
-        :type samples: list
+        :type sample: SampleFile
         :param samples: the sample to verify upload
         :return: boolean indicating whether the sample was uploaded successfully
         """
-        sample_uploaded_successfully = False
+        sample_integrity_verified = sample_file.verified
 
-        num_waits = 0
-        while num_waits <= self.MAX_WAITS:
-            state = sample_item.state(self.reg_gi, self.library.id)
-            if state == 'ok': # uploaded succesfully
-                sample_uploaded_successfully = True
-                break
-            elif state in ['new', 'upload', 'queued', 'running', 'setting_metadata']: # pending
-                num_waits += 1
-                time.sleep(5)
-            else:
-                # delete the dataset from the library
-                retries = 0
-                while retries <= self.MAX_RETRIES:
-                    if sample_item.delete(self.reg_gi, self.library.id):
-                        sample_item.library_dataset_id = None
-                        break
-                break
+        if not sample_integrity_verified:
+            self.logger.debug(time.strftime("[%D %H:%M:%S]:") +
+                              ' Verifying integrity of: ' +
+                              sample_file.name)
+            num_waits = 0
+            while num_waits <= self.MAX_WAITS:
+                state = sample_file.state(self.reg_gi, self.library.id)
+                if state == 'ok': # uploaded succesfully
+                    self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' OK! ')
+                    sample_integrity_verified = True
+                    sample_file.verified = True
+                    break
+                elif state in ['new', 'upload', 'queued', 'running', 'setting_metadata']: # pending
+                    self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' PENDING! ')
+                    num_waits += 1
+                    time.sleep(5)
+                else:
+                    self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' NOT OK! ')
+                    # delete the dataset from the library
+                    retries = 0
+                    while retries <= self.MAX_RETRIES:
+                        if sample_file.delete(self.reg_gi, self.library.id):
+                            sample_file.library_dataset_id = None
+                            break
+                    break
 
-        return sample_uploaded_successfully
+        return sample_integrity_verified
 
     def samples_uploaded_successfully(self, samples=[]):
         """
@@ -369,12 +376,12 @@ class IridaImport:
         for sample in samples:
             for sample_item in sample.get_reads():
                 if isinstance(sample_item, SamplePair):
-                    forward_result = self.sample_uploaded_successfully(sample_item.forward)
-                    reverse_result = self.sample_uploaded_successfully(sample_item.reverse)
+                    forward_result = self.verify_sample_integrity(sample_item.forward)
+                    reverse_result = self.verify_sample_integrity(sample_item.reverse)
                     if not forward_result or not reverse_result:
                         samples_uploaded_successfully = False
                 else:
-                    sample_result = self.sample_uploaded_successfully(sample_item)
+                    sample_result = self.verify_sample_integrity(sample_item)
                     if not sample_result:
                         samples_uploaded_successfully = False
 
@@ -543,6 +550,7 @@ class IridaImport:
                     self.print_logged(time.strftime("[%D %H:%M:%S]:") +
                                       ' Skipped file with Galaxy path: ' +
                                       galaxy_sample_file_name)
+                    sample_file.verified = True
                     self.skipped_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
                 else:
@@ -785,6 +793,7 @@ class IridaImport:
             while (retries <= self.MAX_RETRIES):
                 num_files = self.add_samples_if_nec(samples)
 
+                self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' Checking if Samples uploaded successfully! ')
                 if self.samples_uploaded_successfully(samples):
                     break
                 else:
