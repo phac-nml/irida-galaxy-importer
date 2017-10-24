@@ -385,6 +385,7 @@ class TestIridaImport:
             imp.get_first_or_make_lib = Mock(return_value=lib)
             imp.create_folder_if_nec = Mock()
             imp.add_samples_if_nec = mock.create_autospec(IridaImport.add_samples_if_nec)
+            imp.samples_uploaded_successfully = mock.create_autospec(IridaImport.samples_uploaded_successfully)
             imp.add_samples_to_history = (
                 mock.create_autospec(IridaImport.add_samples_to_history))
             imp.assign_ownership_if_nec = Mock()
@@ -393,6 +394,7 @@ class TestIridaImport:
             imp.get_sample_meta = Mock()
             imp.get_samples = Mock()
             imp.configure = Mock()
+            imp.MAX_RETRIES = 3
             imp.make_irida_request = Mock()
             self.add_irida_constants(imp)
 
