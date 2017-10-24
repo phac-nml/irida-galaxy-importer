@@ -295,7 +295,7 @@ class IridaImport:
         :type sample_file_path: str
         :param sample_file_path: the local file path to the file
         :type galaxy_name: str
-        :param galaxy_name: the full path to the sample file as itd
+        :param galaxy_name: the full path to the sample file as it
         exists in Galaxy
         :rtype: Boolean
         :return: Return file unique ID otherwise Boolean False
@@ -347,7 +347,7 @@ class IridaImport:
                     sample_file.verified = True
                     break
                 elif state in ['new', 'upload', 'queued', 'running', 'setting_metadata']: # pending
-                    self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' PENDING! ')
+                    self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' PENDING! (%s)' % (state))
                     num_waits += 1
                     time.sleep(5)
                 else:
