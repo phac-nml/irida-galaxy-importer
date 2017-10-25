@@ -146,7 +146,7 @@ class TestIridaImportInt:
     def setup_irida(self, request, driver):
         """Set up IRIDA for tests (Start if required, register, log in)"""
         def stop_irida():
-            print 'Stopping IRIDA nicely'
+            print('Stopping IRIDA nicely')
             stopper = subprocess32.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
                                          shell=True)
             stopper.wait()
@@ -178,7 +178,7 @@ class TestIridaImportInt:
             try:
                 os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY']
             except KeyError:
-                print 'Killing Galaxy'
+                print('Killing Galaxy')
                 subprocess32.call(self.GALAXY_STOP, shell=True)
 
         try:
@@ -216,7 +216,7 @@ class TestIridaImportInt:
     def register_galaxy(self, driver):
         """Register with Galaxy, and then attempt to log in"""
         driver.get(self.GALAXY_URL)
-        driver.find_element_by_link_text("User").click()
+        driver.find_element_by_link_text("Login or Register").click()
         driver.find_element_by_link_text("Register").click()
         driver.switch_to_frame(driver.find_element_by_tag_name("iframe"))
         driver.find_element_by_id("email_input").send_keys(self.EMAIL)
@@ -243,7 +243,7 @@ class TestIridaImportInt:
                                     email=self.EMAIL,
                                     password=self.GALAXY_PASSWORD)
         self.configure_tool('Galaxy', 'admin_key', gal.key)
-        print 'key:' + gal.key
+        print('key:' + gal.key)
 
     def configure_tool(self, section, option, value):
         """Write tool configuration data"""
@@ -612,7 +612,7 @@ class TestIridaImportInt:
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
 
-	assert (succeeded - initially_succeeded == 4,
+        assert (succeeded - initially_succeeded == 4,
                 "Import did not complete successfully")
 
     def test_cart_import_multi_project(self, setup_irida, setup_galaxy,

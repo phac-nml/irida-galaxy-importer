@@ -1,4 +1,4 @@
-<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="1.3.1">
+<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="1.3.2">
     <description>server</description>
     <requirements>
         <requirement type="package" version="1.3.0">irida-galaxy-importer</requirement>
