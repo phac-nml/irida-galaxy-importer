@@ -1,4 +1,4 @@
-image: http://docker.corefacility.ca:5000/import-tool-for-galaxy_build:latest
+image: docker.corefacility.ca:5000/import-tool-for-galaxy_build:latest
 
 variables:
   MYSQL_ROOT_PASSWORD: "password"
