@@ -41,23 +41,23 @@ echo "Preparing Galaxy for first execution (installing eggs)..."
 echo "Configuring Galaxy."
 pushd config
 
-cp galaxy.ini.sample galaxy.ini
+cp galaxy.yaml.sample galaxy.yml
 cp tool_conf.xml.sample tool_conf.xml
 
 # allow soft linking of file system files
-sed -i 's/#allow_library_path_paste = False/allow_library_path_paste = True/' galaxy.ini
+sed -i 's/#allow_library_path_paste: false/allow_library_path_paste = True/' galaxy.ini
 
 # allow importing from the entire system
-sed -i 's/#library_import_dir.*/library_import_dir = \//'  galaxy.ini
+sed -i 's/#library_import_dir.*/library_import_dir = \//'  galaxy.yml
 
 # use MySQL instead of sqlite; to be configured to use a database user and name specified in README.md
-echo "database_connection = mysql://test:test@localhost/external_galaxy_test" | cat >> galaxy.ini
+echo "database_connection = mysql://test:test@localhost/external_galaxy_test" | cat >> galaxy.yml
 
 # add admin e-mail user
-sed -i 's/#admin_users = None/admin_users=irida@irida.ca/' galaxy.ini
+sed -i 's/#admin_users: null/admin_users=irida@irida.ca/' galaxy.yml
 
 # run galaxy on port 8888 instead of 8080; Tomcat runs on 8080 by default.
-sed -i "s|#port = 8080|port = $galaxy_port|" galaxy.ini
+sed -i "s|#port = 8080|port = $galaxy_port|" galaxy.yml
 popd
 popd
 echo "Galaxy has been installed"
