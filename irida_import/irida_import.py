@@ -686,6 +686,10 @@ class IridaImport:
             self.XML_FILE = config.get('Galaxy', 'xml_file')
             self.MAX_WAITS = config.get('Galaxy', 'max_waits')
             self.MAX_RETRIES = 3
+ 
+            # Used to reconnect to Galaxy instance when connection is lost
+            self.MAX_CLIENT_ATTEMPTS = int(config.get('Galaxy', 'max_client_http_attempts'))
+            self.CLIENT_RETRY_DELAY = int(config.get('Galaxy', 'client_http_retry_delay'))
 
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
@@ -771,12 +775,17 @@ class IridaImport:
             self.irida = self.get_IRIDA_session(oauth_dict)
 
             self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
+            self.gi.gi.max_get_attempts = self.MAX_CLIENT_ATTEMPTS
+            self.gi.gi.get_retry_delay = self.CLIENT_RETRY_DELAY
+
 
             # This is necessary for uploads from arbitary local paths
             # that require setting the "link_to_files" flag:
             self.reg_gi = galaxy.GalaxyInstance(
                 url=self.GALAXY_URL,
                 key=self.ADMIN_KEY)
+            self.reg_gi.max_get_attempts = self.MAX_CLIENT_ATTEMPTS
+            self.reg_gi.get_retry_delay = self.CLIENT_RETRY_DELAY
 
             self.histories = self.reg_gi.histories
 
