@@ -41,7 +41,7 @@ echo "Preparing Galaxy for first execution (installing eggs)..."
 echo "Configuring Galaxy."
 pushd config
 
-cp galaxy.yaml.sample galaxy.yml
+cp galaxy.yml.sample galaxy.yml
 cp tool_conf.xml.sample tool_conf.xml
 
 # allow soft linking of file system files
