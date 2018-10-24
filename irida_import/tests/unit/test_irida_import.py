@@ -213,11 +213,11 @@ class TestIridaImport:
         imp.exists_in_lib.side_effect = [False, [picked_f_id]]
 
         imp.library = Mock(return_value=[2222])
-        
+
         imp.reg_gi.libraries.create_folder = Mock(
             return_value=[{'id': 123 , 'type':'folder', 'name':'/illumina_reads/sample1'}])
 
-        
+
         made_folder_id = imp.create_folder_if_nec(
             folder_path)
 
@@ -244,8 +244,8 @@ class TestIridaImport:
         """ Test if a folder can be found in a library among chaff items """
         imp.library = self.make_lib('wolib', False)
         imp.gi.libraries.get = Mock(return_value=imp.library)
-        
-       
+
+
         items = {}
         items['sally.fastq']={}
         items['sally.fastq']['id']=123
@@ -256,18 +256,18 @@ class TestIridaImport:
         items['bob.fasta']['id']=234
         items['bob.fasta']['type']='file'
         items['bob.fasta']['name']='bob.fasta'
-        
+
         imp.folds = items
-        
+
         exists = imp.exists_in_lib('file', 'name', 'bob.fasta')
         assert exists, 'file must exist in library'
 
     def test_add_samples_if_nec(self, imp, file_list):
         """ Test if a new sample file is added to the library """
-        
+
         imp.exists_in_lib = Mock()
         imp.exists_in_lib.side_effect = [[123], [234]]
-        
+
         imp.link = mock.create_autospec(IridaImport.link)
         imp._add_file = mock.create_autospec(IridaImport._add_file)
         imp._add_file.return_value = [{'id': '321'}]
@@ -300,7 +300,7 @@ class TestIridaImport:
         assert imp._add_file.call_count is num_files, \
             'The %s files should be uploaded once each' % num_files
 
-        assert num_added == 2, "The correct amount of files need to be uploaded"
+        assert num_added == 4, "The correct amount of files need to be uploaded"
 
     def test_add_samples_to_history(self, imp, file_list):
         """ Test if a new sample file is added to the library """
@@ -385,6 +385,7 @@ class TestIridaImport:
             imp.get_first_or_make_lib = Mock(return_value=lib)
             imp.create_folder_if_nec = Mock()
             imp.add_samples_if_nec = mock.create_autospec(IridaImport.add_samples_if_nec)
+            imp.samples_uploaded_successfully = mock.create_autospec(IridaImport.samples_uploaded_successfully)
             imp.add_samples_to_history = (
                 mock.create_autospec(IridaImport.add_samples_to_history))
             imp.assign_ownership_if_nec = Mock()
@@ -393,6 +394,7 @@ class TestIridaImport:
             imp.get_sample_meta = Mock()
             imp.get_samples = Mock()
             imp.configure = Mock()
+            imp.MAX_RETRIES = 3
             imp.make_irida_request = Mock()
             self.add_irida_constants(imp)
 
