@@ -69,7 +69,7 @@ class TestIridaImportInt:
     IRIDA_PASSWORD_ID = 'password_client'
     IRIDA_AUTH_CODE_ID = 'auth_code_client'
     IRIDA_USER = 'admin'
-    IRIDA_PASSWORD = 'Password1'
+    IRIDA_PASSWORD = 'Password1!'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
     IRIDA_PROJECTS = IRIDA_URL + '/api/projects'
 
@@ -211,7 +211,7 @@ class TestIridaImportInt:
         """Make sure there is a link to the tool in Galaxy"""
         driver.get(self.GALAXY_URL)
         driver.find_element_by_css_selector("#title_getext > a > span").click()
-        assert(driver.find_element_by_link_text("IRIDA"))
+        assert(driver.find_element_by_link_text("IRIDA server"))
 
     def register_galaxy(self, driver):
         """Register with Galaxy, and then attempt to log in"""
@@ -367,7 +367,7 @@ class TestIridaImportInt:
         initially_succeeded = len(history_panel.find_elements_by_class_name(
             'state-ok'))
         driver.find_element_by_css_selector("#title_getext > a > span").click()
-        driver.find_element_by_link_text("IRIDA").click()
+        driver.find_element_by_link_text("IRIDA server").click()
 
         # Sometimes a login is required
         try:
@@ -385,7 +385,8 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
+
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -398,9 +399,9 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('export-samples-btn').click()
+        driver.find_element_by_xpath("//button[contains(@class, 't-export-samples-btn')]").click()
 
-        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'gExportCtrl.exportToGalaxy')]").click()
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
@@ -466,7 +467,7 @@ class TestIridaImportInt:
         initially_succeeded = len(history_panel.find_elements_by_class_name(
             'state-ok'))
         driver.find_element_by_css_selector("#title_getext > a > span").click()
-        driver.find_element_by_link_text("IRIDA").click()
+        driver.find_element_by_link_text("IRIDA server").click()
 
         # Sometimes a login is required
         try:
@@ -484,7 +485,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -497,9 +498,11 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('export-samples-btn').click()
+        driver.find_element_by_xpath("//button[contains(@class, 't-export-samples-btn')]").click()
 
-        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+
+
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'gExportCtrl.exportToGalaxy')]").click()
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
@@ -558,7 +561,7 @@ class TestIridaImportInt:
         initially_succeeded = len(history_panel.find_elements_by_class_name(
             'state-ok'))
         driver.find_element_by_css_selector("#title_getext > a > span").click()
-        driver.find_element_by_link_text("IRIDA").click()
+        driver.find_element_by_link_text("IRIDA server").click()
 
         # Sometimes a login is required
         try:
@@ -576,7 +579,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -589,9 +592,9 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('export-samples-btn').click()
+        driver.find_element_by_xpath("//button[contains(@class, 't-export-samples-btn')]").click()
 
-        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'gExportCtrl.exportToGalaxy')]").click()
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
