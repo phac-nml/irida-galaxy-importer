@@ -385,7 +385,8 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
+
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -484,7 +485,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -576,7 +577,7 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_xpath("//table[contains(@class, 'selectable')]/tbody/tr/td[1]/input[@type='checkbox']")
+                checkboxes = driver.find_elements_by_xpath("//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
