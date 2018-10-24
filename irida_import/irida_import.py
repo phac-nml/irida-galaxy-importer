@@ -150,7 +150,6 @@ class IridaImport:
                     unpaired_path = link['href']
 
             samples.append(Sample(sample_name, paired_path, unpaired_path))
-
         return samples
 
     def get_sample_file(self, file_dict):
@@ -446,8 +445,8 @@ class IridaImport:
         :return: The collection array of added samples
         """
         collection_array = []
+        collection_name_count = {}
         hist = self.histories
-
         for sample in samples:
             self.logger.debug("sample name is" + sample.name)
 
@@ -460,8 +459,13 @@ class IridaImport:
                     datasets = dict()
 
                     pair_path = sample_folder_path + "/" + sample_item.name
-                    collection_name = str(sample.name) + "__" + str(
-                        sample_item.name)
+
+                    if sample.name in collection_name_count:
+                        collection_name = str(sample.name) + "__" + str(collection_name_count[sample.name])
+                        collection_name_count[sample.name] += 1
+                    else:
+                        collection_name = str(sample.name)
+                        collection_name_count[sample.name] = 2
 
                     # Add datasets to the current history
                     datasets['forward'] = hist.upload_dataset_from_library(
