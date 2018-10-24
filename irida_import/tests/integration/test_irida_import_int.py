@@ -39,7 +39,7 @@ class TestIridaImportInt:
     must be disabled, in addition to Galaxy starting/stopping
     """
 
-    TIMEOUT = 600  # seconds
+    TIMEOUT = 1200  # seconds
 
     USER = getpass.getuser()
     EMAIL = 'irida@irida.ca'
