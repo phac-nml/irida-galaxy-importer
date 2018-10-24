@@ -69,7 +69,7 @@ class TestIridaImportInt:
     IRIDA_PASSWORD_ID = 'password_client'
     IRIDA_AUTH_CODE_ID = 'auth_code_client'
     IRIDA_USER = 'admin'
-    IRIDA_PASSWORD = 'Password1'
+    IRIDA_PASSWORD = 'Password1!'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
     IRIDA_PROJECTS = IRIDA_URL + '/api/projects'
 
