@@ -399,9 +399,9 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('export-samples-btn').click()
+        driver.find_element_by_xpath("//button[contains(@class, 't-export-samples-btn')]").click()
 
-        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'gExportCtrl.exportToGalaxy')]").click()
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
@@ -498,9 +498,11 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('export-samples-btn').click()
+        driver.find_element_by_xpath("//button[contains(@class, 't-export-samples-btn')]").click()
 
-        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+
+
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'gExportCtrl.exportToGalaxy')]").click()
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
@@ -590,9 +592,9 @@ class TestIridaImportInt:
                 if timeout == 60:
                     raise
 
-        driver.find_element_by_id('export-samples-btn').click()
+        driver.find_element_by_xpath("//button[contains(@class, 't-export-samples-btn')]").click()
 
-        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'toolsCtrl.galaxy')]").click()
+        driver.find_element_by_xpath("//li/a[contains(@ng-click, 'gExportCtrl.exportToGalaxy')]").click()
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, self.IRIDA_GALAXY_MODAL))
