@@ -51,7 +51,7 @@ sed -i 's/#allow_path_paste: false/allow_path_paste: true/' galaxy.yml
 sed -i 's/#library_import_dir.*/library_import_dir: \//'  galaxy.yml
 
 # use MySQL instead of sqlite; to be configured to use a database user and name specified in README.md
-echo "  database_connection: postgres://galaxy:nicebigpasswordarebest@localhost/galaxy_test" | cat >> galaxy.yml
+echo "  database_connection: postgres://galaxy:nicebigpasswordarebest@postgres/galaxy_test" | cat >> galaxy.yml
 
 # add admin e-mail user
 sed -i 's/#admin_users: null/admin_users: irida@irida.ca/' galaxy.yml
