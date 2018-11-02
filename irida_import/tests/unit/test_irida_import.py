@@ -75,7 +75,7 @@ class TestIridaImport:
         irida_instance.REFERENCE_PATH = '/references'
         irida_instance.MAX_WAITS = 1
         irida_instance.MAX_CLIENT_ATTEMPTS = 10
-        irida_instance.CLIENT_HTTP_DELAY = 30
+        irida_instance.CLIENT_RETRY_DELAY = 30
         irida_instance.CLIENT_ID = 'webClient'
         irida_instance.CLIENT_SECRET = 'webClientSecret'
         irida_instance.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
