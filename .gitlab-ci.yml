@@ -5,6 +5,9 @@ variables:
   MYSQL_DATABASE: "external_galaxy_test"
   MAVEN_OPTS: "-Djava.awt.headless=true -Dmaven.repo.local=${CI_PROJECT_DIR}/.m2"
   #MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
+  POSTGRES_DB: galaxy_test
+  POSTGRES_USER: galaxy
+  POSTGRES_PASSWORD: "nicebigpasswordarebest"
 
 cache:
   paths:
@@ -15,6 +18,7 @@ cache:
 
 services:
   - mysql:5.6
+  - postgres:latest
 
 before_script:
   - source .ci/install_deps.sh
