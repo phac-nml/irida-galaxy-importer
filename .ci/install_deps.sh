@@ -1,10 +1,19 @@
 #!/bin/bash -e
-pip install -U bioblend pytest pytest-cov pytest-mock requests==2.6 requests-oauthlib==0.4.2 subprocess32 selenium
 
-echo '{ "allow_root": true }' > /root/.bowerrc
-sed -i -e 's/localhost:3306/mysql:3306/g' irida_import/tests/integration/test_irida_import_int.py
-sed -i -e 's/username=test/username=root/g' irida_import/tests/integration/test_irida_import_int.py
-sed -i -e 's/password=test/password=password/g' irida_import/tests/integration/test_irida_import_int.py
-sed -i -e 's/mysql -u test -ptest/mysql -h mysql -u root -ppassword/g' irida_import/tests/integration/test_irida_import_int.py
+CHROMEDRIVER_VERSION=$1
 
-sed -i -e 's/test:test@localhost/root:password@mysql/g' irida_import/tests/integration/bash_scripts/install.sh
+python2 -m virtualenv .venv
+source .venv/bin/activate
+pip install -U bioblend pytest pytest-cov pytest-mock requests==2.6 requests-oauthlib==1.2.0 subprocess32 selenium
+
+# Install chromedriver if not correct version
+TEST_CHROMEDRIVER_VERSION=`chromedriver --version | sed -e 's/^ChromeDriver //' -e 's/ (.*//' 2>/dev/null`
+if [ "$TEST_CHROMEDRIVER_VERSION" != "$CHROMEDRIVER_VERSION" ];
+then
+	echo "Downloading Chromedriver Version: $CHROMEDRIVER_VERSION"
+	wget --no-verbose -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+	unzip /tmp/chromedriver_linux64.zip -d .venv/bin
+	chmod 755 .venv/bin/chromedriver
+else
+	echo "Chromedriver version [" $CHROMEDRIVER_VERSION "] already exists, not installing"
+fi
