@@ -143,7 +143,7 @@ class TestIridaImportInt:
         return driver
 
     @pytest.fixture(scope='class')
-    def setup_irida(self, request, driver, tmpdir):
+    def setup_irida(self, request, driver):
         """Set up IRIDA for tests (Start if required, register, log in)"""
 
         def stop_irida():
@@ -158,7 +158,7 @@ class TestIridaImportInt:
             stop_irida()
 
             # create temporary directories for IRIDA data
-            data_dir = tmpdir
+            data_dir = mkdtemp(prefix='irida-tmp-')
             sequence_file_dir = mkdtemp(prefix='sequence-files-', dir=data_dir)
             reference_file_dir = mkdtemp(prefix='reference-files-', dir=data_dir)
             output_file_dir = mkdtemp(prefix='output-files-', dir=data_dir)
