@@ -143,7 +143,7 @@ class TestIridaImportInt:
         return driver
 
     @pytest.fixture(scope='class')
-    def setup_irida(self, request, driver):
+    def setup_irida(self, request, driver, tmpdir):
         """Set up IRIDA for tests (Start if required, register, log in)"""
 
         def stop_irida():
@@ -158,7 +158,7 @@ class TestIridaImportInt:
             stop_irida()
 
             # create temporary directories for IRIDA data
-            data_dir = mkdtemp(prefix='irida-tmp-')
+            data_dir = tmpdir
             sequence_file_dir = mkdtemp(prefix='sequence-files-', dir=data_dir)
             reference_file_dir = mkdtemp(prefix='reference-files-', dir=data_dir)
             output_file_dir = mkdtemp(prefix='output-files-', dir=data_dir)
@@ -344,7 +344,7 @@ class TestIridaImportInt:
         href = next(link['href'] for link in links if link['rel'] == rel)
         return href
 
-    def test_project_samples_import(self, setup_irida, setup_galaxy,
+    def test_project_samples_import_single_end(self, setup_irida, setup_galaxy,
                                     driver, tmpdir):
         """Verify that sequence files can be imported from IRIDA to Galaxy"""
         irida = setup_irida
@@ -360,12 +360,12 @@ class TestIridaImportInt:
         # Pytest manages the temporary directory
         seq1 = tmpdir.join("seq1.fastq")
         seq1.write(self.FASTQ_CONTENTS)
-        sequence1 = irida.post(sequences1, files={'file': open(str(seq1),
+        irida.post(sequences1, files={'file': open(str(seq1),
                                                                'rb')})
 
         seq2 = tmpdir.join("seq2.fastq")
         seq2.write(self.FASTQ_CONTENTS)
-        sequence2 = irida.post(sequences1, files={'file': open(str(seq2),
+        irida.post(sequences1, files={'file': open(str(seq2),
                                                                'rb')})
 
         sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
@@ -373,7 +373,7 @@ class TestIridaImportInt:
         sequences2 = self.get_href(sample2, 'sample/sequenceFiles')
         seq3 = tmpdir.join("seq3.fastq")
         seq3.write(self.FASTQ_CONTENTS)
-        sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
+        irida.post(sequences2, files={'file': open(str(seq3),
                                                                'rb')})
 
         # Export to Galaxy using the button on the dropdown menu
@@ -395,7 +395,6 @@ class TestIridaImportInt:
 
         # These checkbox elements cannot be clicked directly
         # Using IDs would complicate running the tests without restarting IRIDA
-        action = webdriver.common.action_chains.ActionChains(driver)
         stale = True
         timeout = 0
         while stale:
