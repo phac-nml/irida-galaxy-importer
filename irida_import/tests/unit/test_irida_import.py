@@ -405,6 +405,8 @@ class TestIridaImport:
             # Config data to come
             imp.import_to_galaxy("any_string", None, history['id'])
 
+            assert isinstance(imp.gi, GalaxyInstance), \
+                   'A GalaxyInstance must be created'
             assert imp.get_first_or_make_lib.call_count == 1, \
                 'One library should be created'
             assert imp.create_folder_if_nec.call_count >= 2, \
