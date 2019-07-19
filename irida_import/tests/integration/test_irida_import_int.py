@@ -11,7 +11,6 @@ import subprocess32
 from tempfile import mkdtemp
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import ElementNotVisibleException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -21,6 +20,7 @@ from . import util
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import LegacyApplicationClient
 from bioblend import galaxy
+
 
 # These variables are to stop Galaxy and Irida from being changed
 # during script execution. This is required if you are using your
@@ -40,7 +40,7 @@ class TestIridaImportInt:
     """
 
     TIMEOUT = 600  # seconds
-    GALAXY_SLEEP_TIME=360
+    GALAXY_SLEEP_TIME = 360
 
     USER = getpass.getuser()
     EMAIL = 'irida@irida.ca'
@@ -61,10 +61,10 @@ class TestIridaImportInt:
                  '-Dhibernate.hbm2ddl.auto=',
                  '-Dhibernate.hbm2ddl.import_files=']
     IRIDA_STOP = 'mvn jetty:stop'
-    IRIDA_DB_RESET = 'echo '\
-        '"drop database if exists irida_test;'\
-        'create database irida_test;'\
-        '"| mysql -u test -ptest'
+    IRIDA_DB_RESET = 'echo ' \
+                     '"drop database if exists irida_test;' \
+                     'create database irida_test;' \
+                     '"| mysql -u test -ptest'
     IRIDA_PASSWORD_ID = 'password_client'
     IRIDA_AUTH_CODE_ID = 'auth_code_client'
     IRIDA_USER = 'admin'
@@ -81,10 +81,10 @@ class TestIridaImportInt:
     # tool attempts to access them if they were not uploaded as valid sequence
     # files
     FASTQ_CONTENTS = (
-        "@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50\n" +
-        "TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT\n" +
-        "+SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50\n" +
-        "hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y")
+            "@SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50\n" +
+            "TTGCCTGCCTATCATTTTAGTGCCTGTGAGGTGGAGATGTGAGGATCAGT\n" +
+            "+SRR566546.970 HWUSI-EAS1673_11067_FC7070M:4:1:2299:1109 length=50\n" +
+            "hhhhhhhhhhghhghhhhhfhhhhhfffffe`ee[`X]b[d[ed`[Y[^Y")
 
     def setup_class(self):
         """Initialize class variables, install IRIDA, Galaxy, and the tool"""
@@ -125,7 +125,7 @@ class TestIridaImportInt:
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
             install = subprocess32.Popen([exec_path, self.TOOL_DIRECTORY,
-                                         str(self.GALAXY_PORT)],
+                                          str(self.GALAXY_PORT)],
                                          cwd=self.REPOS_PARENT)
             install.wait()  # Block untill installed
 
@@ -138,12 +138,14 @@ class TestIridaImportInt:
 
         def finalize_driver():
             driver.quit()
+
         request.addfinalizer(finalize_driver)
         return driver
 
     @pytest.fixture(scope='class')
     def setup_irida(self, request, driver):
         """Set up IRIDA for tests (Start if required, register, log in)"""
+
         def stop_irida():
             print('Stopping IRIDA nicely')
             stopper = subprocess32.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
@@ -157,12 +159,12 @@ class TestIridaImportInt:
 
             # create temporary directories for IRIDA data
             data_dir = mkdtemp(prefix='irida-tmp-')
-            sequence_file_dir = mkdtemp(prefix='sequence-files-',dir=data_dir)
-            reference_file_dir = mkdtemp(prefix='reference-files-',dir=data_dir)
-            output_file_dir = mkdtemp(prefix='output-files-',dir=data_dir)
-            self.IRIDA_CMD.append('-Dsequence.file.base.directory='+sequence_file_dir)
-            self.IRIDA_CMD.append('-Dreference.file.base.directory='+reference_file_dir)
-            self.IRIDA_CMD.append('-Doutput.file.base.directory='+output_file_dir)
+            sequence_file_dir = mkdtemp(prefix='sequence-files-', dir=data_dir)
+            reference_file_dir = mkdtemp(prefix='reference-files-', dir=data_dir)
+            output_file_dir = mkdtemp(prefix='output-files-', dir=data_dir)
+            self.IRIDA_CMD.append('-Dsequence.file.base.directory=' + sequence_file_dir)
+            self.IRIDA_CMD.append('-Dreference.file.base.directory=' + reference_file_dir)
+            self.IRIDA_CMD.append('-Doutput.file.base.directory=' + output_file_dir)
 
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
             subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ)
@@ -171,6 +173,7 @@ class TestIridaImportInt:
 
             def finalize_irida():
                 stop_irida()
+
             request.addfinalizer(finalize_irida)
         self.register_irida(driver)
         self.add_irida_client_password(driver)
@@ -183,6 +186,7 @@ class TestIridaImportInt:
     @pytest.fixture(scope='class')
     def setup_galaxy(self, request, driver):
         """Set up Galaxy for tests (Start if required, register, log in)"""
+
         def stop_galaxy():
             try:
                 os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY']
@@ -196,17 +200,19 @@ class TestIridaImportInt:
             stop_galaxy()
             subprocess32.call(self.GALAXY_DB_RESET, shell=True)
             subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
-            self.log.debug("Waiting for Galaxy database migration [%s]. Sleeping for [%s] seconds",self.GALAXY_URL,self.GALAXY_SLEEP_TIME)
+            self.log.debug("Waiting for Galaxy database migration [%s]. Sleeping for [%s] seconds", self.GALAXY_URL,
+                           self.GALAXY_SLEEP_TIME)
             time.sleep(self.GALAXY_SLEEP_TIME)
             self.log.debug("Galaxy database migration should have (hopefully) finished, checking if it is up")
             util.wait_until_up(
                 self.GALAXY_DOMAIN,
                 self.GALAXY_PORT,
                 self.TIMEOUT)
-            self.log.debug("Galaxy should now be up on [%s]",self.GALAXY_URL)
+            self.log.debug("Galaxy should now be up on [%s]", self.GALAXY_URL)
 
             def finalize_galaxy():
                 stop_galaxy()
+
             request.addfinalizer(finalize_galaxy)
         self.register_galaxy(driver)
         self.configure_galaxy_api_key(driver)
@@ -224,7 +230,7 @@ class TestIridaImportInt:
         """Make sure there is a link to the tool in Galaxy"""
         driver.get(self.GALAXY_URL)
         driver.find_element_by_css_selector("#title_getext > a > span").click()
-        assert(driver.find_element_by_link_text("IRIDA server"))
+        assert (driver.find_element_by_link_text("IRIDA server"))
 
     def register_galaxy(self, driver):
         """Register with Galaxy, and then attempt to log in"""
@@ -355,12 +361,12 @@ class TestIridaImportInt:
         seq1 = tmpdir.join("seq1.fastq")
         seq1.write(self.FASTQ_CONTENTS)
         sequence1 = irida.post(sequences1, files={'file': open(str(seq1),
-                               'rb')})
+                                                               'rb')})
 
         seq2 = tmpdir.join("seq2.fastq")
         seq2.write(self.FASTQ_CONTENTS)
         sequence2 = irida.post(sequences1, files={'file': open(str(seq2),
-                               'rb')})
+                                                               'rb')})
 
         sample2 = irida.post(samples, json={'sampleName': 'PS_Sample2',
                                             'sequencerSampleId': 'PS_2'})
@@ -368,7 +374,7 @@ class TestIridaImportInt:
         seq3 = tmpdir.join("seq3.fastq")
         seq3.write(self.FASTQ_CONTENTS)
         sequence3 = irida.post(sequences2, files={'file': open(str(seq3),
-                               'rb')})
+                                                               'rb')})
 
         # Export to Galaxy using the button on the dropdown menu
         driver.get(self.GALAXY_URL)
@@ -394,8 +400,8 @@ class TestIridaImportInt:
         timeout = 0
         while stale:
             try:
-                checkboxes = driver.find_elements_by_xpath("//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
-
+                checkboxes = driver.find_elements_by_xpath(
+                    "//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
 
                 checkboxes[0].click()
                 checkboxes[1].click()
@@ -411,7 +417,7 @@ class TestIridaImportInt:
         driver.find_element_by_id("cart-add-btn").click()
         driver.find_element_by_id("cart-show-btn").click()
 
-        email_input=driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']")
+        email_input = driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']")
         email_input.clear()
         email_input.send_keys(self.EMAIL)
 
@@ -425,4 +431,4 @@ class TestIridaImportInt:
         history_panel = driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
         assert succeeded - initially_succeeded > 0, \
-                "Import did not complete successfully"
+            "Import did not complete successfully"
