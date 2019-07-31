@@ -31,7 +31,7 @@ install:
   - sudo apt-get install python2.7
   - mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));"
   - mysql -e "CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD'; GRANT ALL ON $MYSQL_DATABASE.* to '$MYSQL_USER'@'localhost';"
-  - psql -c 'create database galaxy_test;' -U postgres
+  - psql -c 'create database galaxy_test;'
   - mvn -version
   - source .ci/install_deps.sh $CHROMEDRIVER_VERSION
 
