@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# This file is adapted from https://irida.corefacility.ca/gitlab/aaron.petkau/irida-public/blob/master/galaxy/install_galaxy.sh
-
 args=("$@")
 tool_loc=${args[0]}
 galaxy_port=${args[1]}
@@ -10,9 +8,9 @@ mkdir repos
 pushd repos
 
 echo "Downloading IRIDA..."
-git clone http://gitlab-ci-token:b71f6552f4cbe6f7d3f6faad8939b9@gitlab-irida.corefacility.ca/irida/irida.git
+git clone https://github.com/phac-nml/irida.git
 pushd irida
-git checkout development > irida-checkout.log 2>&1
+git checkout master > irida-checkout.log 2>&1
 git fetch
 git reset --hard
 git clean -fd
@@ -51,10 +49,10 @@ sed -i 's/#allow_path_paste: false/allow_path_paste: true/' galaxy.yml
 sed -i 's/#library_import_dir.*/library_import_dir: \//'  galaxy.yml
 
 # use MySQL instead of sqlite; to be configured to use a database user and name specified in README.md
-echo "  database_connection: postgres://galaxy:nicebigpasswordarebest@postgres/galaxy_test" | cat >> galaxy.yml
+echo "  database_connection: postgresql:///galaxy_test" | cat >> galaxy.yml
 
 # add admin e-mail user
-sed -i 's/#admin_users: null/admin_users: irida@irida.ca/' galaxy.yml
+sed -i 's/#admin_users:.*/admin_users: "irida@irida.ca"/' galaxy.yml
 
 # run galaxy on port 8888 instead of 8080; Tomcat runs on 8080 by default.
 sed -i "s|http: 127.0.0.1:8080|http: 127.0.0.1:$galaxy_port|" galaxy.yml

@@ -106,56 +106,45 @@ The tool must be run once with the `--config` option to configure the tool XML f
 Testing:
 -------
 
+#### Test dependencies
 
-#### Running the Tests:
+The script `run-tests.sh` can be used to run the tests. This should check for some of the dependencies and let you know which is missing. However, you will have to have the following dependencies installed:
 
-To run the tests, pytest is required.
-It can be installed by:
+* Python 2
+* Java 8
+* Maven
+* MySQL/MariaDB (Server and Client)
+* PostgreSQL (Server and Client)
+* Git
+* Chrome (or Chromium) and Chromedriver
+* Xvfb
 
-```
-pip install -U pytest
-```
-
-The Mock library, pytest-mock, subprocess32, and Splinter must be installed as well:
-
-```
-pip install -U mock pytest-mock subprocess32 splinter
-```
-
-Requests 2.6.2 causes the test setup to fail while uploading sequence files to IRIDA. Use Requests 2.6.0 instead:
-```
-pip install requests==2.6.0 requests-oauthlib==0.4.2
-```
-
-MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases
-`irida_test`, and `external_galaxy_test`:
-
-```
-echo "grant all privileges on irida_test.* to 'test'@'localhost' identified by 'test';" | mysql -u root -p
-echo "grant all privileges on external_galaxy_test.* to 'test'@'localhost' identified by 'test';" | mysql -u root -p
-```
-
-Then to run the tests, navigate to `$GALAXY_ROOT/tools/irida_import/` and  invoke:
-
-```
-py.test
-```
-
-To monitor test progress, for example to monitor the installation and configuration process for the integration tests, use `pytest -s`.
-
-To run only the unit or integration tests, use `pytest -m unit` or `pytest -m integration` respectively.
-
-
-#### Generating Code Coverage Reports:
-
-First install pytest-cov:
-
-```
-pip install pytest-cov
-```
-
-Then, to generate a html line by line code coverage report for a file--for example for `irida_import.py`--navigate to `$GALAXY_ROOT/tools/irida_import` and then invoke:
+On Ubuntu, you can install these with:
 
 ```bash
-py.test --cov=irida_import.py --cov-report=html
+sudo apt-get install python2.7 openjdk-8-jdk maven mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
+```
+
+MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases `irida_test`. MySQL must also be configured to disable `ONLY_FULL_GROUP_BY` mode.
+
+```bash
+echo "grant all privileges on irida_test.* to 'test'@'localhost' identified by 'test';" | mysql -u root -p
+
+mysql -u root -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));"
+```
+
+#### Running tests
+
+To run all the test, you can run:
+
+```bash
+./run-tests.sh
+```
+
+If you just want to run the unit tests (much quicker) you can do:
+
+```bash
+source .ci/install_deps.sh
+cd irida_import
+pytest tests/unit/*.py
 ```
