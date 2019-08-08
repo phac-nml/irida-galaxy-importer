@@ -178,6 +178,7 @@ You will next want to make the appropriate changes with your connection informat
 
 ```
 [Galaxy]
+
 ### MODIFY THESE ###
 admin_key: d9c54f0b38b75dd6513035e4dd786a0b
 galaxy_url: http://localhost:48888
@@ -191,6 +192,7 @@ max_client_http_attempts: 10
 client_http_retry_delay: 30
 
 [IRIDA]
+
 ### MODIFY THESE ###
 client_secret: qlB82t7Ct917127lL7oQ82bd9o2iAP8bT0rJohpz7s
 client_id: galaxy
@@ -202,6 +204,7 @@ token_endpoint_suffix: /api/oauth/token
 ```
 
 You will want to modify the URL values and connection information (for both IRIDA and Galaxy).
+That is, for Galaxy, modify `admin_key`, and `galaxy_url`. For IRIDA modify `irida_url`, `client_id`, and `client_secret`. 
 
 It is also possible to configure the folders in which sample files and reference data are stored, and the endpoints at which the tool
 expects to access IRIDA resources (but the defaults are fine).
@@ -279,6 +282,7 @@ cd irida_import
 pytest tests/unit/*.py
 ```
 
+
 [galaxy]: https://galaxyproject.org/
 [irida]: https://www.irida.ca/
 [data-source]: https://galaxyproject.org/admin/internals/data-sources/
@@ -292,7 +296,7 @@ pytest tests/unit/*.py
 [galaxy-dataset-permissions.png]: doc/images/galaxy-dataset-permissions.png
 [irida-new-client]: https://irida.corefacility.ca/documentation/user/administrator/#creating-a-new-system-client
 [irida-client.png]: doc/images/irida-client.png
-[config-sample]: irida_import/config.ini.sampleClone to Galaxy tools/ directory
+[config-sample]: irida_import/config.ini.sample
 [section-1.1]: #11-clone-to-galaxy-tools-directory
 [galaxy-import-tool.png]: doc/images/galaxy-import-tool.png
 [irida-docs]: https://irida.corefacility.ca/documentation/user/user/samples/#galaxy-export
