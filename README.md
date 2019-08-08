@@ -3,28 +3,186 @@ IRIDA Import Tool for Galaxy
 
 This is a Galaxy tool that imports sequence data from IRIDA to Galaxy.
 
+Install Instructions
+--------------------
 
-Install Instructions:
----------------------
+This is a [DataSource][data-source] tool in Galaxy, which is a special type of tool used to integrate data from external sites into a local Galaxy instance. In the case of IRIDA, this requires configuration of connection details directly in the tool so that it can contact the correct IRIDA server with the appropriate API details. This means that installation requires a bit more manual steps then regular Galaxy tools to fill in these connection details. 
 
+### 1. Install from GitHub
 
+An easy way to install this tool is directly from GitHub.
 
-#### Initial Instructions
+#### 1.1. Clone to Galaxy tools/ directory
 
-This tool can be installed manually, or it can be archived to be added to Galaxy via a toolshed by running `make_tool_tarball.sh`
-In both cases, a tool configuration file will need to be modified, and `galaxy.ini` may need to be modified.
+The Galaxy [tools/][galaxy-tools] directory contains tools that come with the Galaxy code. You can add your own to this directory and configure Galaxy to load them up. We will do this for the **IRIDA Import Tool**.
 
-If you are installing from a toolshed, note that because of how Galaxy uses virtualenv,
-the tool may attempt to use the wrong versions of libraries.
-To fix this, change the line in the `env.sh` that Galaxy creates for the tool that reads something like:
 ```bash
-PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.3.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages:$PYTHONPATH; export PYTHONPATH 
-```
-to read:
-```bash
-PYTHONPATH=/home/someuser/shed/irida-galaxy-importer/1.3.0/someuser/irida_export_tool/5d2cb354d0f9/venv/lib/python2.7/site-packages
+cd galaxy/tools/
+
+git clone https://github.com/phac-nml/irida-galaxy-importer.git
+cd irida-galaxy-importer
+git checkout [LATEST_RELEASE]
 ```
 
+Where `[LATEST_RELEASE]` refers to the [latest release][releases] of this tool.
+
+#### 1.2. Install dependencies
+
+This tool requires Python 2 and a number of Python libraries. You must make sure these are installed and available on all machines this tool will be run with (e.g., if you are submitting to a cluster, these must be available on all cluster nodes).
+
+If you are only running Galaxy on a single machine, please install **Python 2** and use `pip2` to install the dependencies:
+
+```bash
+pip2 install bioblend requests-oauthlib
+```
+
+You may need to also install the Python and YAML development libraries. On Ubuntu, you can install them with:
+
+```bash
+sudo apt-get install python-dev libyaml-dev
+```
+
+If you are using Python 2.6, `argparse` must be installed too. If you are not installing from a toolshed invoke:
+
+```bash
+pip2 install argparse
+```
+
+#### 1.3. Configure Galaxy to see tool
+
+In order to configure Galaxy to see the tool, please find the `galaxy/config/tool_conf.xml` file which is located in the [galaxy/config][galaxy-conf] directory.
+If the `galaxy/config/tool_conf.xml` you can copy the sample from this same `config/` directory. An example of this file can also be found in the [Galaxy code][tool-conf-sample].
+
+Once you've found the file, please add the following line:
+
+```xml
+<tool file="irida-galaxy-importer/irida_import/irida_import.xml" />
+```
+
+You likely want to add this to the **Get Data** section, so your modification will likely look like:
+
+```xml
+<toolbox monitor="true">
+  <section id="getext" name="Get Data">
+    <!-- Add below line to your file -->
+    <tool file="irida-galaxy-importer/irida_import/irida_import.xml" />
+```
+
+#### 1.4. Set appropriate configuration options in Galaxy
+
+This tool works by making links to the IRIDA data files (instead of directly copying them). In order to do this, you will
+have to enable the following options in the Galaxy `galaxy/config/galaxy.yml` file. An example of this file can be found on the [Galaxy GitHub][galaxy-config-sample] page. 
+
+Please enable the following:
+
+```yaml
+allow_path_paste: True
+```
+
+### 2. Tool Connection Configuration
+
+Once the tool is installed in Galaxy, we can move onto configuring the connection details for the tool with both IRIDA and Galaxy.
+
+#### 2.1. Create a Galaxy admin account/api key
+
+The tool makes use of linking to files via a Galaxy Dataset Library. This requires you to configure an API key in Galaxy linked to an administrator account to be used by the tool.
+You will first have to setup a [Galaxy Admin User][galaxy-admin-user] to be used by this tool (it can be the same account as your normal Galaxy Admin user if you wish).
+
+You will also have to create an API key for this user by going to **User > Preferences > Manage API key**.
+
+![galaxy-api-key.png][]
+
+In this case, the Galaxy API key is:
+
+* **Galaxy API Key**: `d9c54f0b38b75dd6513035e4dd786a0b`
+
+##### 2.1.1. Make sure permissions are correct
+
+You will also have to make sure that the **access** permissions are blank in **User > Preferences > Set dataset permissions for new histories**, otherwise files may not import correctly.
+
+![galaxy-dataset-permissions.png][]
+
+#### 2.2. Create an IRIDA client id/key
+
+On the IRIDA end, you will have to setup an IRIDA client id and key so that the **IRIDA Import Tool** can communicate with IRIDA.
+
+To do this, please follow the [Creating a New System Client][irida-new-client] instructions in the IRIDA documentation.
+You will want to create a client with **Grant Types** set to `authorization_code` and with **Read** access (you do not need **write** access).
+
+Please make sure to remember the **Client ID** and **Client Secret**. In this case they would be:
+
+![irida-client.png][]
+
+* **Client ID**: `galaxy`
+* **Client Secret**: `qlB82t7Ct917127lL7oQ82bd9o2iAP8bT0rJohpz7s`
+
+#### 2.3. Configure tool
+
+Once we have all the connection information for both IRIDA and Galaxy, we can move onto configuring the tool to connect to IRIDA and Galaxy.
+
+You will first want to find the directory containing the [config.ini.sample][config-sample] file (see [(1.1)][section-1.1]).
+
+Please copy this file to `config.ini`:
+
+```bash
+cp config.ini.sample config.ini
+```
+
+You will next want to make the appropriate changes with your connection information. For example:
+
+```
+[Galaxy]
+### MODIFY THESE ###
+admin_key: d9c54f0b38b75dd6513035e4dd786a0b
+galaxy_url: http://localhost:48888
+####################
+
+illumina_path: /illumina_reads
+reference_path: /references
+xml_file: irida_import.xml
+max_waits: 120
+max_client_http_attempts: 10
+client_http_retry_delay: 30
+
+[IRIDA]
+### MODIFY THESE ###
+client_secret: qlB82t7Ct917127lL7oQ82bd9o2iAP8bT0rJohpz7s
+client_id: galaxy
+irida_url: http://localhost:8080
+####################
+
+initial_endpoint_suffix: /projects
+token_endpoint_suffix: /api/oauth/token
+```
+
+You will want to modify the URL values and connection information (for both IRIDA and Galaxy).
+
+#### 2.4. Generate tool XML file
+
+Once you've set the appropriate connection details in the `config.ini` file, please run:
+
+```bash
+python2 irida_import.py --config
+```
+
+This should print out:
+
+```
+Successfully configured the XML file!
+```
+
+And you should now see a `irida_import.xml` file in the directory which contains the proper details to connect between your IRIDA and Galaxy instances.
+
+### 3. Restart Galaxy
+
+Once you've made the above changes, please restart Galaxy. The **IRIDA Import Tool** should now appear in your Galaxy tool panel.
+
+![galaxy-import-tool.png][]
+
+## Usage
+
+This tool lets you import data from IRIDA into Galaxy (via a Galaxy Dataset Library, which links to the files instead of making copies).
+To make use of this tool, please follow the below steps.
 
 #### Prerequisites
 
@@ -35,19 +193,11 @@ They can be manually installed by:
 pip install bioblend requests-oauthlib
 ```
 
-You may need to also install the Python and YAML development libraries. On Ubuntu, you can install them with:
+
+
+Then add an entry for irida_import.xml to `$GALAXY_ROOT/config/tool_conf.xml` to the "Get Data" section:
 
 ```
-sudo apt-get install python-dev libyaml-dev
-```
-
-If you are using Python 2.6, argparse must be installed too. If you are not installing from a toolshed invoke:
-
-```
-pip install argparse
-```
-
-
 #### Tool Installation and Galaxy Configuration:
 
 If the tool is not being added from a toolshed, place the git repository's `irida_import` folder into `$GALAXY_ROOT/tools/`
@@ -148,3 +298,18 @@ source .ci/install_deps.sh
 cd irida_import
 pytest tests/unit/*.py
 ```
+
+[data-source]: https://galaxyproject.org/admin/internals/data-sources/
+[galaxy-tools]: https://github.com/galaxyproject/galaxy/tree/dev/tools
+[releases]: https://github.com/phac-nml/irida-galaxy-importer/releases
+[galaxy-conf]: https://github.com/galaxyproject/galaxy/tree/dev/config
+[tool-conf-sample]: https://github.com/galaxyproject/galaxy/blob/dev/lib/galaxy/config/sample/tool_conf.xml.sample
+[galaxy-config-sample]: https://github.com/galaxyproject/galaxy/blob/dev/lib/galaxy/config/sample/galaxy.yml.sample
+[galaxy-admin-user]: https://galaxyproject.org/admin/
+[galaxy-api-key.png]: doc/images/galaxy-api-key.png
+[galaxy-dataset-permissions.png]: doc/images/galaxy-dataset-permissions.png
+[irida-new-client]: https://irida.corefacility.ca/documentation/user/administrator/#creating-a-new-system-client
+[irida-client.png]: doc/images/irida-client.png
+[config-sample]: irida_import/config.ini.sampleClone to Galaxy tools/ directory
+[section-1.1]: #11-clone-to-galaxy-tools-directory
+[galaxy-import-tool.png]: doc/images/galaxy-import-tool.png
