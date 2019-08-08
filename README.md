@@ -4,6 +4,19 @@ IRIDA Import Tool for Galaxy
 This is a [Galaxy][galaxy] tool that imports sequence data from [IRIDA][irida] to Galaxy. Data is imported as a series of links (instead of directly copying the files from IRIDA to Galaxy).
 This requires that the IRIDA and Galaxy instance both share the same filesystem.
 
+* [1. Usage](#1-usage)
+  * [1.1. Click **Get Data > IRIDA**.](#11-click-get-data--irida)
+  * [1.2. Select IRIDA samples and add to cart](#12-select-irida-samples-and-add-to-cart)
+  * [1.3. From cart, export to Galaxy](#13-from-cart-export-to-galaxy)
+  * [1.4. Data is now in Galaxy](#14-data-is-now-in-galaxy)
+* [2. Install Instructions](#2-install-instructions)
+  * [2.1. Install from GitHub](#21-install-from-github)
+  * [2.2. Tool Connection Configuration](#22-tool-connection-configuration)
+  * [2.3. Restart Galaxy](#23-restart-galaxy)
+* [3. Testing](#3-testing)
+  * [3.1. Installing test dependencies](#31-installing-test-dependencies)
+  * [3.2. Running tests](#32-running-tests)
+
 ## 1. Usage
 
 This tool lets you import data from IRIDA into Galaxy (via a Galaxy Dataset Library, which links to the files instead of making copies).
@@ -28,7 +41,7 @@ From the cart, you can export the selected samples to Galaxy.
 
 ![irida-galaxy-export.png][]
 
-### 1.4. Data in Galaxy
+### 1.4. Data is now in Galaxy
 
 You should be redirected to Galaxy, where the export tool will run and load up the data (fastq files) within your Galaxy History.
 
