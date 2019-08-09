@@ -243,7 +243,7 @@ Please make sure to remember the **Client ID** and **Client Secret**. In this ca
 
 Once we have all the connection information for both IRIDA and Galaxy, we can move onto configuring the tool to connect to IRIDA and Galaxy.
 
-You will first want to find the directory containing the [config.ini.sample][config-sample] file. If installed via GitHub, see section [1.1][section-1.1] to find this directory.
+You will first want to find the directory containing the [config.ini.sample][config-sample] file. If installed via GitHub, see section [2.1.2.1][section-2.1.2.1] to find this directory.
 If installed via the ToolShed, you will have to find the Galaxy `shed_tools/` directory and navigate to a directory named something like `shed_tools/irida.corefacility.ca/galaxy-shed/repos/irida/irida_galaxy_importer/d82238b091f2/irida_galaxy_importer/`.
 The `shed_tools/` directory is often one directory up from the main Galaxy installation (e.g., `galaxy/../shed_tools/`). But, this may change depending on your instllation.
 
@@ -385,7 +385,7 @@ pytest tests/unit/*.py
 [irida-new-client]: https://irida.corefacility.ca/documentation/user/administrator/#creating-a-new-system-client
 [irida-client.png]: doc/images/irida-client.png
 [config-sample]: irida_import/config.ini.sample
-[section-1.1]: #11-clone-to-galaxy-tools-directory
+[section-2.1.2.1]: #2121-clone-to-galaxy-tools-directory
 [galaxy-import-tool.png]: doc/images/galaxy-import-tool.png
 [irida-docs]: https://irida.corefacility.ca/documentation/user/user/samples/#galaxy-export
 [irida-select-samples.png]: doc/images/irida-select-samples.png
