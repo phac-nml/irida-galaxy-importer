@@ -62,12 +62,12 @@ The Galaxy [tools/][galaxy-tools] directory contains tools that come with the Ga
 ```bash
 cd galaxy/tools/
 
-git clone https://github.com/phac-nml/irida-galaxy-importer.git
+git clone -b master https://github.com/phac-nml/irida-galaxy-importer.git
 cd irida-galaxy-importer
-git checkout [LATEST_RELEASE]
-```
 
-Where `[LATEST_RELEASE]` refers to the [latest release][releases] of this tool.
+# Optional. Checkout specific release from https://github.com/phac-nml/irida-galaxy-importer/releases
+#git checkout [LATEST_RELEASE]
+```
 
 #### 2.1.2. Install dependencies
 
