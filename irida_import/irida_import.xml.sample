@@ -1,7 +1,12 @@
-<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="1.3.3">
+<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="1.4.1">
     <description>server</description>
     <requirements>
-        <requirement type="package" version="1.3.0">irida-galaxy-importer</requirement>
+      <requirement type="package" version="0.13.0">bioblend</requirement>
+      <requirement type="package" version="3.0.1">oauthlib</requirement>
+      <requirement type="package" version="2.22.0">requests</requirement>
+      <requirement type="package" version="1.2.0">requests-oauthlib</requirement>
+      <requirement type="package" version="3.16.1">simplejson</requirement>
+      <requirement type="package" version="3.7.3">python</requirement>
     </requirements>
     <command interpreter="python">irida_import.py
 	    --json_parameter_file "${output}" --log-file $log_file --history-id "$__app__.security.encode_id($output.history.id)"
