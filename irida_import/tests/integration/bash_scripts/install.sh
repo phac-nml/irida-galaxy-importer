@@ -20,7 +20,7 @@ rm -rf /tmp/shed_tools/
 pkill -u $USER -f "python ./scripts/paster.py" || true
 
 pushd lib
-./install-libs.sh
+./install-libs.sh > /dev/null
 popd
 popd
 echo "IRIDA has been installed"
