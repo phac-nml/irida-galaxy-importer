@@ -167,7 +167,7 @@ class TestIridaImportInt:
             self.IRIDA_CMD.append('-Doutput.file.base.directory=' + output_file_dir)
 
             subprocess32.call(self.IRIDA_DB_RESET, shell=True)
-            subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ)
+            subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ,stdout=os.devnull)
             util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT,
                                self.TIMEOUT)
 
