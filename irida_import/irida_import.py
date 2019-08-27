@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 import argparse
-import ConfigParser
+import configparser
 import datetime
 import json
 import logging
@@ -679,7 +680,7 @@ class IridaImport:
 
         config_path = os.path.join(parent_folder, self.CONFIG_FILE)
         with open(config_path, 'r') as config_file:
-            config = ConfigParser.ConfigParser()
+            config = configparser.ConfigParser()
             config.readfp(config_file)
 
             # TODO: parse options from command line and config file as a list
@@ -688,7 +689,7 @@ class IridaImport:
             self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
             self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
             self.XML_FILE = config.get('Galaxy', 'xml_file')
-            self.MAX_WAITS = config.get('Galaxy', 'max_waits')
+            self.MAX_WAITS = int(config.get('Galaxy', 'max_waits'))
             self.MAX_RETRIES = 3
  
             # Used to reconnect to Galaxy instance when connection is lost
