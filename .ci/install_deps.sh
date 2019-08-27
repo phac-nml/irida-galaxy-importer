@@ -1,10 +1,10 @@
 #!/bin/bash -e
 
 CHROMEDRIVER_VERSION=$1
-
+python3 -m pip install virtualenv
 python3 -m virtualenv .venv
 source .venv/bin/activate
-pip install -U bioblend pytest pytest-cov pytest-mock requests requests-oauthlib subprocess32 selenium
+pip3 install -U bioblend pytest pytest-cov pytest-mock requests requests-oauthlib subprocess32 selenium
 
 # Install chromedriver if not correct version
 TEST_CHROMEDRIVER_VERSION=`chromedriver --version | sed -e 's/^ChromeDriver //' -e 's/ (.*//' 2>/dev/null`
