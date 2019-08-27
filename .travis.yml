@@ -28,7 +28,7 @@ cache:
     - $HOME/.m2
 
 install:
-  - sudo apt-get install python3 python3-pip python3-virtualenv
+  - sudo apt-get install python3 python3-pip
   - mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));"
   - mysql -e "CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD'; GRANT ALL ON $MYSQL_DATABASE.* to '$MYSQL_USER'@'localhost';"
   - psql -c 'create database galaxy_test;'
