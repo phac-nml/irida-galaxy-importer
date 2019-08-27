@@ -2,7 +2,7 @@
 
 CHROMEDRIVER_VERSION=$1
 
-python3 -m virtualenv .venv
+python2 -m virtualenv .venv
 source .venv/bin/activate
 pip install -U bioblend pytest pytest-cov pytest-mock requests==2.6 requests-oauthlib==1.2.0 subprocess32 selenium
 

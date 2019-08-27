@@ -146,18 +146,24 @@ cd irida-galaxy-importer
 
 #### 2.1.2.2. Install dependencies
 
-This tool requires Python 3 and a number of Python libraries. You must make sure these are installed and available on all machines this tool will be run with (e.g., if you are submitting to a cluster, these must be available on all cluster nodes).
+This tool requires Python 2 and a number of Python libraries. You must make sure these are installed and available on all machines this tool will be run with (e.g., if you are submitting to a cluster, these must be available on all cluster nodes).
 
-If you are only running Galaxy on a single machine, please install **Python 3** and use `pipi` to install the dependencies:
+If you are only running Galaxy on a single machine, please install **Python 2** and use `pip2` to install the dependencies:
 
 ```bash
-pip install bioblend requests-oauthlib
+pip2 install bioblend requests-oauthlib
 ```
 
 You may need to also install the Python and YAML development libraries. On Ubuntu, you can install them with:
 
 ```bash
 sudo apt-get install python-dev libyaml-dev
+```
+
+If you are using Python 2.6, `argparse` must be installed too. If you are not installing from a toolshed invoke:
+
+```bash
+pip2 install argparse
 ```
 
 #### 2.1.2.3. Configure Galaxy to see tool
@@ -287,7 +293,7 @@ expects to access IRIDA resources (but the defaults are fine).
 Once you've set the appropriate connection details in the `config.ini` file, please run:
 
 ```bash
-python3 irida_import.py --config
+python2 irida_import.py --config
 ```
 
 This should print out:
@@ -331,7 +337,7 @@ The script `run-tests.sh` can be used to run the tests. This should check for so
 On Ubuntu, you can install these with:
 
 ```bash
-sudo apt-get install python3 openjdk-8-jdk maven mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
+sudo apt-get install python2.7 openjdk-8-jdk maven mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
 ```
 
 MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases `irida_test`. MySQL must also be configured to disable `ONLY_FULL_GROUP_BY` mode.
