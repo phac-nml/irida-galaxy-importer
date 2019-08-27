@@ -28,10 +28,10 @@ check_dependencies() {
 		exit_error "Command 'psql' does not exist.  Please install PostgreSQL (e.g., 'apt-get install postgresql') to continue."
 	fi
 
-	python2 --version 1>/dev/null 2>/dev/null
+	python3 --version 1>/dev/null 2>/dev/null
 	if [ $? -ne 0 ];
 	then
-		exit_error "Command 'python2' does not exist.  These tests require python2. Please install (e.g., 'apt-get install python2.7') to continue."
+		exit_error "Command 'python3' does not exist.  These tests require python3. Please install (e.g., 'apt-get install python3') to continue."
 	fi
 
 	git --version 1>/dev/null 2>/dev/null
