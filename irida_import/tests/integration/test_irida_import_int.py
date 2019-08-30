@@ -7,7 +7,7 @@ import logging
 import os
 import configparser
 import pytest
-import subprocess32
+import subprocess
 from tempfile import mkdtemp
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -124,7 +124,7 @@ class TestIridaImportInt:
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
-            install = subprocess32.Popen([exec_path, self.TOOL_DIRECTORY,
+            install = subprocess.Popen([exec_path, self.TOOL_DIRECTORY,
                                           str(self.GALAXY_PORT)],
                                          cwd=self.REPOS_PARENT)
             install.wait()  # Block untill installed
@@ -148,7 +148,7 @@ class TestIridaImportInt:
 
         def stop_irida():
             print('Stopping IRIDA nicely')
-            stopper = subprocess32.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
+            stopper = subprocess.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
                                          shell=True)
             stopper.wait()
 
@@ -166,9 +166,9 @@ class TestIridaImportInt:
             self.IRIDA_CMD.append('-Dreference.file.base.directory=' + reference_file_dir)
             self.IRIDA_CMD.append('-Doutput.file.base.directory=' + output_file_dir)
 
-            subprocess32.call(self.IRIDA_DB_RESET, shell=True)
+            subprocess.call(self.IRIDA_DB_RESET, shell=True)
             FNULL = open(os.devnull, 'w')
-            subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ,stdout=FNULL)
+            subprocess.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ,stdout=FNULL)
             util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT,
                                self.TIMEOUT)
 
@@ -193,14 +193,14 @@ class TestIridaImportInt:
                 os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY']
             except KeyError:
                 print('Killing Galaxy')
-                subprocess32.Popen(self.GALAXY_STOP, cwd=self.GALAXY)
+                subprocess.Popen(self.GALAXY_STOP, cwd=self.GALAXY)
 
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY']
         except KeyError:
             stop_galaxy()
-            subprocess32.call(self.GALAXY_DB_RESET, shell=True)
-            subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
+            subprocess.call(self.GALAXY_DB_RESET, shell=True)
+            subprocess.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
             self.log.debug("Waiting for Galaxy database migration [%s]. Sleeping for [%s] seconds", self.GALAXY_URL,
                            self.GALAXY_SLEEP_TIME)
             time.sleep(self.GALAXY_SLEEP_TIME)
