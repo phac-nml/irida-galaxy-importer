@@ -6,8 +6,8 @@ CHROMEDRIVER_VERSION=$1
 WORKSPACE=`pwd`
 BASH_ENV=`mktemp`
 
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh -b -p $WORKSPACE/miniconda
+curl -L -o miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash miniconda.sh -b -p $WORKSPACE/miniconda
 
 # step 2: setup channels
 $WORKSPACE/miniconda/bin/conda config --system --add channels defaults
@@ -22,7 +22,7 @@ source $BASH_ENV
 #create conda env as Galaxy would
 conda create -y --quiet --override-channels --channel iuc --channel conda-forge --channel bioconda --channel defaults --name irida_importer bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 python=3.6.7
 
-conda activate irida_importer
+source activate irida_importer
 pip install -U pytest pytest-cov pytest-mock selenium
 
 # Install chromedriver if not correct version
