@@ -5,7 +5,7 @@ import time
 import sys
 import logging
 import os
-import ConfigParser
+import configparser
 import pytest
 import subprocess32
 from tempfile import mkdtemp

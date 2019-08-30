@@ -23,7 +23,7 @@ source $BASH_ENV
 conda create -y --quiet --override-channels --channel iuc --channel conda-forge --channel bioconda --channel defaults --name irida_importer bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 python=3.6.7
 
 source activate irida_importer
-pip install -U pytest pytest-cov pytest-mock selenium
+pip install -U pytest pytest-cov pytest-mock mock selenium
 
 # Install chromedriver if not correct version
 TEST_CHROMEDRIVER_VERSION=`chromedriver --version | sed -e 's/^ChromeDriver //' -e 's/ (.*//' 2>/dev/null`
