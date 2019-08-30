@@ -4,6 +4,7 @@ CHROMEDRIVER_VERSION=$1
 
 #some setup of bioconda 'borrowed' from https://github.com/bioconda/bioconda-recipes/tree/master/.circleci
 WORKSPACE=`pwd`
+BASH_ENV=`mktemp`
 
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh -b -p $WORKSPACE/miniconda
@@ -30,8 +31,10 @@ if [ "$TEST_CHROMEDRIVER_VERSION" != "$CHROMEDRIVER_VERSION" ];
 then
 	echo "Downloading Chromedriver Version: $CHROMEDRIVER_VERSION"
 	wget --no-verbose -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-	unzip /tmp/chromedriver_linux64.zip -d .venv/bin
-	chmod 755 .venv/bin/chromedriver
+	pythonbin=`which python`
+	bindir=`dirname $pythonbin`
+	unzip /tmp/chromedriver_linux64.zip -d $bindir
+	chmod 755 $bindir/chromedriver
 else
 	echo "Chromedriver version [" $CHROMEDRIVER_VERSION "] already exists, not installing"
 fi
