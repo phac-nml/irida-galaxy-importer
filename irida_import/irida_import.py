@@ -17,9 +17,9 @@ from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
 from requests_oauthlib import OAuth2Session
 
-from sample import Sample
-from sample_file import SampleFile
-from sample_pair import SamplePair
+from irida_import.sample import Sample
+from irida_import.sample_file import SampleFile
+from irida_import.sample_pair import SamplePair
 
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
