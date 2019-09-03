@@ -264,7 +264,7 @@ class TestIridaImportInt:
 
     def configure_tool(self, section, option, value):
         """Write tool configuration data"""
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(self.CONFIG_PATH)
         config.set(section, option, value)
         with open(self.CONFIG_PATH, 'w') as config_file:
