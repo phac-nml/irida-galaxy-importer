@@ -95,6 +95,10 @@ class IridaImport:
             for single in unpaired_resource['resources']:
                 sample.add_file(self.get_sample_file(single['sequenceFile']))
 
+            assembly_resource = self.make_irida_request(sample.assembly_path)
+            for assembly in assembly_resource['resources']:
+                sample.add_file(self.get_sample_file(assembly))
+
         return samples
 
     def make_irida_request(self, request_url):
@@ -142,14 +146,17 @@ class IridaImport:
             paths = sample_resource['links']
             paired_path = ""
             unpaired_path = ""
+            assembly_path = ""
 
             for link in paths:
                 if link['rel'] == "sample/sequenceFiles/pairs":
                     paired_path = link['href']
                 elif link['rel'] == "sample/sequenceFiles/unpaired":
                     unpaired_path = link['href']
+                elif link['rel'] == "sample/assemblies":
+                    assembly_path = link['href']
 
-            samples.append(Sample(sample_name, paired_path, unpaired_path))
+            samples.append(Sample(sample_name, paired_path, unpaired_path, assembly_path))
         return samples
 
     def get_sample_file(self, file_dict):

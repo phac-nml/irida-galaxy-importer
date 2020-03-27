@@ -2,7 +2,7 @@ class Sample:
 
     """A representation of a sample obtained from IRIDA"""
 
-    def __init__(self, name, paired_path, unpaired_path):
+    def __init__(self, name, paired_path, unpaired_path, assembly_path):
         """
         Initialize a sample instance
 
@@ -15,6 +15,7 @@ class Sample:
         self.name = name
         self.paired_path = paired_path
         self.unpaired_path = unpaired_path
+        self.assembly_path = assembly_path
         self._sample_reads = []  # A list of SampleFile/SamplePair objects
 
     def __repr__(self):
