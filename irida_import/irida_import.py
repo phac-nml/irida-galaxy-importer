@@ -57,8 +57,7 @@ class IridaImport:
 
         return True
 
-
-    def get_samples(self, samples_dict):
+    def get_samples(self, samples_dict, include_assemblies):
         """
         Gets sample objects from a dictionary.
 
@@ -66,6 +65,8 @@ class IridaImport:
         :param samples_dict: a dictionary to parse. See one of the test
         json files for formatting information (the format will likely
         change soon)
+        :type include_assemblies: boolean
+        :param include_assemblies: A boolean whether or not to include assemblies with the import
         :return: a list of Samples with all necessary information
         """
         samples = self.get_sample_meta(samples_dict)
@@ -95,9 +96,10 @@ class IridaImport:
             for single in unpaired_resource['resources']:
                 sample.add_file(self.get_sample_file(single['sequenceFile']))
 
-            assembly_resource = self.make_irida_request(sample.assembly_path)
-            for assembly in assembly_resource['resources']:
-                sample.add_file(self.get_sample_file(assembly))
+            if include_assemblies:
+                assembly_resource = self.make_irida_request(sample.assembly_path)
+                for assembly in assembly_resource['resources']:
+                    sample.add_file(self.get_sample_file(assembly))
 
         return samples
 
@@ -774,6 +776,7 @@ class IridaImport:
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             addtohistory = json_params_dict['_embedded']['addtohistory']
+            include_assemblies = json_params_dict['_embedded']['includeAssemblies']
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
@@ -801,7 +804,7 @@ class IridaImport:
             self.histories = self.reg_gi.histories
 
             # Each sample contains a list of sample files
-            samples = self.get_samples(samples_dict)
+            samples = self.get_samples(samples_dict, include_assemblies)
 
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name, email)
