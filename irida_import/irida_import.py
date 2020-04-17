@@ -41,6 +41,9 @@ class IridaImport:
     XML_FILE = 'irida_import.xml'
     folds = {}
 
+    uploaded_files_log = []
+    skipped_files_log = []
+
     def __init__(self):
         self.logger = logging.getLogger('irida_import')
 
@@ -879,6 +882,7 @@ if __name__ == '__main__':
     logging.debug("Reading from passed file")
 
     if args.config:
+        # If we're just configuring the script, run the configuration flow
         if os.path.isfile('config.ini'):
             importer.configure()
             message = 'Successfully configured the XML file!'
@@ -890,6 +894,7 @@ if __name__ == '__main__':
             logging.info(message)
             print(message)
     else:
+        # otherwise start looking at the input file
         try:
             file_to_open = args.json_parameter_file
             importer.import_to_galaxy(file_to_open, args.log, args.hist_id,
