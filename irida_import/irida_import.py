@@ -779,7 +779,10 @@ class IridaImport:
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             addtohistory = json_params_dict['_embedded']['addtohistory']
-            include_assemblies = json_params_dict['_embedded']['includeAssemblies']
+            if "includeAssemblies" in json_params_dict['_embedded']:
+                include_assemblies = json_params_dict['_embedded']['includeAssemblies']
+            else:
+                include_assemblies = False
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
