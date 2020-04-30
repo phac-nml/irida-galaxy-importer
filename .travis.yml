@@ -8,11 +8,8 @@ services:
   - postgresql
   - xvfb
 
-addons:
-  chrome: stable
-
 jdk:
-  - openjdk8
+  - openjdk11
 
 env:
   global:
@@ -20,7 +17,7 @@ env:
     - "MYSQL_USER=test"
     - "MYSQL_PASSWORD=test"
     - "MAVEN_OPTS=-Djava.awt.headless=true"
-    - "CHROMEDRIVER_VERSION=75.0.3770.140"
+    - "CHROMEDRIVER_VERSION=79.0.3945.36"
     - "XVFB_STARTED=1"
 
 cache:
