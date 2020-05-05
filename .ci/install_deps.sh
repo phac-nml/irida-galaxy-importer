@@ -27,7 +27,7 @@ then
   echo "Installing conda environment $CONDA_ENV"
 
 
-  conda create -y --quiet --override-channels --channel iuc --channel conda-forge --channel bioconda --channel defaults --name irida_importer bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 python=3.6.7
+  conda create -y --quiet --override-channels --channel iuc --channel conda-forge --channel bioconda --channel defaults --name $CONDA_ENV bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 python=3.6.7
 
   source activate $CONDA_ENV
   pip install -U pytest pytest-cov pytest-mock mock subprocess32 selenium
