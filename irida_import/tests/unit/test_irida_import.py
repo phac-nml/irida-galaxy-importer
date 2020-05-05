@@ -130,7 +130,7 @@ class TestIridaImport:
         sample_file = SampleFile('nameish', 'pathish')
         imp.get_sample_file = Mock(return_value=sample_file)
 
-        samples = imp.get_samples(json_params['_embedded']['samples'])
+        samples = imp.get_samples(json_params['_embedded']['samples'],False)
 
         assert isinstance(
             samples, list), 'A list must be returned'
@@ -288,7 +288,8 @@ class TestIridaImport:
         num_files = 4
         sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
-                        "/imaginary/path/Samples/1/unpaired")
+                        "/imaginary/path/Samples/1/unpaired",
+                        "/imaginary/path/Samples/1/assemblies")
         sample.add_file(sampleFile1)
         sample.add_file(sampleFile2)
         sample.add_pair(samplePair1)
@@ -328,7 +329,8 @@ class TestIridaImport:
         num_pairs = 1
         sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
-                        "/imaginary/path/Samples/1/unpaired")
+                        "/imaginary/path/Samples/1/unpaired",
+                        "/imaginary/path/Samples/1/assemblies")
         sample.add_file(sampleFile1)
         sample.add_file(sampleFile2)
         sample.add_pair(samplePair1)

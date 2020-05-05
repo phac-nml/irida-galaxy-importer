@@ -42,6 +42,9 @@ class IridaImport:
     XML_FILE = 'irida_import.xml'
     folds = {}
 
+    uploaded_files_log = []
+    skipped_files_log = []
+
     def __init__(self):
         self.logger = logging.getLogger('irida_import')
 
@@ -58,8 +61,7 @@ class IridaImport:
 
         return True
 
-
-    def get_samples(self, samples_dict):
+    def get_samples(self, samples_dict, include_assemblies):
         """
         Gets sample objects from a dictionary.
 
@@ -67,6 +69,8 @@ class IridaImport:
         :param samples_dict: a dictionary to parse. See one of the test
         json files for formatting information (the format will likely
         change soon)
+        :type include_assemblies: boolean
+        :param include_assemblies: A boolean whether or not to include assemblies with the import
         :return: a list of Samples with all necessary information
         """
         samples = self.get_sample_meta(samples_dict)
@@ -95,6 +99,11 @@ class IridaImport:
             unpaired_resource = self.make_irida_request(sample.unpaired_path)
             for single in unpaired_resource['resources']:
                 sample.add_file(self.get_sample_file(single['sequenceFile']))
+
+            if include_assemblies:
+                assembly_resource = self.make_irida_request(sample.assembly_path)
+                for assembly in assembly_resource['resources']:
+                    sample.add_file(self.get_sample_file(assembly))
 
         return samples
 
@@ -143,14 +152,17 @@ class IridaImport:
             paths = sample_resource['links']
             paired_path = ""
             unpaired_path = ""
+            assembly_path = ""
 
             for link in paths:
                 if link['rel'] == "sample/sequenceFiles/pairs":
                     paired_path = link['href']
                 elif link['rel'] == "sample/sequenceFiles/unpaired":
                     unpaired_path = link['href']
+                elif link['rel'] == "sample/assemblies":
+                    assembly_path = link['href']
 
-            samples.append(Sample(sample_name, paired_path, unpaired_path))
+            samples.append(Sample(sample_name, paired_path, unpaired_path, assembly_path))
         return samples
 
     def get_sample_file(self, file_dict):
@@ -768,6 +780,10 @@ class IridaImport:
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             addtohistory = json_params_dict['_embedded']['addtohistory']
+            if "includeAssemblies" in json_params_dict['_embedded']:
+                include_assemblies = json_params_dict['_embedded']['includeAssemblies']
+            else:
+                include_assemblies = False
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
@@ -795,7 +811,7 @@ class IridaImport:
             self.histories = self.reg_gi.histories
 
             # Each sample contains a list of sample files
-            samples = self.get_samples(samples_dict)
+            samples = self.get_samples(samples_dict, include_assemblies)
 
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name, email)
@@ -870,6 +886,7 @@ if __name__ == '__main__':
     logging.debug("Reading from passed file")
 
     if args.config:
+        # If we're just configuring the script, run the configuration flow
         if os.path.isfile('config.ini'):
             importer.configure()
             message = 'Successfully configured the XML file!'
@@ -881,6 +898,7 @@ if __name__ == '__main__':
             logging.info(message)
             print(message)
     else:
+        # otherwise start looking at the input file
         try:
             file_to_open = args.json_parameter_file
             importer.import_to_galaxy(file_to_open, args.log, args.hist_id,
