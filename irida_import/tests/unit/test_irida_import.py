@@ -379,7 +379,7 @@ class TestIridaImport:
         """Test reading a file and running apropriate methods"""
         mocker.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
         mocked_open_function = mock.mock_open(read_data=setup_json)
-        with mock.patch("__builtin__.open", mocked_open_function):
+        with mock.patch("builtins.open", mocked_open_function):
             imp = IridaImport()
             imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
             imp.reg_gi.histories = mock.create_autospec(galaxy.histories.HistoryClient)

@@ -17,9 +17,9 @@ from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
 from requests_oauthlib import OAuth2Session
 
-from sample import Sample
-from sample_file import SampleFile
-from sample_pair import SamplePair
+from irida_import.sample import Sample
+from irida_import.sample_file import SampleFile
+from irida_import.sample_pair import SamplePair
 
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
@@ -703,7 +703,7 @@ class IridaImport:
             self.XML_FILE = config.get('Galaxy', 'xml_file')
             self.MAX_WAITS = int(config.get('Galaxy', 'max_waits'))
             self.MAX_RETRIES = 3
- 
+
             # Used to reconnect to Galaxy instance when connection is lost
             self.MAX_CLIENT_ATTEMPTS = int(config.get('Galaxy', 'max_client_http_attempts'))
             self.CLIENT_RETRY_DELAY = int(config.get('Galaxy', 'client_http_retry_delay'))

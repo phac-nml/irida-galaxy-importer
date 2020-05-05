@@ -67,6 +67,7 @@ class TestIridaImportInt:
                      '"| mysql -u test -ptest'
     IRIDA_PASSWORD_ID = 'password_client'
     IRIDA_AUTH_CODE_ID = 'auth_code_client'
+    IRIDA_REDIRECT_URI = IRIDA_URL + '/galaxy/auth_code'
     IRIDA_USER = 'admin'
     IRIDA_PASSWORD = 'Password1!'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
@@ -230,8 +231,10 @@ class TestIridaImportInt:
     def test_tool_visible(self, setup_galaxy, driver):
         """Make sure there is a link to the tool in Galaxy"""
         driver.get(self.GALAXY_URL)
-        driver.find_element_by_css_selector("#title_getext > a > span").click()
-        assert (driver.find_element_by_link_text("IRIDA server"))
+        #driver.find_element_by_xpath("//*[contains(text(), 'Get Data')]").click()
+        driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
+        assert (driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]"))
+        #assert (driver.find_element_by_link_text("IRIDA server"))
 
     def register_galaxy(self, driver):
         """Register with Galaxy, and then attempt to log in"""
@@ -264,7 +267,7 @@ class TestIridaImportInt:
 
     def configure_tool(self, section, option, value):
         """Write tool configuration data"""
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(self.CONFIG_PATH)
         config.set(section, option, value)
         with open(self.CONFIG_PATH, 'w') as config_file:
@@ -277,9 +280,9 @@ class TestIridaImportInt:
 
         # Set a new password if necessary
         try:
-            driver.find_element_by_id(
+            driver.find_element_by_name(
                 "password").send_keys(self.IRIDA_PASSWORD)
-            driver.find_element_by_id(
+            driver.find_element_by_name(
                 "confirmPassword").send_keys(self.IRIDA_PASSWORD)
             driver.find_element_by_xpath("//button[@type='submit']").click()
         except NoSuchElementException:
@@ -288,10 +291,10 @@ class TestIridaImportInt:
     def login_irida(self, driver, username, password):
         """Log in to IRIDA (assumes the login page is opened by the driver)"""
         try:
-            driver.find_element_by_id("emailTF").send_keys(username)
-            driver.find_element_by_id(
-                "passwordTF").send_keys(password)
-            driver.find_element_by_id("submitBtn").click()
+            driver.find_element_by_name("username").send_keys(username)
+            driver.find_element_by_name(
+                "password").send_keys(password)
+            driver.find_element_by_xpath("//button[@type='submit']").click()
         except NoSuchElementException:
             # If already logged in
             pass
@@ -303,6 +306,7 @@ class TestIridaImportInt:
         driver.find_element_by_id('authorizedGrantTypes').click()
         driver.find_element_by_xpath(
             "//*[contains(text(), 'authorization_code')]").click()
+        driver.find_element_by_name("registeredRedirectUri").send_keys(self.IRIDA_REDIRECT_URI)
         driver.find_element_by_id("scope_auto_read").click()
         driver.find_element_by_id("create-client-submit").click()
 
@@ -326,6 +330,7 @@ class TestIridaImportInt:
     def get_irida_secret(self, driver, client_id):
         """Get an IRIDA client's secret given its client ID """
         driver.get(self.IRIDA_URL + '/clients')
+        #time.sleep(600)
         driver.find_element_by_xpath(
             "//*[contains(text(), '" + client_id + "')]").click()
         secret = driver.find_element_by_id(
@@ -382,8 +387,10 @@ class TestIridaImportInt:
         history_panel = driver.find_element_by_id('current-history-panel')
         initially_succeeded = len(history_panel.find_elements_by_class_name(
             'state-ok'))
-        driver.find_element_by_css_selector("#title_getext > a > span").click()
-        driver.find_element_by_link_text("IRIDA server").click()
+        #driver.find_element_by_xpath("//*[contains(text(), 'Get Data')]").click()
+        driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
+        driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]").click()
+        #driver.find_element_by_link_text("IRIDA server").click()
 
         # Sometimes a login is required
         try:
