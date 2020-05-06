@@ -289,7 +289,8 @@ class TestIridaImport:
         sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
                         "/imaginary/path/Samples/1/unpaired",
-                        "/imaginary/path/Samples/1/assemblies")
+                        "/imaginary/path/Samples/1/assemblies",
+                        "/imaginary/path/Samples/1/fast5")
         sample.add_file(sampleFile1)
         sample.add_file(sampleFile2)
         sample.add_pair(samplePair1)
@@ -330,7 +331,8 @@ class TestIridaImport:
         sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
                         "/imaginary/path/Samples/1/unpaired",
-                        "/imaginary/path/Samples/1/assemblies")
+                        "/imaginary/path/Samples/1/assemblies",
+                        "/imaginary/path/Samples/1/fast5")
         sample.add_file(sampleFile1)
         sample.add_file(sampleFile2)
         sample.add_pair(samplePair1)
