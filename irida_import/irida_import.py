@@ -99,6 +99,12 @@ class IridaImport:
             for single in unpaired_resource['resources']:
                 sample.add_file(self.get_sample_file(single['sequenceFile']))
 
+            # Add a sample_file object for each fast5
+            if sample.fast5_path:
+                fast5_resource = self.make_irida_request(sample.fast5_path)
+                for fast5 in fast5_resource['resources']:
+                    sample.add_file(self.get_sample_file(fast5['file']))
+
             if include_assemblies:
                 assembly_resource = self.make_irida_request(sample.assembly_path)
                 for assembly in assembly_resource['resources']:
@@ -151,6 +157,7 @@ class IridaImport:
             paths = sample_resource['links']
             paired_path = ""
             unpaired_path = ""
+            fast5_path = ""
             assembly_path = ""
 
             for link in paths:
@@ -160,8 +167,10 @@ class IridaImport:
                     unpaired_path = link['href']
                 elif link['rel'] == "sample/assemblies":
                     assembly_path = link['href']
+                elif link['rel'] == "sample/sequenceFiles/fast5":
+                    fast5_path = link['href']
 
-            samples.append(Sample(sample_name, paired_path, unpaired_path, assembly_path))
+            samples.append(Sample(sample_name, paired_path, unpaired_path, assembly_path, fast5_path))
         return samples
 
     def get_sample_file(self, file_dict):
