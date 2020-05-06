@@ -119,7 +119,7 @@ Now, let's activate the virtual environment and re-install the dependencies.
 
 ```bash
 source venv/bin/activate
-pip2 install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 If everything worked, great. We can move on to configuring the tool and Galaxy.
@@ -137,8 +137,8 @@ The Galaxy [tools/][galaxy-tools] directory contains tools that come with the Ga
 ```bash
 cd galaxy/tools/
 
-git clone -b master https://github.com/phac-nml/irida-galaxy-importer.git
-cd irida-galaxy-importer
+git clone -b master https://github.com/phac-nml/irida-galaxy-importer.git irida_import
+cd irida_import
 
 # Optional. Checkout specific release from https://github.com/phac-nml/irida-galaxy-importer/releases
 #git checkout [LATEST_RELEASE]
@@ -146,24 +146,18 @@ cd irida-galaxy-importer
 
 #### 2.1.2.2. Install dependencies
 
-This tool requires Python 2 and a number of Python libraries. You must make sure these are installed and available on all machines this tool will be run with (e.g., if you are submitting to a cluster, these must be available on all cluster nodes).
+This tool requires Python 3 and a number of Python libraries. You must make sure these are installed and available on all machines this tool will be run with (e.g., if you are submitting to a cluster, these must be available on all cluster nodes).
 
-If you are only running Galaxy on a single machine, please install **Python 2** and use `pip2` to install the dependencies:
+If you are only running Galaxy on a single machine, please install **Python 3** and use `pip3` to install the dependencies:
 
 ```bash
-pip2 install bioblend requests-oauthlib
+pip3 install bioblend requests-oauthlib
 ```
 
 You may need to also install the Python and YAML development libraries. On Ubuntu, you can install them with:
 
 ```bash
-sudo apt-get install python-dev libyaml-dev
-```
-
-If you are using Python 2.6, `argparse` must be installed too. If you are not installing from a toolshed invoke:
-
-```bash
-pip2 install argparse
+sudo apt-get install python3-dev libyaml-dev
 ```
 
 #### 2.1.2.3. Configure Galaxy to see tool
@@ -174,7 +168,7 @@ If the `galaxy/config/tool_conf.xml` you can copy the sample from this same `con
 Once you've found the file, please add the following line:
 
 ```xml
-<tool file="irida-galaxy-importer/irida_import/irida_import.xml" />
+<tool file="irida_import/irida_import.xml" />
 ```
 
 You likely want to add this to the **Get Data** section, so your modification will likely look like:
@@ -183,7 +177,7 @@ You likely want to add this to the **Get Data** section, so your modification wi
 <toolbox monitor="true">
   <section id="getext" name="Get Data">
     <!-- Add below line to your file -->
-    <tool file="irida-galaxy-importer/irida_import/irida_import.xml" />
+    <tool file="irida_import/irida_import.xml" />
 ```
 
 ### 2.1.3. Set appropriate configuration options in Galaxy
@@ -191,7 +185,7 @@ You likely want to add this to the **Get Data** section, so your modification wi
 No matter which way you install the code (ToolShed or GitHub), you will have to set some configuration options in Galaxy to get this tool to work.
 
 This tool works by making links to the IRIDA data files (instead of directly copying them). In order to do this, you will
-have to enable the following options in the Galaxy `galaxy/config/galaxy.yml` file. An example of this file can be found on the [Galaxy GitHub][galaxy-config-sample] page. 
+have to enable the following options in the Galaxy `galaxy/config/galaxy.yml` file. An example of this file can be found on the [Galaxy GitHub][galaxy-config-sample] page.
 
 Please enable the following:
 
@@ -283,7 +277,7 @@ token_endpoint_suffix: /api/oauth/token
 ```
 
 You will want to modify the URL values and connection information (for both IRIDA and Galaxy).
-That is, for Galaxy, modify `admin_key`, and `galaxy_url`. For IRIDA modify `irida_url`, `client_id`, and `client_secret`. 
+That is, for Galaxy, modify `admin_key`, and `galaxy_url`. For IRIDA modify `irida_url`, `client_id`, and `client_secret`.
 
 It is also possible to configure the folders in which sample files and reference data are stored, and the endpoints at which the tool
 expects to access IRIDA resources (but the defaults are fine).
@@ -293,7 +287,7 @@ expects to access IRIDA resources (but the defaults are fine).
 Once you've set the appropriate connection details in the `config.ini` file, please run:
 
 ```bash
-python2 irida_import.py --config
+python3 -m irida_import.irida_import --config
 ```
 
 This should print out:
@@ -325,8 +319,7 @@ If you wish to make additions to the code, the below instructions can be used to
 
 The script `run-tests.sh` can be used to run the tests. This should check for some of the dependencies and let you know which is missing. However, you will have to have the following dependencies installed:
 
-* Python 2
-* Java 8
+* Java 11
 * Maven
 * MySQL/MariaDB (Server and Client)
 * PostgreSQL (Server and Client)
@@ -337,7 +330,7 @@ The script `run-tests.sh` can be used to run the tests. This should check for so
 On Ubuntu, you can install these with:
 
 ```bash
-sudo apt-get install python2.7 openjdk-8-jdk maven mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
+sudo apt-get install openjdk-11-jdk maven mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
 ```
 
 MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases `irida_test`. MySQL must also be configured to disable `ONLY_FULL_GROUP_BY` mode.
