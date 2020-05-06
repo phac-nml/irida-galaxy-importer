@@ -37,7 +37,11 @@ class IridaImport:
     An appropriate library and folders are created if necessary
     """
 
+    MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+
     CONFIG_FILE = 'config.ini'
+    CONFIG_PATH = os.path.join(MODULE_DIR, CONFIG_FILE)
+
     XML_FILE_SAMPLE = 'irida_import.xml.sample'
     XML_FILE = 'irida_import.xml'
     folds = {}
@@ -679,19 +683,8 @@ class IridaImport:
         Configure the tool using the configuration file
 
         """
-        this_module_path = os.path.abspath(__file__)
-        parent_folder = os.path.dirname(this_module_path)
-        src = os.path.join(parent_folder, self.XML_FILE_SAMPLE)
-        dest = os.path.join(parent_folder, self.XML_FILE)
-        # Allows storing recommended configuration options in a sample XML file
-        # and not commiting the XML file that Galaxy will read:
-        try:
-            shutil.copyfile(src, dest)
-        except:
-            pass
 
-        config_path = os.path.join(parent_folder, self.CONFIG_FILE)
-        with open(config_path, 'r') as config_file:
+        with open(self.CONFIG_PATH, 'r') as config_file:
             config = configparser.ConfigParser()
             config.readfp(config_file)
 
@@ -703,6 +696,15 @@ class IridaImport:
             self.XML_FILE = config.get('Galaxy', 'xml_file')
             self.MAX_WAITS = int(config.get('Galaxy', 'max_waits'))
             self.MAX_RETRIES = 3
+
+            src = os.path.join(self.MODULE_DIR, self.XML_FILE_SAMPLE)
+            dest = os.path.join(self.MODULE_DIR, self.XML_FILE)
+            # Allows storing recommended configuration options in a sample XML file
+            # and not commiting the XML file that Galaxy will read:
+            try:
+                shutil.copyfile(src, dest)
+            except:
+                pass
 
             # Used to reconnect to Galaxy instance when connection is lost
             self.MAX_CLIENT_ATTEMPTS = int(config.get('Galaxy', 'max_client_http_attempts'))
@@ -725,7 +727,7 @@ class IridaImport:
             # changes to take effect.
             # The XML file is only changed to reflect the IRIDA URL
             # and IRIDA client ID
-            xml_path = os.path.join(parent_folder, self.XML_FILE)
+            xml_path = os.path.join(self.MODULE_DIR, self.XML_FILE)
             tree = ElementTree.parse(xml_path)
 
             inputs = tree.find('inputs')
@@ -887,7 +889,7 @@ if __name__ == '__main__':
 
     if args.config:
         # If we're just configuring the script, run the configuration flow
-        if os.path.isfile('config.ini'):
+        if os.path.isfile(IridaImport.CONFIG_PATH):
             importer.configure()
             message = 'Successfully configured the XML file!'
             logging.info(message)
