@@ -96,7 +96,7 @@ class TestIridaImportInt:
         self.TOOL_DIRECTORY = os.path.dirname(inspect.getfile(IridaImport))
         self.CONFIG_PATH = os.path.join(self.TOOL_DIRECTORY, 'tests',
                                         'integration', 'repos', 'galaxy',
-                                        'tools', 'irida_import', 'irida_import',
+                                        'tools', 'irida-galaxy-importer', 'irida_import',
                                         'config.ini')
 
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
