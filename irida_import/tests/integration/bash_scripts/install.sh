@@ -62,22 +62,22 @@ echo "Galaxy has been installed"
 
 echo "Installing the IRIDA Export Tool..."
 echo "Copying tool directory"
-rsync -rv --progress $tool_loc galaxy/tools/irida_import --exclude tests
+rsync -rv --progress $tool_loc galaxy/tools/irida-galaxy-importer --exclude tests
 
 echo "Initializing the tool's configuration file."
-pushd galaxy/tools/irida_import/
+pushd galaxy/tools/irida-galaxy-importer/
 cp irida_import/config.ini.sample irida_import/config.ini
 sed -i "s/^max_waits: .*$/max_waits: 1/" irida_import/config.ini
 sed -i "s|^galaxy_url: http://localhost:8888$|galaxy_url: http://localhost:$galaxy_port|" irida_import/config.ini
 
 echo "Configuring the tool's XML file"
-python -m irida_import.irida_import --config
+python -m irida_import.main --config
 popd
 
 echo "Adding the tool to Galaxy's tools configuration file."
 pushd galaxy
 pushd config
-sed  -i '/<section id="getext" name="Get Data">/a\    <tool file="irida_import/irida_import.xml" />' tool_conf.xml
+sed  -i '/<section id="getext" name="Get Data">/a\    <tool file="irida-galaxy-importer/irida_import.xml" />' tool_conf.xml
 popd
 
 popd
