@@ -11,9 +11,6 @@ This requires that the IRIDA and Galaxy instance both share the same filesystem.
   * [1.4. Data is now in Galaxy](#14-data-is-now-in-galaxy)
 * [2. Install Instructions](#2-install-instructions)
   * [2.1. Installing code](#21-installing-code)
-    * [2.1.1. Install from Galaxy ToolShed](#211-install-from-galaxy-toolshed)
-    * [2.1.2. Install from GitHub](#212-install-from-github)
-    * [2.1.3. Set appropriate configuration options in Galaxy](#213-set-appropriate-configuration-options-in-galaxy)
   * [2.2. Tool Connection Configuration](#22-tool-connection-configuration)
     * [2.2.1. Create a Galaxy admin account/api key](#221-create-a-galaxy-admin-accountapi-key)
     * [2.2.2. Create an IRIDA client id/key](#222-create-an-irida-client-idkey)
@@ -60,91 +57,23 @@ This is a [DataSource][data-source] tool in Galaxy, which is a special type of t
 
 ## 2.1. Installing code
 
-There are overall two different methods to install this tool, through a Galaxy [ToolShed][galaxy-toolshed] or directly from GitHub (you only have to choose one of these options).
+Since this tool requires manual configuration we only support installation from GitHub.
 
-### 2.1.1. Install from Galaxy ToolShed
-
-The easiest way to install this tool is via a Galaxy ToolShed. The specific ToolShed this tool is located within is the [IRIDA ToolShed][irida-toolshed].
-You will want to install the tool located at <http://irida.corefacility.ca/galaxy-shed/view/irida/irida_galaxy_importer/d82238b091f2>.
-
-#### 2.1.1.1. Adding the IRIDA ToolShed
-
-If your Galaxy instance is not configured to make use of the IRIDA ToolShed you will have to modifiy it.
-
-Please find the `tool_sheds_conf.xml` file in the [galaxy/config/][galaxy-conf] directory.
-If you do not have this file, you can make a copy from the sample file provided by Galaxy `cp tool_sheds_conf.xml.sample tool_sheds_conf.xml`.
-
-Add the following line to this file:
-
-```xml
-<tool_shed name="IRIDA Toolshed" url="https://irida.corefacility.ca/galaxy-shed/"/>
-```
-
-Now, restart Galaxy. You should see the IRIDA ToolShed available from **Admin** then **Install new tools**.
-
-![irida-toolshed.png][]
-
-#### 2.1.1.2. Install IRIDA Importer tool from ToolShed
-
-From within the IRIDA ToolShed, find the [irida_galaxy_importer][irida-importer-irida-toolshed] tool and install to Galaxy.
-
-Once installed, you should see it show up in your list of installed tools (**Admin > Mange tools**).
-
-![irida-galaxy-importer-tool.png][]
-
-#### 2.1.1.3. (Optional) Fix dependency issues
-
-If the tool reports an error like **missing tool dependencies**, you can click on the tool for more details. For example:
-
-![irida-tool-dependency-error.png][]
-
-Here, it looks like the Python virtual environment did not load properly. So, let's fix this.
-
-First, login to the machine running Galaxy and navigate to the directory shown in the error
-(here it's `/export/tool_deps/irida-galaxy-importer/1.3.0/irida/irida_galaxy_importer/d82238b091f2/`).
-
-```
-cd /export/tool_deps/irida-galaxy-importer/1.3.0/irida/irida_galaxy_importer/d82238b091f2/
-```
-
-Now, we'll just delete the `venv` directory and re-create it.
-
-```bash
-rm -rf venv
-
-virtualenv venv
-```
-
-Now, let's activate the virtual environment and re-install the dependencies.
-
-```bash
-source venv/bin/activate
-pip3 install -r requirements.txt
-```
-
-If everything worked, great. We can move on to configuring the tool and Galaxy.
-
-### 2.1.2. Install from GitHub
-
-If, instead, you wish to install the tool via GitHub (e.g., to use the latest code), please follow the instructions below.
-
-*Note: If you've already installed the tool from the ToolShed, you can skip this step.*
-
-#### 2.1.2.1. Clone to Galaxy tools/ directory
+#### 2.1.1 Clone to Galaxy tools/ directory
 
 The Galaxy [tools/][galaxy-tools] directory contains tools that come with the Galaxy code. You can add your own to this directory and configure Galaxy to load them up. We will do this for the **IRIDA Import Tool**.
 
 ```bash
 cd galaxy/tools/
 
-git clone -b master https://github.com/phac-nml/irida-galaxy-importer.git irida_import
-cd irida_import
+git clone -b master https://github.com/phac-nml/irida-galaxy-importer.git
+cd irida-galaxy-importer
 
 # Optional. Checkout specific release from https://github.com/phac-nml/irida-galaxy-importer/releases
 #git checkout [LATEST_RELEASE]
 ```
 
-#### 2.1.2.2. Install dependencies
+#### 2.1.2. Install dependencies
 
 This tool requires Python 3 and a number of Python libraries. You must make sure these are installed and available on all machines this tool will be run with (e.g., if you are submitting to a cluster, these must be available on all cluster nodes).
 
@@ -160,7 +89,7 @@ You may need to also install the Python and YAML development libraries. On Ubunt
 sudo apt-get install python3-dev libyaml-dev
 ```
 
-#### 2.1.2.3. Configure Galaxy to see tool
+#### 2.1.3. Configure Galaxy to see tool
 
 In order to configure Galaxy to see the tool, please find the `galaxy/config/tool_conf.xml` file which is located in the [galaxy/config][galaxy-conf] directory.
 If the `galaxy/config/tool_conf.xml` you can copy the sample from this same `config/` directory. An example of this file can also be found in the [Galaxy code][tool-conf-sample].
@@ -168,7 +97,7 @@ If the `galaxy/config/tool_conf.xml` you can copy the sample from this same `con
 Once you've found the file, please add the following line:
 
 ```xml
-<tool file="irida_import/irida_import.xml" />
+<tool file="irida-galaxy-importer/irida_import.xml" />
 ```
 
 You likely want to add this to the **Get Data** section, so your modification will likely look like:
@@ -177,12 +106,12 @@ You likely want to add this to the **Get Data** section, so your modification wi
 <toolbox monitor="true">
   <section id="getext" name="Get Data">
     <!-- Add below line to your file -->
-    <tool file="irida_import/irida_import.xml" />
+    <tool file="irida-galaxy-importer/irida_import.xml" />
 ```
 
-### 2.1.3. Set appropriate configuration options in Galaxy
+### 2.1.4. Set appropriate configuration options in Galaxy
 
-No matter which way you install the code (ToolShed or GitHub), you will have to set some configuration options in Galaxy to get this tool to work.
+Before you can use the tool, you will have to set some configuration options in Galaxy to get this tool to work.
 
 This tool works by making links to the IRIDA data files (instead of directly copying them). In order to do this, you will
 have to enable the following options in the Galaxy `galaxy/config/galaxy.yml` file. An example of this file can be found on the [Galaxy GitHub][galaxy-config-sample] page.
@@ -237,14 +166,12 @@ Please make sure to remember the **Client ID** and **Client Secret**. In this ca
 
 Once we have all the connection information for both IRIDA and Galaxy, we can move onto configuring the tool to connect to IRIDA and Galaxy.
 
-You will first want to find the directory containing the [config.ini.sample][config-sample] file. If installed via GitHub, see section [2.1.2.1][section-2.1.2.1] to find this directory.
-If installed via the ToolShed, you will have to find the Galaxy `shed_tools/` directory and navigate to a directory named something like `shed_tools/irida.corefacility.ca/galaxy-shed/repos/irida/irida_galaxy_importer/d82238b091f2/irida_galaxy_importer/`.
-The `shed_tools/` directory is often one directory up from the main Galaxy installation (e.g., `galaxy/../shed_tools/`). But, this may change depending on your instllation.
+You will first want to change to the directory where you cloned the repository.
 
-Once you have found the directory containing the `config.ini.sample` file, please copy this file to `config.ini`:
+Once you are in the directory, you will need to copy the sample config file (`config.ini.sample`) to `config.ini`:
 
 ```bash
-cp config.ini.sample config.ini
+cp irida_import/config.ini.sample irida_import/config.ini
 ```
 
 You will next want to make the appropriate changes with your connection information. For example:
@@ -284,7 +211,7 @@ expects to access IRIDA resources (but the defaults are fine).
 
 ### 2.2.4. Generate tool XML file
 
-Once you've set the appropriate connection details in the `config.ini` file, please run:
+Once you've set the appropriate connection details in the `config.ini` file, please run the following command from the root of the repository:
 
 ```bash
 python3 -m irida_import.irida_import --config
@@ -298,8 +225,7 @@ Successfully configured the XML file!
 
 And you should now see a `irida_import.xml` file in the directory which contains the proper details to connect between your IRIDA and Galaxy instances.
 
-*Note: Depending on how you've installed the tool, to run this command you may also have to either install additional Python dependencies(e.g., like in section [2.1.2.2][section-2.1.2.2])
-or load up the appropriate virtual environment with the dependencies (like in section [2.1.1.3][section-2.1.1.3]).
+*Note: To run this command you may also have to either install additional Python dependencies(e.g., like in section [2.1.2][section-2.1.2]).
 
 ## 2.3. Restart Galaxy
 
@@ -361,12 +287,8 @@ pytest tests/unit/*.py
 [galaxy]: https://galaxyproject.org/
 [irida]: https://www.irida.ca/
 [data-source]: https://galaxyproject.org/admin/internals/data-sources/
-[galaxy-toolshed]: https://galaxyproject.org/toolshed/
-[irida-toolshed]: https://irida.corefacility.ca/galaxy-shed
-[irida-toolshed.png]: doc/images/irida-toolshed.png
 [irida-galaxy-importer-tool.png]: doc/images/irida-galaxy-importer-tool.png
 [irida-tool-dependency-error.png]: doc/images/irida-tool-dependency-error.png
-[irida-importer-irida-toolshed]: http://irida.corefacility.ca/galaxy-shed/view/irida/irida_galaxy_importer/d82238b091f2
 [galaxy-tools]: https://github.com/galaxyproject/galaxy/tree/dev/tools
 [releases]: https://github.com/phac-nml/irida-galaxy-importer/releases
 [galaxy-conf]: https://github.com/galaxyproject/galaxy/tree/dev/config
@@ -378,11 +300,10 @@ pytest tests/unit/*.py
 [irida-new-client]: https://irida.corefacility.ca/documentation/user/administrator/#creating-a-new-system-client
 [irida-client.png]: doc/images/irida-client.png
 [config-sample]: irida_import/config.ini.sample
-[section-2.1.2.1]: #2121-clone-to-galaxy-tools-directory
+[section-2.1.1]: #211-clone-to-galaxy-tools-directory
 [galaxy-import-tool.png]: doc/images/galaxy-import-tool.png
 [irida-docs]: https://irida.corefacility.ca/documentation/user/user/samples/#galaxy-export
 [irida-select-samples.png]: doc/images/irida-select-samples.png
 [irida-galaxy-export.png]: doc/images/irida-galaxy-export.png
 [galaxy-history-datasets.png]: doc/images/galaxy-history-datasets.png
-[section-2.1.2.2]: #2122-install-dependencies
-[section-2.1.1.3]: #2113-optional-fix-dependency-issues
+[section-2.1.2]: #212-install-dependencies
