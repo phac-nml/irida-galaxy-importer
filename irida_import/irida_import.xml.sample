@@ -1,4 +1,4 @@
-<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="1.4.0">
+<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="2.0.0">
     <description>server</description>
     <requirements>
       <requirement type="package" version="0.13.0">bioblend</requirement>
