@@ -214,7 +214,7 @@ expects to access IRIDA resources (but the defaults are fine).
 Once you've set the appropriate connection details in the `config.ini` file, please run the following command from the root of the repository:
 
 ```bash
-python3 -m irida_import.irida_import --config
+python3 -m irida_import.main --config
 ```
 
 This should print out:

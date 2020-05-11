@@ -9,7 +9,7 @@
       <requirement type="package" version="3.6.7">python</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
-      PYTHONPATH=$__tool_directory__ python -m irida_import.irida_import
+      PYTHONPATH=$__tool_directory__ python -m irida_import.main
 	    --json_parameter_file "${output}" --log-file $log_file --history-id "$__app__.security.encode_id($output.history.id)"
     ]]></command>
     <inputs action="http://localhost:8080/projects" check_values="False" method="post">
