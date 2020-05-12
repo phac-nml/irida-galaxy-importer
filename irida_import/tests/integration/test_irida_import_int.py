@@ -232,10 +232,8 @@ class TestIridaImportInt:
     def test_tool_visible(self, setup_galaxy, driver):
         """Make sure there is a link to the tool in Galaxy"""
         driver.get(self.GALAXY_URL)
-        #driver.find_element_by_xpath("//*[contains(text(), 'Get Data')]").click()
         driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
         assert (driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]"))
-        #assert (driver.find_element_by_link_text("IRIDA server"))
 
     def register_galaxy(self, driver):
         """Register with Galaxy, and then attempt to log in"""
@@ -331,7 +329,6 @@ class TestIridaImportInt:
     def get_irida_secret(self, driver, client_id):
         """Get an IRIDA client's secret given its client ID """
         driver.get(self.IRIDA_URL + '/clients')
-        #time.sleep(600)
         driver.find_element_by_xpath(
             "//*[contains(text(), '" + client_id + "')]").click()
         secret = driver.find_element_by_id(
@@ -388,10 +385,8 @@ class TestIridaImportInt:
         history_panel = driver.find_element_by_id('current-history-panel')
         initially_succeeded = len(history_panel.find_elements_by_class_name(
             'state-ok'))
-        #driver.find_element_by_xpath("//*[contains(text(), 'Get Data')]").click()
         driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
         driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]").click()
-        #driver.find_element_by_link_text("IRIDA server").click()
 
         # Sometimes a login is required
         try:
