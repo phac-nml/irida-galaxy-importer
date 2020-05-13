@@ -1,11 +1,17 @@
-<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="1.4.0">
+<tool add_galaxy_url="False" force_history_refresh="True" id="irida_import" name="IRIDA" tool_type="data_source" version="2.0.0">
     <description>server</description>
     <requirements>
-        <requirement type="package" version="1.4.0">irida-galaxy-importer</requirement>
+      <requirement type="package" version="0.13.0">bioblend</requirement>
+      <requirement type="package" version="3.0.1">oauthlib</requirement>
+      <requirement type="package" version="2.22.0">requests</requirement>
+      <requirement type="package" version="1.2.0">requests-oauthlib</requirement>
+      <requirement type="package" version="3.8.1">simplejson</requirement>
+      <requirement type="package" version="3.6.7">python</requirement>
     </requirements>
-    <command interpreter="python">irida_import.py
+    <command detect_errors="exit_code"><![CDATA[
+      PYTHONPATH=$__tool_directory__ python -m irida_import.main
 	    --json_parameter_file "${output}" --log-file $log_file --history-id "$__app__.security.encode_id($output.history.id)"
-    </command>
+    ]]></command>
     <inputs action="http://localhost:8080/projects" check_values="False" method="post">
         <display>import data from IRIDA to Galaxy</display>
         <param name="galaxyCallbackUrl" type="hidden" value="GALAXY_URL/tool_runner?tool_id=irida_import&amp;runtool_btn=Execute" />

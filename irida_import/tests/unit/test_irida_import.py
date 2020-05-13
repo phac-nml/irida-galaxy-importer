@@ -17,6 +17,21 @@ from ...sample_file import SampleFile
 from ...sample_pair import SamplePair
 
 
+class MockConfig:
+    def __init__(self):
+        self.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
+        self.GALAXY_URL = "http://localhost:8888/"
+        self.ILLUMINA_PATH = '/illumina_reads'
+        self.REFERENCE_PATH = '/references'
+        self.MAX_WAITS = 1
+        self.MAX_RETRIES = 3
+        self.MAX_CLIENT_ATTEMPTS = 10
+        self.CLIENT_RETRY_DELAY = 30
+        self.CLIENT_ID = 'webClient'
+        self.CLIENT_SECRET = 'webClientSecret'
+        self.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
+
+
 class TestIridaImport:
 
     """ TestIridaImport performs unit tests on IridaImport."""
@@ -43,7 +58,7 @@ class TestIridaImport:
     @pytest.fixture(scope="function")
     def imp(self):
         """Create an IridaImport instance to test"""
-        imp = IridaImport()
+        imp = IridaImport(MockConfig())
         imp.irida = mock.create_autospec(OAuth2Session)
         imp.gi = mock.create_autospec(GalaxyInstance)
         imp.gi.libraries = mock.create_autospec(client.ObjLibraryClient)
@@ -63,21 +78,7 @@ class TestIridaImport:
         imp.skipped_files_log = []
         imp.configure = Mock()
         imp.logger = logging.getLogger('irida_import')
-        self.add_irida_constants(imp)
         return imp
-
-    def add_irida_constants(self, irida_instance):
-        """Add constants to a passed IRIDA instance"""
-        irida_instance.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
-        irida_instance.GALAXY_URL = "http://localhost:8888/"
-        irida_instance.ILLUMINA_PATH = '/illumina_reads'
-        irida_instance.REFERENCE_PATH = '/references'
-        irida_instance.MAX_WAITS = 1
-        irida_instance.MAX_CLIENT_ATTEMPTS = 10
-        irida_instance.CLIENT_RETRY_DELAY = 30
-        irida_instance.CLIENT_ID = 'webClient'
-        irida_instance.CLIENT_SECRET = 'webClientSecret'
-        irida_instance.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
 
     @pytest.fixture(scope='class')
     def file_list(self):
@@ -379,8 +380,8 @@ class TestIridaImport:
         """Test reading a file and running apropriate methods"""
         mocker.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
         mocked_open_function = mock.mock_open(read_data=setup_json)
-        with mock.patch("__builtin__.open", mocked_open_function):
-            imp = IridaImport()
+        with mock.patch("builtins.open", mocked_open_function):
+            imp = IridaImport(MockConfig())
             imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
             imp.reg_gi.histories = mock.create_autospec(galaxy.histories.HistoryClient)
             imp.histories = None
@@ -399,7 +400,6 @@ class TestIridaImport:
             imp.configure = Mock()
             imp.MAX_RETRIES = 3
             imp.make_irida_request = Mock()
-            self.add_irida_constants(imp)
 
             # Create a history first
             history = imp.reg_gi.histories.create_history()
