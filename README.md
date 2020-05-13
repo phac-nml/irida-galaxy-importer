@@ -92,7 +92,7 @@ sudo apt-get install python3-dev libyaml-dev
 #### 2.1.3. Configure Galaxy to see tool
 
 In order to configure Galaxy to see the tool, please find the `galaxy/config/tool_conf.xml` file which is located in the [galaxy/config][galaxy-conf] directory.
-If the `galaxy/config/tool_conf.xml` you can copy the sample from this same `config/` directory. An example of this file can also be found in the [Galaxy code][tool-conf-sample].
+If the `galaxy/config/tool_conf.xml` does not exists, you can copy the sample from this same `config/` directory. An example of this file can also be found in the [Galaxy code][tool-conf-sample].
 
 Once you've found the file, please add the following line:
 
@@ -275,12 +275,16 @@ To run all the test, you can run:
 ./run-tests.sh
 ```
 
-If you just want to run the unit tests (much quicker) you can do:
+If you just want to run just the unit tests (much quicker) you can do:
 
 ```bash
-source .ci/install_deps.sh
-cd irida_import
-pytest tests/unit/*.py
+./run-tests.sh unit
+```
+
+If you just want to run just the integration tests you can do:
+
+```bash
+./run-tests.sh integration
 ```
 
 
