@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/phac-nml/irida-galaxy-importer.svg?branch=development)](https://travis-ci.org/phac-nml/irida-galaxy-importer)
+
 IRIDA Import Tool for Galaxy
 ============================
 
