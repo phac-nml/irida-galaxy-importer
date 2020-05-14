@@ -14,22 +14,22 @@ class Config:
 
     MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
 
-    CONFIG_FILE = 'config.ini'
-    CONFIG_PATH = os.path.join(MODULE_DIR, CONFIG_FILE)
+    DEFAULT_CONFIG_FILE = 'config.ini'
+    DEFAULT_CONFIG_PATH = os.path.join(MODULE_DIR, CONFIG_FILE)
 
     XML_FILE_SAMPLE = 'irida_import.xml.sample'
     XML_FILE = 'irida_import.xml'
 
-    def __init__(self):
-        self._load_from_file()
+    def __init__(self, config_file):
+        self._load_from_file(config_file)
 
-    def _load_from_file(self):
+    def _load_from_file(self, config_file):
         """
         Load the tools configuration from the config file
         """
-        with open(self.CONFIG_PATH, 'r') as config_file:
+        with open(config_file, 'r') as config_fh:
             config = configparser.ConfigParser()
-            config.readfp(config_file)
+            config.readfp(config_fh)
 
             # TODO: parse options from command line and config file as a list
             self.ADMIN_KEY = config.get('Galaxy', 'admin_key')
@@ -57,7 +57,7 @@ class Config:
             self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
 
 
-    def emit_tool_xml(self):
+    def generate_xml(self):
         """
         Emit the configured tools xml
 
