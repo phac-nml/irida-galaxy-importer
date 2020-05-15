@@ -46,11 +46,9 @@ if __name__ == '__main__':
     try:
         config = Config(args.config)
     except FileNotFoundError:
-        message = ('Error: Could not find config.ini in the irida_importer'
-                   + ' directory!')
+        message = "Error: {} does not exist!".format(args.config)
         logging.info(message)
-        print(message)
-        exit(1)
+        sys.exit(message)
 
     logging.debug("Reading from passed file")
 
