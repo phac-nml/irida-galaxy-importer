@@ -1,12 +1,12 @@
 import configparser
 import os.path
 import re
-import shutil
 
 import xml.etree.ElementTree as ET
 
 
 ET._original_serialize_xml = ET._serialize_xml
+
 
 def serialize_xml_with_CDATA(write, elem, qnames, namespaces, short_empty_elements, **kwargs):
     if elem.tag == 'CDATA':
@@ -14,7 +14,9 @@ def serialize_xml_with_CDATA(write, elem, qnames, namespaces, short_empty_elemen
         return
     return ET._original_serialize_xml(write, elem, qnames, namespaces, short_empty_elements, **kwargs)
 
+
 ET._serialize_xml = ET._serialize['xml'] = serialize_xml_with_CDATA
+
 
 def CDATA(text):
     element = ET.Element("CDATA")
@@ -68,7 +70,7 @@ class Config:
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
             self.INITIAL_ENDPOINT_SUFFIX = config.get('IRIDA',
-                                                        'initial_endpoint_suffix')
+                                                      'initial_endpoint_suffix')
 
             irida_loc = config.get('IRIDA', 'irida_url')
             self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFIX
@@ -76,7 +78,6 @@ class Config:
 
             self.CLIENT_ID = config.get('IRIDA', 'client_id')
             self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
-
 
     def generate_xml(self):
         """
@@ -113,6 +114,8 @@ class Config:
             # https://github.com/phac-nml/irida-galaxy-importer/issues/1
             if param.get('name') == 'galaxyCallbackUrl':
                 previous_value = param.get('value')
-                param.set('value', re.sub(r'TOOL_ID', self.TOOL_ID, re.sub(r'GALAXY_URL', self.GALAXY_URL, previous_value)))
+                new_value = re.sub(r'GALAXY_URL', self.GALAXY_URL, previous_value)
+                new_value = re.sub(r'TOOL_ID', self.TOOL_ID, new_value)
+                param.set('value', new_value)
 
         tree.write(self.TOOL_FILE)
