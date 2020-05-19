@@ -7,6 +7,9 @@ All notable changes to irida-galaxy-importer will be documeted in this file.
 * Upgraded to Python 3
 * Removed toolshed support
 * Dependencies needs are now being addressed with bioconda
+* Changes `--config` option to accept a path to to a config file
+* Adds in `--generate_xml` option which is the new option to generate the galaxy tool xml file
+* Adds in `tool_id`, `tool_file`, and `tool_description` options to the config file. These options are used to customize the galaxy tool xml file (e.g. for multiple installations of the tool for multiple Irida installs)
 
 
 ## 1.4.0
