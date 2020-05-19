@@ -7,8 +7,8 @@ class IridaFileStorageAzure:
   def __init__(self, config):
       self.config = config
       self.logger = logging.getLogger('irida_import')
-      self.connect_str = config.azure_account_connection_string
-      self.container_name = config.azure_container_name
+      self.connect_str = self.config.azure_account_connection_string
+      self.container_name = self.config.azure_container_name
       self.blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
 
   def fileExists(file_path):

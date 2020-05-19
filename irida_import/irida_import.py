@@ -15,7 +15,7 @@ from irida_import.sample import Sample
 from irida_import.sample_file import SampleFile
 from irida_import.sample_pair import SamplePair
 
-from irida_import.irida_file_storage_azure import IridaFileStorageAzure as iridaFileStorage
+from irida_import.irida_file_storage_azure import IridaFileStorageAzure
 #from irida_import.irida_file_storage_aws import IridaFileStorageAws as iridaFileStorage
 #from irida_import.irida_file_storage_local import IridaFileStorageLocal as iridaFileStorage
 
@@ -43,6 +43,7 @@ class IridaImport:
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger('irida_import')
+        self.iridaFileStorage = IridaFileStorageAzure(config)
 
     def initial_lib_state(self):
 
