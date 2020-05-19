@@ -19,3 +19,18 @@ token_endpoint_suffix: /api/oauth/token
 client_id: auth_code_client
 irida_url: http://localhost:8080
 initial_endpoint_suffix: /projects
+
+# Irida file storage mechanism (azure, aws, local)
+irida_storage_type = local
+
+
+# Azure configuration
+azure_container_name = AZURE_CONTAINER_NAME
+azure_account_connection_string = AZURE_ACCOUNT_CONNECTION_STRING
+
+
+# AWS configuration
+aws_bucket_name = AWS_BUCKET_NAME
+aws_bucket_region = AWS BUCKET REGION
+aws_secret_key = AWS_SECRET_KEY
+aws_access_key = AWS_ACCESS_KEY

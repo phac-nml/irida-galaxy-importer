@@ -15,6 +15,10 @@ from irida_import.sample import Sample
 from irida_import.sample_file import SampleFile
 from irida_import.sample_pair import SamplePair
 
+from irida_import.irida_file_storage_azure import IridaFileStorageAzure as iridaFileStorage
+#from irida_import.irida_file_storage_aws import IridaFileStorageAws as iridaFileStorage
+#from irida_import.irida_file_storage_local import IridaFileStorageLocal as iridaFileStorage
+
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
 # (none)
@@ -308,7 +312,7 @@ class IridaImport:
             "Getting dataset ID for existing file: " +
             galaxy_name)
         found = False
-        size = os.path.getsize(sample_file_path)
+        size = iridaFileStorage.getFileSize(sample_file_path)
 
         # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
@@ -548,7 +552,7 @@ class IridaImport:
         :return: dataset object or the id of an existing dataset
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
-        if os.path.isfile(sample_file.path):
+        if iridaFileStorage.fileExists(sample_file.path):
             if sample_file.library_dataset_id == None:
                 #grab dataset_id if it does exist, if not will be given False
                 dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
