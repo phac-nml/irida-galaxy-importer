@@ -5,9 +5,9 @@ import time
 import sys
 import logging
 import os
-import ConfigParser
+import configparser
 import pytest
-import subprocess32
+import subprocess
 from tempfile import mkdtemp
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -67,6 +67,7 @@ class TestIridaImportInt:
                      '"| mysql -u test -ptest'
     IRIDA_PASSWORD_ID = 'password_client'
     IRIDA_AUTH_CODE_ID = 'auth_code_client'
+    IRIDA_REDIRECT_URI = IRIDA_URL + '/galaxy/auth_code'
     IRIDA_USER = 'admin'
     IRIDA_PASSWORD = 'Password1!'
     IRIDA_TOKEN_ENDPOINT = IRIDA_URL + '/api/oauth/token'
@@ -95,7 +96,8 @@ class TestIridaImportInt:
         self.TOOL_DIRECTORY = os.path.dirname(inspect.getfile(IridaImport))
         self.CONFIG_PATH = os.path.join(self.TOOL_DIRECTORY, 'tests',
                                         'integration', 'repos', 'galaxy',
-                                        'tools', 'irida_import', 'config.ini')
+                                        'tools', 'irida-galaxy-importer', 'irida_import',
+                                        'config.ini')
 
         self.GALAXY = os.path.join(self.REPOS, 'galaxy')
         self.IRIDA = os.path.join(self.REPOS, 'irida')
@@ -124,7 +126,7 @@ class TestIridaImportInt:
 
             # Install IRIDA, Galaxy, and the IRIDA export tool:
             exec_path = os.path.join(self.SCRIPTS, self.INSTALL_EXEC)
-            install = subprocess32.Popen([exec_path, self.TOOL_DIRECTORY,
+            install = subprocess.Popen([exec_path, self.TOOL_DIRECTORY,
                                           str(self.GALAXY_PORT)],
                                          cwd=self.REPOS_PARENT)
             install.wait()  # Block untill installed
@@ -148,7 +150,7 @@ class TestIridaImportInt:
 
         def stop_irida():
             print('Stopping IRIDA nicely')
-            stopper = subprocess32.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
+            stopper = subprocess.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
                                          shell=True)
             stopper.wait()
 
@@ -166,8 +168,9 @@ class TestIridaImportInt:
             self.IRIDA_CMD.append('-Dreference.file.base.directory=' + reference_file_dir)
             self.IRIDA_CMD.append('-Doutput.file.base.directory=' + output_file_dir)
 
-            subprocess32.call(self.IRIDA_DB_RESET, shell=True)
-            subprocess32.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ)
+            subprocess.call(self.IRIDA_DB_RESET, shell=True)
+            FNULL = open(os.devnull, 'w')
+            subprocess.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ,stdout=FNULL)
             util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT,
                                self.TIMEOUT)
 
@@ -192,14 +195,14 @@ class TestIridaImportInt:
                 os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY']
             except KeyError:
                 print('Killing Galaxy')
-                subprocess32.Popen(self.GALAXY_STOP, cwd=self.GALAXY)
+                subprocess.Popen(self.GALAXY_STOP, cwd=self.GALAXY)
 
         try:
             os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY']
         except KeyError:
             stop_galaxy()
-            subprocess32.call(self.GALAXY_DB_RESET, shell=True)
-            subprocess32.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
+            subprocess.call(self.GALAXY_DB_RESET, shell=True)
+            subprocess.Popen(self.GALAXY_CMD, cwd=self.GALAXY)
             self.log.debug("Waiting for Galaxy database migration [%s]. Sleeping for [%s] seconds", self.GALAXY_URL,
                            self.GALAXY_SLEEP_TIME)
             time.sleep(self.GALAXY_SLEEP_TIME)
@@ -229,8 +232,8 @@ class TestIridaImportInt:
     def test_tool_visible(self, setup_galaxy, driver):
         """Make sure there is a link to the tool in Galaxy"""
         driver.get(self.GALAXY_URL)
-        driver.find_element_by_css_selector("#title_getext > a > span").click()
-        assert (driver.find_element_by_link_text("IRIDA server"))
+        driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
+        assert (driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]"))
 
     def register_galaxy(self, driver):
         """Register with Galaxy, and then attempt to log in"""
@@ -263,7 +266,7 @@ class TestIridaImportInt:
 
     def configure_tool(self, section, option, value):
         """Write tool configuration data"""
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(self.CONFIG_PATH)
         config.set(section, option, value)
         with open(self.CONFIG_PATH, 'w') as config_file:
@@ -276,9 +279,9 @@ class TestIridaImportInt:
 
         # Set a new password if necessary
         try:
-            driver.find_element_by_id(
+            driver.find_element_by_name(
                 "password").send_keys(self.IRIDA_PASSWORD)
-            driver.find_element_by_id(
+            driver.find_element_by_name(
                 "confirmPassword").send_keys(self.IRIDA_PASSWORD)
             driver.find_element_by_xpath("//button[@type='submit']").click()
         except NoSuchElementException:
@@ -287,10 +290,10 @@ class TestIridaImportInt:
     def login_irida(self, driver, username, password):
         """Log in to IRIDA (assumes the login page is opened by the driver)"""
         try:
-            driver.find_element_by_id("emailTF").send_keys(username)
-            driver.find_element_by_id(
-                "passwordTF").send_keys(password)
-            driver.find_element_by_id("submitBtn").click()
+            driver.find_element_by_name("username").send_keys(username)
+            driver.find_element_by_name(
+                "password").send_keys(password)
+            driver.find_element_by_xpath("//button[@type='submit']").click()
         except NoSuchElementException:
             # If already logged in
             pass
@@ -302,6 +305,7 @@ class TestIridaImportInt:
         driver.find_element_by_id('authorizedGrantTypes').click()
         driver.find_element_by_xpath(
             "//*[contains(text(), 'authorization_code')]").click()
+        driver.find_element_by_name("registeredRedirectUri").send_keys(self.IRIDA_REDIRECT_URI)
         driver.find_element_by_id("scope_auto_read").click()
         driver.find_element_by_id("create-client-submit").click()
 
@@ -381,8 +385,8 @@ class TestIridaImportInt:
         history_panel = driver.find_element_by_id('current-history-panel')
         initially_succeeded = len(history_panel.find_elements_by_class_name(
             'state-ok'))
-        driver.find_element_by_css_selector("#title_getext > a > span").click()
-        driver.find_element_by_link_text("IRIDA server").click()
+        driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
+        driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]").click()
 
         # Sometimes a login is required
         try:

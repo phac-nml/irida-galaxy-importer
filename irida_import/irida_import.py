@@ -1,24 +1,19 @@
-import argparse
-import ConfigParser
 import datetime
 import json
 import logging
 import os.path
 import pprint
 import re
-import shutil
 import sys
 import time
-
-from xml.etree import ElementTree
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
 from requests_oauthlib import OAuth2Session
 
-from sample import Sample
-from sample_file import SampleFile
-from sample_pair import SamplePair
+from irida_import.sample import Sample
+from irida_import.sample_file import SampleFile
+from irida_import.sample_pair import SamplePair
 
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
@@ -36,15 +31,13 @@ class IridaImport:
     An appropriate library and folders are created if necessary
     """
 
-    CONFIG_FILE = 'config.ini'
-    XML_FILE_SAMPLE = 'irida_import.xml.sample'
-    XML_FILE = 'irida_import.xml'
     folds = {}
 
     uploaded_files_log = []
     skipped_files_log = []
 
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
         self.logger = logging.getLogger('irida_import')
 
     def initial_lib_state(self):
@@ -359,7 +352,7 @@ class IridaImport:
                               ' Verifying integrity of: ' +
                               sample_file.name)
             num_waits = 0
-            while num_waits <= self.MAX_WAITS:
+            while num_waits <= self.config.MAX_WAITS:
                 state = sample_file.state(self.reg_gi, self.library.id)
                 if state == 'ok': # uploaded succesfully
                     self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' OK! ')
@@ -420,12 +413,12 @@ class IridaImport:
 
         for sample in samples:
             self.logger.debug("sample name is" + sample.name)
-            sample_root_folder_id = self.create_folder_if_nec(self.ILLUMINA_PATH + '/' + sample.name)
+            sample_root_folder_id = self.create_folder_if_nec(self.config.ILLUMINA_PATH + '/' + sample.name)
 
             added_to_galaxy = []
 
             for sample_item in sample.get_reads():
-                sample_folder_path = self.ILLUMINA_PATH + '/' + sample.name
+                sample_folder_path = self.config.ILLUMINA_PATH + '/' + sample.name
                 if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
                     forward = sample_item.forward
@@ -474,7 +467,7 @@ class IridaImport:
             added_to_galaxy = []
 
             for sample_item in sample.get_reads():
-                sample_folder_path = self.ILLUMINA_PATH + '/' + sample.name
+                sample_folder_path = self.config.ILLUMINA_PATH + '/' + sample.name
                 if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
                     datasets = dict()
@@ -670,87 +663,19 @@ class IridaImport:
         redirect_uri = oauth_dict['redirect']
         auth_code = oauth_dict['code']
         if self.token:
-            irida = OAuth2Session(client_id=self.CLIENT_ID,
+            irida = OAuth2Session(client_id=self.config.CLIENT_ID,
                                   redirect_uri=redirect_uri,
                                   token={'access_token': self.token})
         else:
-            irida = OAuth2Session(self.CLIENT_ID, redirect_uri=redirect_uri)
+            irida = OAuth2Session(self.config.CLIENT_ID, redirect_uri=redirect_uri)
             irida.fetch_token(
-                self.TOKEN_ENDPOINT, client_secret=self.CLIENT_SECRET,
+                self.config.TOKEN_ENDPOINT, client_secret=self.config.CLIENT_SECRET,
                 authorization_response=redirect_uri + '?code=' + auth_code)
         if PRINT_TOKEN_INSECURELY:
             self.print_logged(irida.token)
         return irida
 
-    def configure(self):
-        """
-        Configure the tool using the configuration file
-
-        """
-        this_module_path = os.path.abspath(__file__)
-        parent_folder = os.path.dirname(this_module_path)
-        src = os.path.join(parent_folder, self.XML_FILE_SAMPLE)
-        dest = os.path.join(parent_folder, self.XML_FILE)
-        # Allows storing recommended configuration options in a sample XML file
-        # and not commiting the XML file that Galaxy will read:
-        try:
-            shutil.copyfile(src, dest)
-        except:
-            pass
-
-        config_path = os.path.join(parent_folder, self.CONFIG_FILE)
-        with open(config_path, 'r') as config_file:
-            config = ConfigParser.ConfigParser()
-            config.readfp(config_file)
-
-            # TODO: parse options from command line and config file as a list
-            self.ADMIN_KEY = config.get('Galaxy', 'admin_key')
-            self.GALAXY_URL = config.get('Galaxy', 'galaxy_url')
-            self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
-            self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
-            self.XML_FILE = config.get('Galaxy', 'xml_file')
-            self.MAX_WAITS = config.get('Galaxy', 'max_waits')
-            self.MAX_RETRIES = 3
- 
-            # Used to reconnect to Galaxy instance when connection is lost
-            self.MAX_CLIENT_ATTEMPTS = int(config.get('Galaxy', 'max_client_http_attempts'))
-            self.CLIENT_RETRY_DELAY = int(config.get('Galaxy', 'client_http_retry_delay'))
-
-            self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
-                                                    'token_endpoint_suffix')
-            self.INITIAL_ENDPOINT_SUFFIX = config.get('IRIDA',
-                                                      'initial_endpoint_suffix')
-
-            irida_loc = config.get('IRIDA', 'irida_url')
-            self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFIX
-            irida_endpoint = irida_loc + self.INITIAL_ENDPOINT_SUFFIX
-
-            self.CLIENT_ID = config.get('IRIDA', 'client_id')
-            self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
-
-            # Configure the tool XML file
-            # The Galaxy server must be restarted for XML configuration
-            # changes to take effect.
-            # The XML file is only changed to reflect the IRIDA URL
-            # and IRIDA client ID
-            xml_path = os.path.join(parent_folder, self.XML_FILE)
-            tree = ElementTree.parse(xml_path)
-
-            inputs = tree.find('inputs')
-            inputs.set('action', irida_endpoint)
-
-            params = inputs.findall('param')
-            for param in params:
-                if param.get('name') == 'galaxyClientID':
-                    param.set('value', self.CLIENT_ID)
-                # manually set GALAXY_URL instead of using galaxy's baseurl type
-                # so that sites with SSL will work
-                # https://github.com/phac-nml/irida-galaxy-importer/issues/1
-                if param.get('name') == 'galaxyCallbackUrl':
-                    previous_value = param.get('value')
-                    param.set('value', re.sub(r'GALAXY_URL', self.GALAXY_URL, previous_value))
-
-            tree.write(xml_path)
+    
 
     def import_to_galaxy(self, json_parameter_file, log, hist_id, token=None,
                          config_file=None):
@@ -773,7 +698,6 @@ class IridaImport:
         self.pp = pprint.PrettyPrinter(indent=4)
 
         self.logger.setLevel(logging.INFO)
-        self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
 
             full_param_dict = json.loads(param_file_handle.read())
@@ -803,18 +727,18 @@ class IridaImport:
             self.token = token
             self.irida = self.get_IRIDA_session(oauth_dict)
 
-            self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
-            self.gi.gi.max_get_attempts = self.MAX_CLIENT_ATTEMPTS
-            self.gi.gi.get_retry_delay = self.CLIENT_RETRY_DELAY
+            self.gi = GalaxyInstance(self.config.GALAXY_URL, self.config.ADMIN_KEY)
+            self.gi.gi.max_get_attempts = self.config.MAX_CLIENT_ATTEMPTS
+            self.gi.gi.get_retry_delay = self.config.CLIENT_RETRY_DELAY
 
 
             # This is necessary for uploads from arbitary local paths
             # that require setting the "link_to_files" flag:
             self.reg_gi = galaxy.GalaxyInstance(
-                url=self.GALAXY_URL,
-                key=self.ADMIN_KEY)
-            self.reg_gi.max_get_attempts = self.MAX_CLIENT_ATTEMPTS
-            self.reg_gi.get_retry_delay = self.CLIENT_RETRY_DELAY
+                url=self.config.GALAXY_URL,
+                key=self.config.ADMIN_KEY)
+            self.reg_gi.max_get_attempts = self.config.MAX_CLIENT_ATTEMPTS
+            self.reg_gi.get_retry_delay = self.config.CLIENT_RETRY_DELAY
 
             self.histories = self.reg_gi.histories
 
@@ -823,12 +747,12 @@ class IridaImport:
 
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name, email)
-            self.create_folder_if_nec(self.ILLUMINA_PATH)
-            self.create_folder_if_nec(self.REFERENCE_PATH)
+            self.create_folder_if_nec(self.config.ILLUMINA_PATH)
+            self.create_folder_if_nec(self.config.REFERENCE_PATH)
 
             # Add each sample's files to the library
             retries = 0
-            while (retries <= self.MAX_RETRIES):
+            while (retries <= self.config.MAX_RETRIES):
                 num_files = self.add_samples_if_nec(samples)
 
                 self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' Checking if Samples uploaded successfully! ')
@@ -853,65 +777,3 @@ class IridaImport:
             self.logger.debug("Number of files on galaxy: " + str(num_files))
 
             self.print_summary()
-
-"""
-From the command line, pass JSON files to IridaImport, and set up the logger
-"""
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-p', '--json_parameter_file', dest='json_parameter_file',
-        default='sample.dat',
-        help='A JSON formatted parameter file from Galaxy.',
-             metavar='json_parameter_file')
-    parser.add_argument(
-        '-l', '--log-file', dest='log', default='log_file',
-        help="The file to which the tool will output the log.", metavar='log')
-    parser.add_argument(
-        '-t', '--token', dest='token',
-        help='The tool can use a supplied access token instead of querying '
-             + 'IRIDA.', metavar='token')
-    parser.add_argument(
-        '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started. '
-             + 'Use this option to do so. config.ini should be in the main '
-             + 'irida_import folder.')
-    parser.add_argument(
-        '-i', '--history-id', dest='hist_id', default=False,
-        help='The tool requires a History ID.')
-
-    args = parser.parse_args()
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
-    log_format = "%(levelname)s: %(message)s"
-    logging.basicConfig(filename=args.log,
-                        format=log_format,
-                        level=logging.ERROR,
-                        filemode="w")
-
-    importer = IridaImport()
-    logging.debug("Reading from passed file")
-
-    if args.config:
-        # If we're just configuring the script, run the configuration flow
-        if os.path.isfile('config.ini'):
-            importer.configure()
-            message = 'Successfully configured the XML file!'
-            logging.info(message)
-            print(message)
-        else:
-            message = ('Error: Could not find config.ini in the irida_importer'
-                       + ' directory!')
-            logging.info(message)
-            print(message)
-    else:
-        # otherwise start looking at the input file
-        try:
-            file_to_open = args.json_parameter_file
-            importer.import_to_galaxy(file_to_open, args.log, args.hist_id,
-                                      token=args.token)
-        except Exception:
-            logging.exception('')
-            importer.print_summary(failed=True)
-            raise

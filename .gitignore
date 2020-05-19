@@ -13,4 +13,5 @@ irida_import/tests/integration/repos/*
 env
 /.idea
 /.venv
+miniconda*
 .vscode

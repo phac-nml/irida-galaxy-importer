@@ -65,10 +65,33 @@ source $SCRIPT_DIR/.ci/install_deps.sh $CHROMEDRIVER_VERSION
 
 pushd irida_import
 
-# If xvfb is already started, don't bother with 'xvfb-run'. Useful for TravisCI tests.
-if [ "$XVFB_STARTED" = "1" ];
-then
-	py.test -s
-else
-	xvfb-run py.test -s
-fi
+exit_code=1
+
+case "$1" in
+	integration)
+		# If xvfb is already started, don't bother with 'xvfb-run'. Useful for TravisCI tests.
+		if [ "$XVFB_STARTED" = "1" ];
+		then
+			pytest tests/integration/*.py
+		else
+			xvfb-run pytest tests/integration/*.py
+		fi
+		exit_code=$?
+	;;
+	unit)
+		pytest tests/unit/*.py
+		exit_code=$?
+	;;
+	*)
+		# If xvfb is already started, don't bother with 'xvfb-run'. Useful for TravisCI tests.
+		if [ "$XVFB_STARTED" = "1" ];
+		then
+			py.test -s
+		else
+			xvfb-run py.test -s
+		fi
+		exit_code=$?
+	;;
+esac
+
+exit $exit_code

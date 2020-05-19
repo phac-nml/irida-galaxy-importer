@@ -5,7 +5,7 @@ admin_key: 09008eb345c9d5a166b0d8f301b1e72c
 galaxy_url: http://localhost:8888
 illumina_path: /illumina_reads
 reference_path: /references
-xml_file: irida_import.xml
+xml_file: ../irida_import.xml
 max_waits: 120
 max_client_http_attempts: 10
 client_http_retry_delay: 30
