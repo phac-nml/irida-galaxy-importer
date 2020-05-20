@@ -1,4 +1,8 @@
-import configparser
+try:
+  import configparser
+except:
+  import ConfigParser as configparser
+
 import os.path
 import re
 
