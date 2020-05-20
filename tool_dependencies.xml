@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<tool_dependency>
+    <package name="irida-galaxy-importer" version="2.0.0">
+        <install version="1.0">
+            <actions_group>
+                <actions>
+                    <action type="setup_virtualenv">
+                        bioblend==0.13.0
+                        oauthlib==3.0.1
+                        requests==2.22.0
+                        requests-oauthlib==1.2.0
+                        argparse==1.4.0
+                        simplejson==3.8.1
+                    </action>
+                </actions>
+            </actions_group>
+        </install>
+    </package>
+</tool_dependency>
