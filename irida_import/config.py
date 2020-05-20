@@ -67,9 +67,20 @@ class Config:
             self.MAX_CLIENT_ATTEMPTS = int(config.get('Galaxy', 'max_client_http_attempts'))
             self.CLIENT_RETRY_DELAY = int(config.get('Galaxy', 'client_http_retry_delay'))
 
-            self.TOOL_ID = config.get('Galaxy', 'tool_id', fallback='irida_import')
-            self.TOOL_DESCRIPTION = config.get('Galaxy', 'tool_description', fallback='server')
-            self.TOOL_FILE = config.get('Galaxy', 'tool_file', fallback='irida_import.xml')
+            try:
+                self.TOOL_ID = config.get('Galaxy', 'tool_id')
+            except:
+                self.TOOL_ID = 'irida_import'
+
+            try:
+                self.TOOL_DESCRIPTION = config.get('Galaxy', 'tool_description')
+            except:
+              self.TOOL_DESCRIPTION = "server"
+
+            try:
+                self.TOOL_FILE = config.get('Galaxy', 'tool_file')
+            except:
+                self.TOOL_FILE = 'irida_import.xml'
 
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
