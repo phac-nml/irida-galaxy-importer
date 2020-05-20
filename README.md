@@ -216,13 +216,13 @@ expects to access IRIDA resources (but the defaults are fine).
 Once you've set the appropriate connection details in the `config.ini` file, please run the following command from the root of the repository:
 
 ```bash
-python3 -m irida_import.main --config
+python3 -m irida_import.main --generate_xml
 ```
 
 This should print out:
 
 ```
-Successfully configured the XML file!
+Successfully generated the XML file!
 ```
 
 And you should now see a `irida_import.xml` file in the directory which contains the proper details to connect between your IRIDA and Galaxy instances.

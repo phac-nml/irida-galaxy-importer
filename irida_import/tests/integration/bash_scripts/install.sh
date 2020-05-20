@@ -71,7 +71,7 @@ sed -i "s/^max_waits: .*$/max_waits: 1/" irida_import/config.ini
 sed -i "s|^galaxy_url: http://localhost:8888$|galaxy_url: http://localhost:$galaxy_port|" irida_import/config.ini
 
 echo "Configuring the tool's XML file"
-python -m irida_import.main --config
+python -m irida_import.main --generate_xml
 popd
 
 echo "Adding the tool to Galaxy's tools configuration file."

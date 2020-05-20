@@ -23,10 +23,13 @@ if __name__ == '__main__':
         help='The tool can use a supplied access token instead of querying '
              + 'IRIDA.', metavar='token')
     parser.add_argument(
-        '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started. '
-             + 'Use this option to do so. config.ini should be in the main '
-             + 'irida_import folder.')
+        '-c', '--config', dest='config', default=Config.DEFAULT_CONFIG_PATH,
+        help='The tool requires a config file to run. '
+             + 'By default this is config.ini in the main irida_import folder.')
+    parser.add_argument(
+        '-g', '--generate_xml', action='store_true', default=False, dest='generate_xml',
+        help='The tool must generate a galaxy tool xml file before Galaxy can be started. '
+             + 'Use this option to do so.')
     parser.add_argument(
         '-i', '--history-id', dest='hist_id', default=False,
         help='The tool requires a History ID.')
@@ -41,19 +44,17 @@ if __name__ == '__main__':
                         level=logging.ERROR,
                         filemode="w")
     try:
-        config = Config()
+        config = Config(args.config)
     except FileNotFoundError:
-        message = ('Error: Could not find config.ini in the irida_importer'
-                   + ' directory!')
+        message = "Error: {} does not exist!".format(args.config)
         logging.info(message)
-        print(message)
-        exit(1)
+        sys.exit(message)
 
     logging.debug("Reading from passed file")
 
-    if args.config:
-        config.emit_tool_xml()
-        message = 'Successfully configured the XML file!'
+    if args.generate_xml:
+        config.generate_xml()
+        message = 'Successfully generated the XML file!'
         logging.info(message)
         print(message)
     else:
