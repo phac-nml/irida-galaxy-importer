@@ -4,6 +4,7 @@ except:
   import ConfigParser as configparser
 
 import os.path
+import sys
 import re
 
 import xml.etree.ElementTree as ET
@@ -12,14 +13,24 @@ import xml.etree.ElementTree as ET
 ET._original_serialize_xml = ET._serialize_xml
 
 
-def serialize_xml_with_CDATA(write, elem, qnames, namespaces, short_empty_elements, **kwargs):
+def serialize_xml_with_CDATA_py2(write, elem, encoding, qnames, namespaces):
+    if elem.tag == 'CDATA':
+        write("<![CDATA[{}]]>".format(elem.text))
+        return
+    return ET._original_serialize_xml(write, elem, encoding, qnames, namespaces)
+
+
+def serialize_xml_with_CDATA_py3(write, elem, qnames, namespaces, short_empty_elements, **kwargs):
     if elem.tag == 'CDATA':
         write("<![CDATA[{}]]>".format(elem.text))
         return
     return ET._original_serialize_xml(write, elem, qnames, namespaces, short_empty_elements, **kwargs)
 
 
-ET._serialize_xml = ET._serialize['xml'] = serialize_xml_with_CDATA
+if sys.version_info[0] < 3:
+    ET._serialize_xml = ET._serialize['xml'] = serialize_xml_with_CDATA_py2
+else:
+    ET._serialize_xml = ET._serialize['xml'] = serialize_xml_with_CDATA_py3
 
 
 def CDATA(text):
@@ -114,8 +125,13 @@ class Config:
         if self.CONFIG_FILE != self.DEFAULT_CONFIG_PATH:
             command_elem = tree.find('command')
             old_command = command_elem.text
-            command_elem.text = None
-            command_elem.append(CDATA("{}    --config {}\n    ".format(old_command, self.CONFIG_FILE)))
+            command_elem.text = "{}    --config {}\n    ".format(old_command, self.CONFIG_FILE)
+
+        # rewrap the command_text in a CDATA tag
+        command_elem = tree.find('command')
+        command_text = command_elem.text
+        command_elem.text = None
+        command_elem.append(CDATA(command_text))
 
         inputs = tree.find('inputs')
         inputs.set('action', self.IRIDA_ENDPOINT)
