@@ -53,7 +53,7 @@ class IridaImport:
 
         return True
 
-    def get_samples(self, samples_dict, include_assemblies):
+    def get_samples(self, samples_dict, include_assemblies, include_fast5):
         """
         Gets sample objects from a dictionary.
 
@@ -93,7 +93,7 @@ class IridaImport:
                 sample.add_file(self.get_sample_file(single['sequenceFile']))
 
             # Add a sample_file object for each fast5
-            if sample.fast5_path:
+            if sample.fast5_path and include_fast5:
                 fast5_resource = self.make_irida_request(sample.fast5_path)
                 for fast5 in fast5_resource['resources']:
                     sample.add_file(self.get_sample_file(fast5['file']))
@@ -712,10 +712,17 @@ class IridaImport:
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             addtohistory = json_params_dict['_embedded']['addtohistory']
+            
             if "includeAssemblies" in json_params_dict['_embedded']:
                 include_assemblies = json_params_dict['_embedded']['includeAssemblies']
             else:
                 include_assemblies = False
+            
+            if "includeFast5" in json_params_dict['_embedded']:
+                include_fast5 = json_params_dict['_embedded']['includeFast5']
+            else:
+                include_fast5 = False
+
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
@@ -743,7 +750,7 @@ class IridaImport:
             self.histories = self.reg_gi.histories
 
             # Each sample contains a list of sample files
-            samples = self.get_samples(samples_dict, include_assemblies)
+            samples = self.get_samples(samples_dict, include_assemblies, include_fast5)
 
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name, email)
