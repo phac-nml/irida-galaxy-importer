@@ -1,7 +1,9 @@
 try:
-  import configparser
+    # python 3 import
+    import configparser
 except:
-  import ConfigParser as configparser
+    # python 2 import
+    import ConfigParser as configparser
 
 import os.path
 import sys
@@ -14,6 +16,9 @@ ET._original_serialize_xml = ET._serialize_xml
 
 
 def serialize_xml_with_CDATA_py2(write, elem, encoding, qnames, namespaces):
+    """
+    Serializes xml wrapped in CDATA
+    """
     if elem.tag == 'CDATA':
         write("<![CDATA[{}]]>".format(elem.text))
         return

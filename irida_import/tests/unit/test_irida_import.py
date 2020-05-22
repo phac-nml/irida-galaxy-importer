@@ -1,5 +1,6 @@
 import ast
 import os
+import sys
 import json
 import logging
 import pprint
@@ -380,7 +381,12 @@ class TestIridaImport:
         """Test reading a file and running apropriate methods"""
         mocker.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
         mocked_open_function = mock.mock_open(read_data=setup_json)
-        with mock.patch("builtins.open", mocked_open_function):
+
+        open_function_name = "builtins.open"
+        if sys.version_info[0] < 3:
+            open_function_name = "__builtin__.open"
+
+        with mock.patch(open_function_name, mocked_open_function):
             imp = IridaImport(MockConfig())
             imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
             imp.reg_gi.histories = mock.create_autospec(galaxy.histories.HistoryClient)
