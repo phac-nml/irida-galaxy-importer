@@ -45,7 +45,12 @@ class IridaImport:
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger('irida_import')
-        self.iridaFileStorage = IridaFileStorageAzure(config)
+        if self.config.irida_storage_type == "azure"
+            self.iridaFileStorage = IridaFileStorageAzure(config)
+        else if self.config.irida_storage_type == "aws"
+            self.iridaFileStorage = IridaFileStorageAws(config)
+        else
+            self.iridaFileStorage = IridaFileStorageLocal(config)
 
     def initial_lib_state(self):
 

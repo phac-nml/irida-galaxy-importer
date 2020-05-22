@@ -4,6 +4,10 @@ import os
 
 class IridaFileStorageLocal:
 
+  def __init__(self, config):
+      self.config = config
+      self.logger = logging.getLogger('irida_import')
+
   def fileExists(file_path):
     """
     Checks to see if file exists

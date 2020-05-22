@@ -4,8 +4,11 @@ import boto3
 
 class IridaFileStorageAws:
 
-  s3 = boto3.resource('s3')
-  bucket_name = os.getenv('AWS_BUCKET_NAME')
+  def __init__(self, config):
+      self.config = config
+      self.logger = logging.getLogger('irida_import')
+      self.s3 = boto3.resource('s3')
+      self.bucket_name = self.config.aws_bucket_name
 
   def fileExists(file_path):
     """
