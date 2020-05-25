@@ -9,6 +9,8 @@ xml_file: ../irida_import.xml
 max_waits: 120
 max_client_http_attempts: 10
 client_http_retry_delay: 30
+tool_id: irida_import
+tool_description: server
 
 [IRIDA]
 
