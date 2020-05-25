@@ -1,5 +1,7 @@
-#!/usr/bin/env python3
+from __future__ import absolute_import
+
 import argparse
+import os
 import sys
 import logging
 
@@ -43,9 +45,10 @@ if __name__ == '__main__':
                         format=log_format,
                         level=logging.ERROR,
                         filemode="w")
-    try:
+
+    if os.path.isfile(args.config):
         config = Config(args.config)
-    except FileNotFoundError:
+    else:
         message = "Error: {} does not exist!".format(args.config)
         logging.info(message)
         sys.exit(message)
@@ -61,7 +64,7 @@ if __name__ == '__main__':
         # importing here prevents a user from needing all libs when only performing a config,
         # after the tool xml is generated galaxy will install all the required dependencies
         from irida_import.irida_import import IridaImport
-        
+
         importer = IridaImport(config)
         # otherwise start looking at the input file
         try:

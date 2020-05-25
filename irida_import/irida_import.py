@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import datetime
 import json
 import logging
@@ -666,7 +668,7 @@ class IridaImport:
             self.print_logged(irida.token)
         return irida
 
-    
+
 
     def import_to_galaxy(self, json_parameter_file, log, hist_id, token=None,
                          config_file=None):

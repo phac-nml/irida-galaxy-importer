@@ -1,13 +1,5 @@
 <tool add_galaxy_url="False" force_history_refresh="True" id="TOOL_ID" name="IRIDA" tool_type="data_source" version="2.0.0">
     <description>server</description>
-    <requirements>
-        <requirement type="package" version="0.13.0">bioblend</requirement>
-        <requirement type="package" version="3.0.1">oauthlib</requirement>
-        <requirement type="package" version="2.22.0">requests</requirement>
-        <requirement type="package" version="1.2.0">requests-oauthlib</requirement>
-        <requirement type="package" version="3.8.1">simplejson</requirement>
-        <requirement type="package" version="3.6.7">python</requirement>
-    </requirements>
     <command detect_errors="exit_code"><![CDATA[
         PYTHONPATH="$__tool_directory__"
         python -m irida_import.main

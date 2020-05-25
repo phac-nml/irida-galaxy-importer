@@ -59,7 +59,7 @@ This is a [DataSource][data-source] tool in Galaxy, which is a special type of t
 
 ## 2.1. Installing code
 
-Since this tool requires manual configuration we only support installation from GitHub.
+Since this tool does not ship with a usable xml file and instead must be generated after configuration, we only support installation from GitHub.
 
 #### 2.1.1 Clone to Galaxy tools/ directory
 
@@ -77,18 +77,16 @@ cd irida-galaxy-importer
 
 #### 2.1.2. Install dependencies
 
-This tool requires Python 3 and a number of Python libraries. You must make sure these are installed and available on all machines this tool will be run with (e.g., if you are submitting to a cluster, these must be available on all cluster nodes).
+NOTE: This tool supports both Python 2 and Python and 3, though we recommend the use of Python 3 if possible.
 
-If you are only running Galaxy on a single machine, please install **Python 3** and use `pip3` to install the dependencies:
+This tool requires Python and a number of Python libraries. You must make sure these are installed and available within your Galaxies python environment, wherever the tool with be run (e.g., if you are submitting to a cluster, these must be available on all cluster nodes). If you have changed the [`environment_setup_file`](https://docs.galaxyproject.org/en/latest/admin/config.html#environment-setup-file) config option in Galaxy, please be sure to install the libraries in the version of Python available in it.
 
-```bash
-pip3 install bioblend requests-oauthlib
-```
-
-You may need to also install the Python and YAML development libraries. On Ubuntu, you can install them with:
+If you are only running Galaxy on a single machine, please ensure that all the requirements are available with the following commands:
 
 ```bash
-sudo apt-get install python3-dev libyaml-dev
+cd [GALAXY_INSTALL_LOCATION]
+source .venv/bin/activate
+pip install bioblend oauthlib requests requests-oauthlib simplejson 
 ```
 
 #### 2.1.3. Configure Galaxy to see tool
@@ -216,7 +214,7 @@ expects to access IRIDA resources (but the defaults are fine).
 Once you've set the appropriate connection details in the `config.ini` file, please run the following command from the root of the repository:
 
 ```bash
-python3 -m irida_import.main --generate_xml
+python -m irida_import.main --generate_xml
 ```
 
 This should print out:

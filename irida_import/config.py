@@ -1,5 +1,12 @@
-import configparser
+try:
+    # python 3 import
+    import configparser
+except:
+    # python 2 import
+    import ConfigParser as configparser
+
 import os.path
+import sys
 import re
 
 import xml.etree.ElementTree as ET
@@ -8,14 +15,27 @@ import xml.etree.ElementTree as ET
 ET._original_serialize_xml = ET._serialize_xml
 
 
-def serialize_xml_with_CDATA(write, elem, qnames, namespaces, short_empty_elements, **kwargs):
+def serialize_xml_with_CDATA_py2(write, elem, encoding, qnames, namespaces):
+    """
+    Serializes xml wrapped in CDATA
+    """
+    if elem.tag == 'CDATA':
+        write("<![CDATA[{}]]>".format(elem.text))
+        return
+    return ET._original_serialize_xml(write, elem, encoding, qnames, namespaces)
+
+
+def serialize_xml_with_CDATA_py3(write, elem, qnames, namespaces, short_empty_elements, **kwargs):
     if elem.tag == 'CDATA':
         write("<![CDATA[{}]]>".format(elem.text))
         return
     return ET._original_serialize_xml(write, elem, qnames, namespaces, short_empty_elements, **kwargs)
 
 
-ET._serialize_xml = ET._serialize['xml'] = serialize_xml_with_CDATA
+if sys.version_info[0] < 3:
+    ET._serialize_xml = ET._serialize['xml'] = serialize_xml_with_CDATA_py2
+else:
+    ET._serialize_xml = ET._serialize['xml'] = serialize_xml_with_CDATA_py3
 
 
 def CDATA(text):
@@ -63,9 +83,20 @@ class Config:
             self.MAX_CLIENT_ATTEMPTS = int(config.get('Galaxy', 'max_client_http_attempts'))
             self.CLIENT_RETRY_DELAY = int(config.get('Galaxy', 'client_http_retry_delay'))
 
-            self.TOOL_ID = config.get('Galaxy', 'tool_id', fallback='irida_import')
-            self.TOOL_DESCRIPTION = config.get('Galaxy', 'tool_description', fallback='server')
-            self.TOOL_FILE = config.get('Galaxy', 'tool_file', fallback='irida_import.xml')
+            try:
+                self.TOOL_ID = config.get('Galaxy', 'tool_id')
+            except:
+                self.TOOL_ID = 'irida_import'
+
+            try:
+                self.TOOL_DESCRIPTION = config.get('Galaxy', 'tool_description')
+            except:
+              self.TOOL_DESCRIPTION = "server"
+
+            try:
+                self.TOOL_FILE = config.get('Galaxy', 'tool_file')
+            except:
+                self.TOOL_FILE = 'irida_import.xml'
 
             self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                     'token_endpoint_suffix')
@@ -99,8 +130,13 @@ class Config:
         if self.CONFIG_FILE != self.DEFAULT_CONFIG_PATH:
             command_elem = tree.find('command')
             old_command = command_elem.text
-            command_elem.text = None
-            command_elem.append(CDATA("{}    --config {}\n    ".format(old_command, self.CONFIG_FILE)))
+            command_elem.text = "{}    --config {}\n    ".format(old_command, self.CONFIG_FILE)
+
+        # rewrap the command_text in a CDATA tag
+        command_elem = tree.find('command')
+        command_text = command_elem.text
+        command_elem.text = None
+        command_elem.append(CDATA(command_text))
 
         inputs = tree.find('inputs')
         inputs.set('action', self.IRIDA_ENDPOINT)

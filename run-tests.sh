@@ -4,6 +4,8 @@ SCRIPT_DIR=`pwd`
 
 CHROMEDRIVER_VERSION=''
 
+PYTHON_VERSION=${PYTHON_VERSION:-3.6.7}
+
 exit_error() {
         echo $1
         exit 1
@@ -26,12 +28,6 @@ check_dependencies() {
 	if [ $? -ne 0 ];
 	then
 		exit_error "Command 'psql' does not exist.  Please install PostgreSQL (e.g., 'apt-get install postgresql') to continue."
-	fi
-
-	python2 --version 1>/dev/null 2>/dev/null
-	if [ $? -ne 0 ];
-	then
-		exit_error "Command 'python2' does not exist.  These tests require python2. Please install (e.g., 'apt-get install python2.7') to continue."
 	fi
 
 	git --version 1>/dev/null 2>/dev/null
@@ -61,7 +57,7 @@ check_dependencies() {
 
 check_dependencies
 
-source $SCRIPT_DIR/.ci/install_deps.sh $CHROMEDRIVER_VERSION
+source $SCRIPT_DIR/.ci/install_deps.sh $CHROMEDRIVER_VERSION $PYTHON_VERSION
 
 pushd irida_import
 
