@@ -2,7 +2,7 @@ class Sample:
 
     """A representation of a sample obtained from IRIDA"""
 
-    def __init__(self, name, paired_path, unpaired_path, assembly_path):
+    def __init__(self, name, paired_path, unpaired_path, assembly_path, fast5_path):
         """
         Initialize a sample instance
 
@@ -14,12 +14,15 @@ class Sample:
         :param unpaired_path: the URI to get the unpaired files from the sample
         :type assembly_path: str
         :param assembly_path: the URI to get the assembly files from the sample
+        :type fast5_path: str
+        :param assembly_path: the URI to get fast5 files from the sample
         """
 
         self.name = name
         self.paired_path = paired_path
         self.unpaired_path = unpaired_path
         self.assembly_path = assembly_path
+        self.fast5_path = fast5_path
         self._sample_reads = []  # A list of SampleFile/SamplePair objects
 
     def __repr__(self):

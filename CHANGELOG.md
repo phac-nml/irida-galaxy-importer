@@ -9,7 +9,7 @@ All notable changes to irida-galaxy-importer will be documeted in this file.
 * Changes `--config` option to accept a path to to a config file
 * Adds in `--generate_xml` option which is the new option to generate the galaxy tool xml file
 * Adds in `tool_id`, `tool_file`, and `tool_description` options to the config file. These options are used to customize the galaxy tool xml file (e.g. for multiple installations of the tool for multiple Irida installs)
-* Added in support for importing assemblies from Irida
+* Added in support for importing assemblies and FAST5 data from IRIDA
 
 
 ## 1.4.0
