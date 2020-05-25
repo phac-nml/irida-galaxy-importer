@@ -65,6 +65,8 @@ class IridaImport:
         change soon)
         :type include_assemblies: boolean
         :param include_assemblies: A boolean whether or not to include assemblies with the import
+        :type include_fast5: boolean
+        :param include_fast5: A boolean whether or not to include fast5 data with the import        
         :return: a list of Samples with all necessary information
         """
         samples = self.get_sample_meta(samples_dict)
