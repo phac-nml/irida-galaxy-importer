@@ -25,7 +25,7 @@ To
 <tool file="irida-galaxy-importer/irida_import.xml" />
 ```
 
-Now we need to regenerate te tool XML file:
+Now we need to regenerate the tool XML file:
 
 ```bash
 pushd galaxy/tools/irida-galaxy-importer
