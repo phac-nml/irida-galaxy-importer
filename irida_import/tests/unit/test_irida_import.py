@@ -132,7 +132,7 @@ class TestIridaImport:
         sample_file = SampleFile('nameish', 'pathish')
         imp.get_sample_file = Mock(return_value=sample_file)
 
-        samples = imp.get_samples(json_params['_embedded']['samples'],False)
+        samples = imp.get_samples(json_params['_embedded']['samples'],False,False)
 
         assert isinstance(
             samples, list), 'A list must be returned'
