@@ -9,7 +9,7 @@ class IridaFileStorageAws:
       self.s3 = boto3.resource('s3')
       self.bucket_name = self.config.aws_bucket_name
 
-  def fileExists(file_path):
+  def fileExists(self, file_path):
     """
     Checks to see if aws bucket object exists
 
@@ -18,12 +18,12 @@ class IridaFileStorageAws:
     :return: boolean indicating whether object exists in bucket
     """
     logging.info("Checking if file exists in aws bucket")
-    s3Object = s3.Object(bucket_name,filePath)
+    s3Object = s3.Object(bucket_name,file_path)
     #size in bytes
     file_size = s3Object.content_length
     return file_size > 0
 
-  def getFileSize(file_path):
+  def getFileSize(self, file_path):
     """
     Gets file size in bytes of object in aws bucket
 

@@ -10,7 +10,7 @@ class IridaFileStorageAzure:
       self.container_name = self.config.azure_container_name
       self.blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
 
-  def fileExists(file_path):
+  def fileExists(self, file_path):
     """
     Checks to see if azure blob exists
 
@@ -24,7 +24,7 @@ class IridaFileStorageAzure:
     size = blob_client.get_blob_properties().size()
     return size > 0
 
-  def getFileSize(file_path):
+  def getFileSize(self, file_path):
     """
     Gets file size in bytes of azure blob
 

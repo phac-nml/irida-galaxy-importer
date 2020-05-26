@@ -18,8 +18,8 @@ from irida_import.sample_file import SampleFile
 from irida_import.sample_pair import SamplePair
 
 from irida_import.irida_file_storage_azure import IridaFileStorageAzure
-#from irida_import.irida_file_storage_aws import IridaFileStorageAws as iridaFileStorage
-#from irida_import.irida_file_storage_local import IridaFileStorageLocal as iridaFileStorage
+from irida_import.irida_file_storage_aws import IridaFileStorageAws
+from irida_import.irida_file_storage_local import IridaFileStorageLocal
 
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
@@ -45,9 +45,9 @@ class IridaImport:
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger('irida_import')
-        if self.config.irida_storage_type == "azure":
+        if self.config.IRIDA_STORAGE_TYPE == "azure":
             self.iridaFileStorage = IridaFileStorageAzure(config)
-        else if self.config.irida_storage_type == "aws":
+        elif self.config.IRIDA_STORAGE_TYPE == "aws":
             self.iridaFileStorage = IridaFileStorageAws(config)
         else:
             self.iridaFileStorage = IridaFileStorageLocal(config)
@@ -331,7 +331,7 @@ class IridaImport:
             "Getting dataset ID for existing file: " +
             galaxy_name)
         found = False
-        size = iridaFileStorage.getFileSize(sample_file_path)
+        size = self.iridaFileStorage.getFileSize(sample_file_path)
 
         # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
@@ -571,7 +571,7 @@ class IridaImport:
         :return: dataset object or the id of an existing dataset
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
-        if iridaFileStorage.fileExists(sample_file.path):
+        if self.iridaFileStorage.fileExists(sample_file.path):
             if sample_file.library_dataset_id == None:
                 #grab dataset_id if it does exist, if not will be given False
                 dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
