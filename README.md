@@ -79,13 +79,13 @@ cd irida-galaxy-importer
 
 NOTE: This tool supports both Python 2 and Python and 3, though we recommend the use of Python 3 if possible.
 
-This tool requires Python and a number of Python libraries. You must make sure these are installed and available within your Galaxies python environment, wherever the tool with be run (e.g., if you are submitting to a cluster, these must be available on all cluster nodes).
+This tool requires Python and a number of Python libraries. You must make sure these are installed and available within your Galaxies python environment, wherever the tool with be run (e.g., if you are submitting to a cluster, these must be available on all cluster nodes). If you have changed the [`environment_setup_file`](https://docs.galaxyproject.org/en/latest/admin/config.html#environment-setup-file) config option in Galaxy, please be sure to install the libraries in the version of Python available in it.
 
 If you are only running Galaxy on a single machine, please ensure that all the requirements are available with the following commands:
 
 ```bash
 cd [GALAXY_INSTALL_LOCATION]
-.venv/bin/activate
+source .venv/bin/activate
 pip install bioblend oauthlib requests requests-oauthlib simplejson 
 ```
 
