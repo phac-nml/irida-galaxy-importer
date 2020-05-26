@@ -1,14 +1,13 @@
 import logging
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from azure.storage.blob import BaseBlobService
 
 class IridaFileStorageAzure:
 
   def __init__(self, config):
       self.config = config
       self.logger = logging.getLogger('irida_import')
-      self.connect_str = self.config.azure_account_connection_string
-      self.container_name = self.config.azure_container_name
-      self.blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
+      self.container_name = self.config.AZURE_CONTAINER_NAME
+      self.blob_service = BaseBlobService(account_name=self.config.AZURE_ACCOUNT_NAME, account_key=self.config.AZURE_ACCOUNT_KEY)
 
   def fileExists(self, file_path):
     """
@@ -19,10 +18,8 @@ class IridaFileStorageAzure:
     :return: boolean indicating whether blob exists
     """
     logging.info("Checking if file exists in azure blob")
-    blob_client = blob_service_client.get_blob_client(container=container_name, blob=file_path)
-    #size in bytes
-    size = blob_client.get_blob_properties().size()
-    return size > 0
+    blob_exists = blob_service.exists(container=container_name, blob=file_path)
+    return blob_exists
 
   def getFileSize(self, file_path):
     """
@@ -33,7 +30,7 @@ class IridaFileStorageAzure:
     :return: file size in bytes
     """
     logging.info("Getting file size from azure blob")
-    blob_client = blob_service_client.get_blob_client(container=container_name, blob=file_path)
+    blob_properties = blob_service.get_blob_properties(container=container_name, blob=file_path)
     #size in bytes
-    size = blob_client.get_blob_properties().size()
+    size = blob_properties.content_length
     return size
