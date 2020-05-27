@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# This file is adapted from https://irida.corefacility.ca/gitlab/aaron.petkau/irida-public/blob/master/galaxy/install_galaxy.sh
-
 args=("$@")
 tool_loc=${args[0]}
 galaxy_port=${args[1]}
@@ -10,9 +8,9 @@ mkdir repos
 pushd repos
 
 echo "Downloading IRIDA..."
-git clone http://gitlab-ci-token:b71f6552f4cbe6f7d3f6faad8939b9@irida.corefacility.ca/gitlab/irida/irida.git
+git clone https://github.com/phac-nml/irida.git
 pushd irida
-git checkout development > irida-checkout.log 2>&1
+git checkout master > irida-checkout.log 2>&1
 git fetch
 git reset --hard
 git clean -fd
@@ -22,7 +20,7 @@ rm -rf /tmp/shed_tools/
 pkill -u $USER -f "python ./scripts/paster.py" || true
 
 pushd lib
-./install-libs.sh
+./install-libs.sh > /dev/null
 popd
 popd
 echo "IRIDA has been installed"
@@ -41,45 +39,45 @@ echo "Preparing Galaxy for first execution (installing eggs)..."
 echo "Configuring Galaxy."
 pushd config
 
-cp galaxy.ini.sample galaxy.ini
+cp galaxy.yml.sample galaxy.yml
 cp tool_conf.xml.sample tool_conf.xml
 
 # allow soft linking of file system files
-sed -i 's/#allow_library_path_paste = False/allow_library_path_paste = True/' galaxy.ini
+sed -i 's/#allow_path_paste: false/allow_path_paste: true/' galaxy.yml
 
 # allow importing from the entire system
-sed -i 's/#library_import_dir.*/library_import_dir = \//'  galaxy.ini
+sed -i 's/#library_import_dir.*/library_import_dir: \//'  galaxy.yml
 
 # use MySQL instead of sqlite; to be configured to use a database user and name specified in README.md
-echo "database_connection = mysql://test:test@localhost/external_galaxy_test" | cat >> galaxy.ini
+echo "  database_connection: postgresql:///galaxy_test" | cat >> galaxy.yml
 
 # add admin e-mail user
-sed -i 's/#admin_users = None/admin_users=irida@irida.ca/' galaxy.ini
+sed -i 's/#admin_users:.*/admin_users: "irida@irida.ca"/' galaxy.yml
 
 # run galaxy on port 8888 instead of 8080; Tomcat runs on 8080 by default.
-sed -i "s|#port = 8080|port = $galaxy_port|" galaxy.ini
+sed -i "s|http: 127.0.0.1:8080|http: 127.0.0.1:$galaxy_port|" galaxy.yml
 popd
 popd
 echo "Galaxy has been installed"
 
 echo "Installing the IRIDA Export Tool..."
 echo "Copying tool directory"
-rsync -rv --progress $tool_loc galaxy/tools --exclude tests
+rsync -rv --progress $tool_loc galaxy/tools/irida-galaxy-importer --exclude tests
 
 echo "Initializing the tool's configuration file."
-pushd galaxy/tools/irida_import/
-cp config.ini.sample config.ini
-sed -i "s/^max_waits: .*$/max_waits: 1/" config.ini
-sed -i "s|^galaxy_url: http://localhost:8888$|galaxy_url: http://localhost:$galaxy_port|" config.ini
+pushd galaxy/tools/irida-galaxy-importer/
+cp irida_import/config.ini.sample irida_import/config.ini
+sed -i "s/^max_waits: .*$/max_waits: 1/" irida_import/config.ini
+sed -i "s|^galaxy_url: http://localhost:8888$|galaxy_url: http://localhost:$galaxy_port|" irida_import/config.ini
 
 echo "Configuring the tool's XML file"
-python irida_import.py --config
+python -m irida_import.main --generate_xml
 popd
 
 echo "Adding the tool to Galaxy's tools configuration file."
 pushd galaxy
 pushd config
-sed  -i '/<section id="getext" name="Get Data">/a\    <tool file="irida_import/irida_import.xml" />' tool_conf.xml
+sed  -i '/<section id="getext" name="Get Data">/a\    <tool file="irida-galaxy-importer/irida_import.xml" />' tool_conf.xml
 popd
 
 popd

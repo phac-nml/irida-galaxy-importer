@@ -1,24 +1,21 @@
-import argparse
-import ConfigParser
+from __future__ import absolute_import
+
 import datetime
 import json
 import logging
 import os.path
 import pprint
 import re
-import shutil
 import sys
 import time
-
-from xml.etree import ElementTree
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
 from requests_oauthlib import OAuth2Session
 
-from sample import Sample
-from sample_file import SampleFile
-from sample_pair import SamplePair
+from irida_import.sample import Sample
+from irida_import.sample_file import SampleFile
+from irida_import.sample_pair import SamplePair
 
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
@@ -36,12 +33,13 @@ class IridaImport:
     An appropriate library and folders are created if necessary
     """
 
-    CONFIG_FILE = 'config.ini'
-    XML_FILE_SAMPLE = 'irida_import.xml.sample'
-    XML_FILE = 'irida_import.xml'
     folds = {}
 
-    def __init__(self):
+    uploaded_files_log = []
+    skipped_files_log = []
+
+    def __init__(self, config):
+        self.config = config
         self.logger = logging.getLogger('irida_import')
 
     def initial_lib_state(self):
@@ -57,8 +55,7 @@ class IridaImport:
 
         return True
 
-
-    def get_samples(self, samples_dict):
+    def get_samples(self, samples_dict, include_assemblies, include_fast5):
         """
         Gets sample objects from a dictionary.
 
@@ -66,6 +63,10 @@ class IridaImport:
         :param samples_dict: a dictionary to parse. See one of the test
         json files for formatting information (the format will likely
         change soon)
+        :type include_assemblies: boolean
+        :param include_assemblies: A boolean whether or not to include assemblies with the import
+        :type include_fast5: boolean
+        :param include_fast5: A boolean whether or not to include fast5 data with the import        
         :return: a list of Samples with all necessary information
         """
         samples = self.get_sample_meta(samples_dict)
@@ -94,6 +95,17 @@ class IridaImport:
             unpaired_resource = self.make_irida_request(sample.unpaired_path)
             for single in unpaired_resource['resources']:
                 sample.add_file(self.get_sample_file(single['sequenceFile']))
+
+            # Add a sample_file object for each fast5
+            if sample.fast5_path and include_fast5:
+                fast5_resource = self.make_irida_request(sample.fast5_path)
+                for fast5 in fast5_resource['resources']:
+                    sample.add_file(self.get_sample_file(fast5['file']))
+
+            if include_assemblies:
+                assembly_resource = self.make_irida_request(sample.assembly_path)
+                for assembly in assembly_resource['resources']:
+                    sample.add_file(self.get_sample_file(assembly))
 
         return samples
 
@@ -142,15 +154,20 @@ class IridaImport:
             paths = sample_resource['links']
             paired_path = ""
             unpaired_path = ""
+            fast5_path = ""
+            assembly_path = ""
 
             for link in paths:
                 if link['rel'] == "sample/sequenceFiles/pairs":
                     paired_path = link['href']
                 elif link['rel'] == "sample/sequenceFiles/unpaired":
                     unpaired_path = link['href']
+                elif link['rel'] == "sample/assemblies":
+                    assembly_path = link['href']
+                elif link['rel'] == "sample/sequenceFiles/fast5":
+                    fast5_path = link['href']
 
-            samples.append(Sample(sample_name, paired_path, unpaired_path))
-
+            samples.append(Sample(sample_name, paired_path, unpaired_path, assembly_path, fast5_path))
         return samples
 
     def get_sample_file(self, file_dict):
@@ -230,10 +247,10 @@ class IridaImport:
             base_folder_id = self.exists_in_lib('folder', 'name', base_folder_path)
             ans = []
             name = ''
-            
+
             if base_folder_id:
                 ans = self.reg_gi.libraries.create_folder(self.library.id,folder_name,base_folder_id=base_folder_id[0])
-                name = base_folder_path + "/" + ans[0]['name'] 
+                name = base_folder_path + "/" + ans[0]['name']
             elif base_folder_path == '':
                 ans = self.reg_gi.libraries.create_folder(self.library.id,folder_name)
                 name = "/" + ans[0]['name']
@@ -247,15 +264,15 @@ class IridaImport:
             self.folds[name]['type']='folder'
             self.folds[name]['name']=name
             final_id=ans[0]['id']
-            
+
             self.logger.debug(
                 'Made folder with path:' + '\'%s\'' % folder_path)
         else:
             #to ensure consistent results, always pick first entry
             #we have no other way of knowing which one to use.
             final_id=exist_id[0]
-            
-            
+
+
         return final_id
 
     def exists_in_lib(self, item_type, item_attr_name, desired_attr_value):
@@ -274,11 +291,11 @@ class IridaImport:
         """
         ans = []
 
-        # check cache before fetching from galaxy. 
+        # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
         if not self.folds:
             self.initial_lib_state()
-            
+
         for item_name in self.folds:
             if item_type == self.folds[item_name]['type']:
                 if desired_attr_value == self.folds[item_name][item_attr_name]:
@@ -306,7 +323,7 @@ class IridaImport:
         found = False
         size = os.path.getsize(sample_file_path)
 
-        # check cache before fetching from galaxy. 
+        # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
         if not self.folds:
             self.initial_lib_state()
@@ -316,14 +333,76 @@ class IridaImport:
         datasets = self.exists_in_lib('file', 'name', galaxy_name)
 
         if datasets:
-            for data_id in datasets: 
+            for data_id in datasets:
                 item = self.reg_gi.libraries.show_dataset(self.library.id,data_id)
-                if item['file_size'] in (size, size + 1):
+                if item['file_size'] in (size, size + 1) and item['state'] == 'ok':
                     found = item['id']
                     break
 
-
         return found
+
+    def verify_sample_integrity(self, sample_file):
+        """
+        Checks to see if a sample was uploaded successfully
+
+        :type sample: SampleFile
+        :param samples: the sample to verify upload
+        :return: boolean indicating whether the sample was uploaded successfully
+        """
+        sample_integrity_verified = sample_file.verified
+
+        if not sample_integrity_verified:
+            self.logger.debug(time.strftime("[%D %H:%M:%S]:") +
+                              ' Verifying integrity of: ' +
+                              sample_file.name)
+            num_waits = 0
+            while num_waits <= self.config.MAX_WAITS:
+                state = sample_file.state(self.reg_gi, self.library.id)
+                if state == 'ok': # uploaded succesfully
+                    self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' OK! ')
+                    sample_integrity_verified = True
+                    sample_file.verified = True
+                    break
+                elif state in ['new', 'upload', 'queued', 'running', 'setting_metadata']: # pending
+                    self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' PENDING! (%s)' % (state))
+                    num_waits += 1
+                    time.sleep(5)
+                else:
+                    self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' NOT OK! ')
+                    # delete the dataset from the library
+                    retries = 0
+                    while retries <= self.MAX_RETRIES:
+                        if sample_file.delete(self.reg_gi, self.library.id):
+                            sample_file.library_dataset_id = None
+                            break
+                    break
+
+        return sample_integrity_verified
+
+    def samples_uploaded_successfully(self, samples=[]):
+        """
+        Checks to see if all of our samples were uploaded successfully
+
+        :type samples: list
+        :param samples: the list of samples to verify upload
+        :return: boolean indicating whether all of the samples were uploaded successfully
+        """
+        samples_uploaded_successfully = True
+
+        # Check that samples have been added
+        for sample in samples:
+            for sample_item in sample.get_reads():
+                if isinstance(sample_item, SamplePair):
+                    forward_result = self.verify_sample_integrity(sample_item.forward)
+                    reverse_result = self.verify_sample_integrity(sample_item.reverse)
+                    if not forward_result or not reverse_result:
+                        samples_uploaded_successfully = False
+                else:
+                    sample_result = self.verify_sample_integrity(sample_item)
+                    if not sample_result:
+                        samples_uploaded_successfully = False
+
+        return samples_uploaded_successfully
 
     def add_samples_if_nec(self, samples=[]):
         """
@@ -338,12 +417,12 @@ class IridaImport:
 
         for sample in samples:
             self.logger.debug("sample name is" + sample.name)
-            sample_root_folder_id = self.create_folder_if_nec(self.ILLUMINA_PATH + '/' + sample.name)
+            sample_root_folder_id = self.create_folder_if_nec(self.config.ILLUMINA_PATH + '/' + sample.name)
 
             added_to_galaxy = []
 
             for sample_item in sample.get_reads():
-                sample_folder_path = self.ILLUMINA_PATH + '/' + sample.name
+                sample_folder_path = self.config.ILLUMINA_PATH + '/' + sample.name
                 if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
                     forward = sample_item.forward
@@ -351,26 +430,25 @@ class IridaImport:
                     pair_path = sample_folder_path + "/" + sample_item.name
 
                     #since doing pair, will not be writting to the 'main' folder for the sample
-                    sample_folder_id  =self.create_folder_if_nec(pair_path)
+                    sample_folder_id = self.create_folder_if_nec(pair_path)
 
                     added_to_galaxy = self._add_file(added_to_galaxy,
                                                      pair_path,sample_folder_id,
                                                      forward)
 
-                    forward.library_dataset_id = added_to_galaxy[0]['id']
+                    file_sum += 1
 
                     added_to_galaxy = self._add_file(added_to_galaxy,
                                                      pair_path,sample_folder_id,
                                                      reverse)
 
-                    reverse.library_dataset_id = added_to_galaxy[0]['id']
+                    file_sum += 1
 
                 else:
                     # Processing for a SampleFile
                     added_to_galaxy = self._add_file(added_to_galaxy,
                                                      sample_folder_path,sample_root_folder_id,
                                                      sample_item)
-                    sample_item.library_dataset_id = added_to_galaxy[0]['id']
                     file_sum += 1
 
         return file_sum
@@ -385,44 +463,33 @@ class IridaImport:
         :return: The collection array of added samples
         """
         collection_array = []
+        collection_name_count = {}
         hist = self.histories
-
         for sample in samples:
             self.logger.debug("sample name is" + sample.name)
 
             added_to_galaxy = []
 
             for sample_item in sample.get_reads():
-                sample_folder_path = self.ILLUMINA_PATH + '/' + sample.name
+                sample_folder_path = self.config.ILLUMINA_PATH + '/' + sample.name
                 if isinstance(sample_item, SamplePair):
                     # Processing for a SamplePair
                     datasets = dict()
 
                     pair_path = sample_folder_path + "/" + sample_item.name
-                    collection_name = str(sample.name) + "__" + str(
-                        sample_item.name)
 
-                    num_waits = 0
-                    while (self.reg_gi.datasets.show_dataset(
-                            sample_item.forward.library_dataset_id,
-                            hda_ldda='ldda')['state'] != 'ok' and
-                            num_waits <= self.MAX_WAITS):
-                        time.sleep(5)
-                        num_waits += 1
+                    if sample.name in collection_name_count:
+                        collection_name = str(sample.name) + "__" + str(collection_name_count[sample.name])
+                        collection_name_count[sample.name] += 1
+                    else:
+                        collection_name = str(sample.name)
+                        collection_name_count[sample.name] = 2
 
                     # Add datasets to the current history
                     datasets['forward'] = hist.upload_dataset_from_library(
                         hist_id,
                         sample_item.forward.library_dataset_id
                     )['id']
-
-                    num_waits = 0
-                    while (self.reg_gi.datasets.show_dataset(
-                            sample_item.reverse.library_dataset_id,
-                            hda_ldda='ldda')['state'] != 'ok' and
-                            num_waits <= self.MAX_WAITS):
-                        time.sleep(5)
-                        num_waits += 1
 
                     datasets['reverse'] = hist.upload_dataset_from_library(
                         hist_id,
@@ -495,30 +562,34 @@ class IridaImport:
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
         if os.path.isfile(sample_file.path):
+            if sample_file.library_dataset_id == None:
+                #grab dataset_id if it does exist, if not will be given False
+                dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
 
-            #grab dataset_id if it does exist, if not will be given False      
-            dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
-            
-            if dataset_id:
-                # Return dataset id of existing file
-                added_to_galaxy = [{'id': dataset_id}]
-                self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                  ' Skipped file with Galaxy path: ' +
-                                  galaxy_sample_file_name)
-                self.skipped_files_log.append(
-                    {'galaxy_name': galaxy_sample_file_name})
-            else:
-                self.logger.debug(
-                    "  Sample file does not exist so uploading/linking it")
-                added = self.link(
-                    sample_file, sample_folder_id)
-                if(added):
-                    added_to_galaxy = added
+                if dataset_id:
+                    # Return dataset id of existing file
+                    added_to_galaxy = [{'id': dataset_id}]
                     self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                      ' Imported file with Galaxy path: ' +
+                                      ' Skipped file with Galaxy path: ' +
                                       galaxy_sample_file_name)
-                    self.uploaded_files_log.append(
+                    sample_file.verified = True
+                    self.skipped_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
+                else:
+                    self.logger.debug(
+                        "  Sample file does not exist so uploading/linking it")
+                    added = self.link(
+                        sample_file, sample_folder_id)
+                    if(added):
+                        added_to_galaxy = added
+                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                          ' Imported file with Galaxy path: ' +
+                                          galaxy_sample_file_name)
+                        self.uploaded_files_log.append(
+                            {'galaxy_name': galaxy_sample_file_name})
+
+                sample_file.library_dataset_id = added_to_galaxy[0]['id']
+
         else:
             error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
                      ).format(galaxy_sample_file_name, sample_file.path)
@@ -584,7 +655,7 @@ class IridaImport:
     def print_logged(self, message):
         """Print a message and log it"""
         self.logger.info(message)
-        print message
+        print(message)
 
     def get_IRIDA_session(self, oauth_dict):
         """
@@ -596,82 +667,19 @@ class IridaImport:
         redirect_uri = oauth_dict['redirect']
         auth_code = oauth_dict['code']
         if self.token:
-            irida = OAuth2Session(client_id=self.CLIENT_ID,
+            irida = OAuth2Session(client_id=self.config.CLIENT_ID,
                                   redirect_uri=redirect_uri,
                                   token={'access_token': self.token})
         else:
-            irida = OAuth2Session(self.CLIENT_ID, redirect_uri=redirect_uri)
+            irida = OAuth2Session(self.config.CLIENT_ID, redirect_uri=redirect_uri)
             irida.fetch_token(
-                self.TOKEN_ENDPOINT, client_secret=self.CLIENT_SECRET,
+                self.config.TOKEN_ENDPOINT, client_secret=self.config.CLIENT_SECRET,
                 authorization_response=redirect_uri + '?code=' + auth_code)
         if PRINT_TOKEN_INSECURELY:
             self.print_logged(irida.token)
         return irida
 
-    def configure(self):
-        """
-        Configure the tool using the configuration file
 
-        """
-        this_module_path = os.path.abspath(__file__)
-        parent_folder = os.path.dirname(this_module_path)
-        src = os.path.join(parent_folder, self.XML_FILE_SAMPLE)
-        dest = os.path.join(parent_folder, self.XML_FILE)
-        # Allows storing recommended configuration options in a sample XML file
-        # and not commiting the XML file that Galaxy will read:
-        try:
-            shutil.copyfile(src, dest)
-        except:
-            pass
-
-        config_path = os.path.join(parent_folder, self.CONFIG_FILE)
-        with open(config_path, 'r') as config_file:
-            config = ConfigParser.ConfigParser()
-            config.readfp(config_file)
-
-            # TODO: parse options from command line and config file as a list
-            self.ADMIN_KEY = config.get('Galaxy', 'admin_key')
-            self.GALAXY_URL = config.get('Galaxy', 'galaxy_url')
-            self.ILLUMINA_PATH = config.get('Galaxy', 'illumina_path')
-            self.REFERENCE_PATH = config.get('Galaxy', 'reference_path')
-            self.XML_FILE = config.get('Galaxy', 'xml_file')
-            self.MAX_WAITS = config.get('Galaxy', 'max_waits')
-
-            self.TOKEN_ENDPOINT_SUFFIX = config.get('IRIDA',
-                                                    'token_endpoint_suffix')
-            self.INITIAL_ENDPOINT_SUFFIX = config.get('IRIDA',
-                                                      'initial_endpoint_suffix')
-
-            irida_loc = config.get('IRIDA', 'irida_url')
-            self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFIX
-            irida_endpoint = irida_loc + self.INITIAL_ENDPOINT_SUFFIX
-
-            self.CLIENT_ID = config.get('IRIDA', 'client_id')
-            self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
-
-            # Configure the tool XML file
-            # The Galaxy server must be restarted for XML configuration
-            # changes to take effect.
-            # The XML file is only changed to reflect the IRIDA URL
-            # and IRIDA client ID
-            xml_path = os.path.join(parent_folder, self.XML_FILE)
-            tree = ElementTree.parse(xml_path)
-
-            inputs = tree.find('inputs')
-            inputs.set('action', irida_endpoint)
-
-            params = inputs.findall('param')
-            for param in params:
-                if param.get('name') == 'galaxyClientID':
-                    param.set('value', self.CLIENT_ID)
-                # manually set GALAXY_URL instead of using galaxy's baseurl type
-                # so that sites with SSL will work
-                # https://github.com/phac-nml/irida-galaxy-importer/issues/1 
-                if param.get('name') == 'galaxyCallbackUrl':
-                    previous_value = param.get('value')
-                    param.set('value', re.sub(r'GALAXY_URL', self.GALAXY_URL, previous_value))
-
-            tree.write(xml_path)
 
     def import_to_galaxy(self, json_parameter_file, log, hist_id, token=None,
                          config_file=None):
@@ -694,7 +702,6 @@ class IridaImport:
         self.pp = pprint.PrettyPrinter(indent=4)
 
         self.logger.setLevel(logging.INFO)
-        self.configure()
         with open(json_parameter_file, 'r') as param_file_handle:
 
             full_param_dict = json.loads(param_file_handle.read())
@@ -709,6 +716,17 @@ class IridaImport:
             samples_dict = json_params_dict['_embedded']['samples']
             email = json_params_dict['_embedded']['user']['email']
             addtohistory = json_params_dict['_embedded']['addtohistory']
+            
+            if "includeAssemblies" in json_params_dict['_embedded']:
+                include_assemblies = json_params_dict['_embedded']['includeAssemblies']
+            else:
+                include_assemblies = False
+            
+            if "includeFast5" in json_params_dict['_embedded']:
+                include_fast5 = json_params_dict['_embedded']['includeFast5']
+            else:
+                include_fast5 = False
+
             desired_lib_name = json_params_dict['_embedded']['library']['name']
             oauth_dict = json_params_dict['_embedded']['oauth2']
 
@@ -720,26 +738,39 @@ class IridaImport:
             self.token = token
             self.irida = self.get_IRIDA_session(oauth_dict)
 
-            self.gi = GalaxyInstance(self.GALAXY_URL, self.ADMIN_KEY)
+            self.gi = GalaxyInstance(self.config.GALAXY_URL, self.config.ADMIN_KEY)
+            self.gi.gi.max_get_attempts = self.config.MAX_CLIENT_ATTEMPTS
+            self.gi.gi.get_retry_delay = self.config.CLIENT_RETRY_DELAY
+
 
             # This is necessary for uploads from arbitary local paths
             # that require setting the "link_to_files" flag:
             self.reg_gi = galaxy.GalaxyInstance(
-                url=self.GALAXY_URL,
-                key=self.ADMIN_KEY)
+                url=self.config.GALAXY_URL,
+                key=self.config.ADMIN_KEY)
+            self.reg_gi.max_get_attempts = self.config.MAX_CLIENT_ATTEMPTS
+            self.reg_gi.get_retry_delay = self.config.CLIENT_RETRY_DELAY
 
             self.histories = self.reg_gi.histories
 
             # Each sample contains a list of sample files
-            samples = self.get_samples(samples_dict)
+            samples = self.get_samples(samples_dict, include_assemblies, include_fast5)
 
             # Set up the library
             self.library = self.get_first_or_make_lib(desired_lib_name, email)
-            self.create_folder_if_nec(self.ILLUMINA_PATH)
-            self.create_folder_if_nec(self.REFERENCE_PATH)
+            self.create_folder_if_nec(self.config.ILLUMINA_PATH)
+            self.create_folder_if_nec(self.config.REFERENCE_PATH)
 
             # Add each sample's files to the library
-            num_files = self.add_samples_if_nec(samples)
+            retries = 0
+            while (retries <= self.config.MAX_RETRIES):
+                num_files = self.add_samples_if_nec(samples)
+
+                self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' Checking if Samples uploaded successfully! ')
+                if self.samples_uploaded_successfully(samples):
+                    break
+                else:
+                    retries += 1
 
             if addtohistory:
                 if make_paired_collection:
@@ -757,63 +788,3 @@ class IridaImport:
             self.logger.debug("Number of files on galaxy: " + str(num_files))
 
             self.print_summary()
-
-"""
-From the command line, pass JSON files to IridaImport, and set up the logger
-"""
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-p', '--json_parameter_file', dest='json_parameter_file',
-        default='sample.dat',
-        help='A JSON formatted parameter file from Galaxy.',
-             metavar='json_parameter_file')
-    parser.add_argument(
-        '-l', '--log-file', dest='log', default='log_file',
-        help="The file to which the tool will output the log.", metavar='log')
-    parser.add_argument(
-        '-t', '--token', dest='token',
-        help='The tool can use a supplied access token instead of querying '
-             + 'IRIDA.', metavar='token')
-    parser.add_argument(
-        '-c', '--config', action='store_true', default=False, dest='config',
-        help='The tool must configure itself before Galaxy can be started. '
-             + 'Use this option to do so. config.ini should be in the main '
-             + 'irida_import folder.')
-    parser.add_argument(
-        '-i', '--history-id', dest='hist_id', default=False,
-        help='The tool requires a History ID.')
-
-    args = parser.parse_args()
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
-    log_format = "%(levelname)s: %(message)s"
-    logging.basicConfig(filename=args.log,
-                        format=log_format,
-                        level=logging.ERROR,
-                        filemode="w")
-
-    importer = IridaImport()
-    logging.debug("Reading from passed file")
-
-    if args.config:
-        if os.path.isfile('config.ini'):
-            importer.configure()
-            message = 'Successfully configured the XML file!'
-            logging.info(message)
-            print message
-        else:
-            message = ('Error: Could not find config.ini in the irida_importer'
-                       + ' directory!')
-            logging.info(message)
-            print message
-    else:
-        try:
-            file_to_open = args.json_parameter_file
-            importer.import_to_galaxy(file_to_open, args.log, args.hist_id,
-                                      token=args.token)
-        except Exception:
-            logging.exception('')
-            importer.print_summary(failed=True)
-            raise

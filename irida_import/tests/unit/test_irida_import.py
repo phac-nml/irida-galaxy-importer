@@ -1,5 +1,6 @@
 import ast
 import os
+import sys
 import json
 import logging
 import pprint
@@ -17,7 +18,21 @@ from ...sample_file import SampleFile
 from ...sample_pair import SamplePair
 
 
-@pytest.mark.unit
+class MockConfig:
+    def __init__(self):
+        self.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
+        self.GALAXY_URL = "http://localhost:8888/"
+        self.ILLUMINA_PATH = '/illumina_reads'
+        self.REFERENCE_PATH = '/references'
+        self.MAX_WAITS = 1
+        self.MAX_RETRIES = 3
+        self.MAX_CLIENT_ATTEMPTS = 10
+        self.CLIENT_RETRY_DELAY = 30
+        self.CLIENT_ID = 'webClient'
+        self.CLIENT_SECRET = 'webClientSecret'
+        self.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
+
+
 class TestIridaImport:
 
     """ TestIridaImport performs unit tests on IridaImport."""
@@ -44,7 +59,7 @@ class TestIridaImport:
     @pytest.fixture(scope="function")
     def imp(self):
         """Create an IridaImport instance to test"""
-        imp = IridaImport()
+        imp = IridaImport(MockConfig())
         imp.irida = mock.create_autospec(OAuth2Session)
         imp.gi = mock.create_autospec(GalaxyInstance)
         imp.gi.libraries = mock.create_autospec(client.ObjLibraryClient)
@@ -64,19 +79,7 @@ class TestIridaImport:
         imp.skipped_files_log = []
         imp.configure = Mock()
         imp.logger = logging.getLogger('irida_import')
-        self.add_irida_constants(imp)
         return imp
-
-    def add_irida_constants(self, irida_instance):
-        """Add constants to a passed IRIDA instance"""
-        irida_instance.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
-        irida_instance.GALAXY_URL = "http://localhost:8888/"
-        irida_instance.ILLUMINA_PATH = '/illumina_reads'
-        irida_instance.REFERENCE_PATH = '/references'
-        irida_instance.MAX_WAITS = 1
-        irida_instance.CLIENT_ID = 'webClient'
-        irida_instance.CLIENT_SECRET = 'webClientSecret'
-        irida_instance.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
 
     @pytest.fixture(scope='class')
     def file_list(self):
@@ -129,7 +132,7 @@ class TestIridaImport:
         sample_file = SampleFile('nameish', 'pathish')
         imp.get_sample_file = Mock(return_value=sample_file)
 
-        samples = imp.get_samples(json_params['_embedded']['samples'])
+        samples = imp.get_samples(json_params['_embedded']['samples'],False,False)
 
         assert isinstance(
             samples, list), 'A list must be returned'
@@ -213,11 +216,11 @@ class TestIridaImport:
         imp.exists_in_lib.side_effect = [False, [picked_f_id]]
 
         imp.library = Mock(return_value=[2222])
-        
+
         imp.reg_gi.libraries.create_folder = Mock(
             return_value=[{'id': 123 , 'type':'folder', 'name':'/illumina_reads/sample1'}])
 
-        
+
         made_folder_id = imp.create_folder_if_nec(
             folder_path)
 
@@ -244,8 +247,8 @@ class TestIridaImport:
         """ Test if a folder can be found in a library among chaff items """
         imp.library = self.make_lib('wolib', False)
         imp.gi.libraries.get = Mock(return_value=imp.library)
-        
-       
+
+
         items = {}
         items['sally.fastq']={}
         items['sally.fastq']['id']=123
@@ -256,18 +259,18 @@ class TestIridaImport:
         items['bob.fasta']['id']=234
         items['bob.fasta']['type']='file'
         items['bob.fasta']['name']='bob.fasta'
-        
+
         imp.folds = items
-        
+
         exists = imp.exists_in_lib('file', 'name', 'bob.fasta')
         assert exists, 'file must exist in library'
 
     def test_add_samples_if_nec(self, imp, file_list):
         """ Test if a new sample file is added to the library """
-        
+
         imp.exists_in_lib = Mock()
         imp.exists_in_lib.side_effect = [[123], [234]]
-        
+
         imp.link = mock.create_autospec(IridaImport.link)
         imp._add_file = mock.create_autospec(IridaImport._add_file)
         imp._add_file.return_value = [{'id': '321'}]
@@ -287,7 +290,9 @@ class TestIridaImport:
         num_files = 4
         sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
-                        "/imaginary/path/Samples/1/unpaired")
+                        "/imaginary/path/Samples/1/unpaired",
+                        "/imaginary/path/Samples/1/assemblies",
+                        "/imaginary/path/Samples/1/fast5")
         sample.add_file(sampleFile1)
         sample.add_file(sampleFile2)
         sample.add_pair(samplePair1)
@@ -300,7 +305,7 @@ class TestIridaImport:
         assert imp._add_file.call_count is num_files, \
             'The %s files should be uploaded once each' % num_files
 
-        assert num_added == 2, "The correct amount of files need to be uploaded"
+        assert num_added == 4, "The correct amount of files need to be uploaded"
 
     def test_add_samples_to_history(self, imp, file_list):
         """ Test if a new sample file is added to the library """
@@ -327,7 +332,9 @@ class TestIridaImport:
         num_pairs = 1
         sample = Sample("bobname",
                         "/imaginary/path/Samples/1/paired",
-                        "/imaginary/path/Samples/1/unpaired")
+                        "/imaginary/path/Samples/1/unpaired",
+                        "/imaginary/path/Samples/1/assemblies",
+                        "/imaginary/path/Samples/1/fast5")
         sample.add_file(sampleFile1)
         sample.add_file(sampleFile2)
         sample.add_pair(samplePair1)
@@ -376,8 +383,13 @@ class TestIridaImport:
         """Test reading a file and running apropriate methods"""
         mocker.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
         mocked_open_function = mock.mock_open(read_data=setup_json)
-        with mock.patch("__builtin__.open", mocked_open_function):
-            imp = IridaImport()
+
+        open_function_name = "builtins.open"
+        if sys.version_info[0] < 3:
+            open_function_name = "__builtin__.open"
+
+        with mock.patch(open_function_name, mocked_open_function):
+            imp = IridaImport(MockConfig())
             imp.reg_gi = mock.create_autospec(galaxy.GalaxyInstance)
             imp.reg_gi.histories = mock.create_autospec(galaxy.histories.HistoryClient)
             imp.histories = None
@@ -385,6 +397,7 @@ class TestIridaImport:
             imp.get_first_or_make_lib = Mock(return_value=lib)
             imp.create_folder_if_nec = Mock()
             imp.add_samples_if_nec = mock.create_autospec(IridaImport.add_samples_if_nec)
+            imp.samples_uploaded_successfully = mock.create_autospec(IridaImport.samples_uploaded_successfully)
             imp.add_samples_to_history = (
                 mock.create_autospec(IridaImport.add_samples_to_history))
             imp.assign_ownership_if_nec = Mock()
@@ -393,8 +406,8 @@ class TestIridaImport:
             imp.get_sample_meta = Mock()
             imp.get_samples = Mock()
             imp.configure = Mock()
+            imp.MAX_RETRIES = 3
             imp.make_irida_request = Mock()
-            self.add_irida_constants(imp)
 
             # Create a history first
             history = imp.reg_gi.histories.create_history()
@@ -402,8 +415,8 @@ class TestIridaImport:
             # Config data to come
             imp.import_to_galaxy("any_string", None, history['id'])
 
-            assert(isinstance(imp.gi, type(GalaxyInstance)),
-                   'A GalaxyInstance must be created')
+            assert isinstance(imp.gi, GalaxyInstance), \
+                   'A GalaxyInstance must be created'
             assert imp.get_first_or_make_lib.call_count == 1, \
                 'One library should be created'
             assert imp.create_folder_if_nec.call_count >= 2, \
