@@ -127,6 +127,20 @@ class Config:
             self.CLIENT_ID = config.get('IRIDA', 'client_id')
             self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
 
+            try:
+                self.IRIDA_STORAGE_TYPE = config.get('IRIDA', 'irida_storage_type')
+            except:
+                self.IRIDA_STORAGE_TYPE = 'local'
+
+            self.AZURE_ACCOUNT_NAME = config.get('IRIDA', 'azure_account_name')
+            self.AZURE_ACCOUNT_KEY = config.get('IRIDA', 'azure_account_key')
+            self.AZURE_CONTAINER_NAME = config.get('IRIDA', 'azure_container_name')
+
+            self.AWS_BUCKET_NAME = config.get('IRIDA', 'aws_bucket_name')
+            self.AWS BUCKET REGION = config.get('IRIDA', 'aws_bucket_region')
+            self.AWS_SECRET_KEY = config.get('IRIDA', 'aws_secret_key')
+            self.AWS_ACCESS_KEY = config.get('IRIDA', 'aws_access_key')
+
     def generate_xml(self):
         """
         Generate the tools xml file
