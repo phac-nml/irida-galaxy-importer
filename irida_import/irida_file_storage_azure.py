@@ -57,7 +57,7 @@ class IridaFileStorageAzure:
       logging.error("File not found in azure container: {0}", self.getFilePath(file_path))
     return blob_item.content
 
-  def getFilePath(self, file_path)
+  def getFilePath(self, file_path):
     """
     Gets the correct file_path for the file (preceding / removed)
 
@@ -65,6 +65,6 @@ class IridaFileStorageAzure:
     :param file_path: the azure container 'file path' to the file
     :return: file path with the preceding slash removed if it exists
     """
-    if file_path[0:1] == "/"
+    if file_path[0:1] == "/":
       return file_path[1:]
     return file_path

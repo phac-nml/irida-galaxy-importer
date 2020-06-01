@@ -71,6 +71,6 @@ class IridaFileStorageAws:
     :param file_path: the aws bucket 'file path' to the file
     :return: file path with the preceding slash removed if it exists
     """
-    if file_path[0:1] == "/"
+    if file_path[0:1] == "/":
       return file_path[1:]
     return file_path
