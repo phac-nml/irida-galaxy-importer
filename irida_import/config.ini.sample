@@ -33,6 +33,3 @@ azure_account_key: AZURE_ACCOUNT_KEY
 
 # AWS configuration
 aws_bucket_name: AWS_BUCKET_NAME
-aws_bucket_region: AWS BUCKET REGION
-aws_secret_key: AWS_SECRET_KEY
-aws_access_key: AWS_ACCESS_KEY
