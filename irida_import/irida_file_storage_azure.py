@@ -21,7 +21,7 @@ class IridaFileStorageAzure:
     :return: boolean indicating whether blob exists
     """
     logging.info("Checking if file exists in azure blob...")
-    blob_exists = self.blob_service.exists(self.container_name, getFilePath(file_path))
+    blob_exists = self.blob_service.exists(self.container_name, self.getFilePath(file_path))
     return blob_exists
 
   def getFileSize(self, file_path):
@@ -35,11 +35,11 @@ class IridaFileStorageAzure:
     size = 0
     logging.info("Getting file size from azure blob...")
     try:
-      blob = self.blob_service.get_blob_properties(self.container_name, getFilePath(file_path))
+      blob = self.blob_service.get_blob_properties(self.container_name, self.getFilePath(file_path))
       #size in bytes
       size = blob.properties.content_length
     except:
-      logging.error("Could not get file size as file was not found in azure container: {0}", getFilePath(file_path))
+      logging.error("Could not get file size as file was not found in azure container: {0}", self.getFilePath(file_path))
     return size
 
   def getFileContents(self, file_path):
@@ -52,9 +52,9 @@ class IridaFileStorageAzure:
     """
     logging.info("Getting file contents from azure blob...")
     try:
-      blob_item = self.blob_service.get_blob_to_text(self.container_name, getFilePath(file_path))
+      blob_item = self.blob_service.get_blob_to_text(self.container_name, self.getFilePath(file_path))
     except:
-      logging.error("File not found in azure container: {0}", getFilePath(file_path))
+      logging.error("File not found in azure container: {0}", self.getFilePath(file_path))
     return blob_item.content
 
   def getFilePath(self, file_path)

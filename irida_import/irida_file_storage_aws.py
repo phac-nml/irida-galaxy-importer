@@ -7,11 +7,14 @@ class IridaFileStorageAws:
       self.config = config
       self.logger = logging.getLogger('irida_import')
       self.s3 = boto3.resource('s3')
-      self.bucket_name = self.config.aws_bucket_name
+      self.bucket_name = self.config.AWS_BUCKET_NAME
 
   def fileExists(self, file_path):
     """
-    Checks to see if aws bucket object exists
+    Checks to see if aws bucket object exists. As there
+    is no exists function for boto3 we get the s3 object
+    content length and if it's greater than 0 then the
+    object exists
 
     :type file_path: str
     :param file_path: the aws bucket 'file path' to the file
@@ -20,9 +23,9 @@ class IridaFileStorageAws:
     logging.info("Checking if file exists in aws bucket")
     try:
       #size in bytes
-      file_size = getFileSize(bucket_name,getFilePath(file_path))
+      file_size = self.getFileSize(file_path)
     except:
-      logging.error("File not found in s3 bucket: {0}", getFilePath(file_path))
+      logging.error("File not found in s3 bucket: {0}", self.getFilePath(file_path))
       return False
     return file_size > 0
 
@@ -37,11 +40,11 @@ class IridaFileStorageAws:
     file_size = 0
     logging.info("Getting file size from aws bucket")
     try:
-      s3Object = s3.Object(bucket_name,getFilePath(file_path))
+      s3Object = self.s3.Object(self.bucket_name, self.getFilePath(file_path))
       #size in bytes
       file_size = s3Object.content_length
     except:
-      logging.error("Could not get file size as file was not found in s3 bucket: {0}", getFilePath(file_path))
+      logging.error("Could not get file size as file was not found in s3 bucket: {0}", self.getFilePath(file_path))
     return file_size
 
   def getFileContents(self, file_path):
@@ -54,13 +57,13 @@ class IridaFileStorageAws:
     """
     logging.info("Getting file contents from s3 bucket...")
     try:
-      s3Object = s3.Object(bucket_name,getFilePath(file_path))
+      s3Object = self.s3.Object(self.bucket_name, self.getFilePath(file_path))
       s3ObjectContents = s3Object.get()["Body"].read()
     except:
-      logging.error("File not found in s3 bucket: {0}", getFilePath(file_path))
+      logging.error("File not found in s3 bucket: {0}", self.getFilePath(file_path))
     return s3ObjectContents
 
-  def getFilePath(self, file_path)
+  def getFilePath(self, file_path):
     """
     Gets the correct file_path for the file (preceding / removed)
 
