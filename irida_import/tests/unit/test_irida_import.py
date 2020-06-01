@@ -31,6 +31,7 @@ class MockConfig:
         self.CLIENT_ID = 'webClient'
         self.CLIENT_SECRET = 'webClientSecret'
         self.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
+        self.IRIDA_STORAGE_TYPE = 'local'
 
 
 class TestIridaImport:
