@@ -483,6 +483,7 @@ class IridaImport:
             for sample_item in sample.get_reads():
                 sample_folder_path = self.config.ILLUMINA_PATH + '/' + sample.name
                 if isinstance(sample_item, SamplePair):
+
                     # Processing for a SamplePair
                     datasets = dict()
 
@@ -590,6 +591,7 @@ class IridaImport:
                         "  Sample file does not exist so uploading/linking it")
                     added = self.link(
                         sample_file, sample_folder_id)
+
                     if(added):
                         added_to_galaxy = added
                         self.print_logged(time.strftime("[%D %H:%M:%S]:") +
@@ -628,13 +630,27 @@ class IridaImport:
         if os.path.splitext(file_path)[1] == '.fastq':
             file_type = 'fastqsanger'
 
-        added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
-            self.library.id,
-            file_path,
-            folder_id=folder_id,
-            link_data_only='link_to_files',
-            file_type=file_type
-        )
+        if self.config.IRIDA_STORAGE_TYPE == 'local':
+            added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
+                self.library.id,
+                file_path,
+                folder_id=folder_id,
+                link_data_only='link_to_files',
+                file_type=file_type
+            )
+        else:
+            file_contents = self.iridaFileStorage.getFileContents(file_path)
+            added = self.reg_gi.libraries.upload_file_contents(
+                self.library.id,
+                file_contents,
+                folder_id=folder_id,
+                file_type=file_type
+            )
+
+            self.reg_gi.libraries.update_library_dataset(
+                dataset_id=added[0]['id'],
+                name=sample_file.name
+            )
 
         return added
 
