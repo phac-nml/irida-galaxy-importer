@@ -29,6 +29,10 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 # Print the token so that it can be used to call the tool from the command line
 PRINT_TOKEN_INSECURELY = False
 
+LOCAL_STORAGE = 'local'
+AZURE_STORAGE = 'azure'
+AWS_STORAGE = 'aws'
+
 class IridaImport:
 
     """
@@ -45,9 +49,9 @@ class IridaImport:
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger('irida_import')
-        if self.config.IRIDA_STORAGE_TYPE == "azure":
+        if self.config.IRIDA_STORAGE_TYPE == AZURE_STORAGE:
             self.iridaFileStorage = IridaFileStorageAzure(config)
-        elif self.config.IRIDA_STORAGE_TYPE == "aws":
+        elif self.config.IRIDA_STORAGE_TYPE == AWS_STORAGE:
             self.iridaFileStorage = IridaFileStorageAws(config)
         else:
             self.iridaFileStorage = IridaFileStorageLocal(config)
@@ -630,7 +634,7 @@ class IridaImport:
         if os.path.splitext(file_path)[1] == '.fastq':
             file_type = 'fastqsanger'
 
-        if self.config.IRIDA_STORAGE_TYPE == 'local':
+        if self.config.IRIDA_STORAGE_TYPE == LOCAL_STORAGE:
             added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
                 file_path,

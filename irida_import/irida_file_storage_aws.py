@@ -18,9 +18,12 @@ class IridaFileStorageAws:
     :return: boolean indicating whether object exists in bucket
     """
     logging.info("Checking if file exists in aws bucket")
-    s3Object = s3.Object(bucket_name,file_path)
-    #size in bytes
-    file_size = s3Object.content_length
+    try:
+      #size in bytes
+      file_size = getFileSize(bucket_name,getFilePath(file_path))
+    except:
+      logging.error("File not found in s3 bucket: {0}", getFilePath(file_path))
+      return False
     return file_size > 0
 
   def getFileSize(self, file_path):
@@ -31,8 +34,40 @@ class IridaFileStorageAws:
     :param file_path: the aws bucket 'file path' to the file
     :return: file size in bytes
     """
+    file_size = 0
     logging.info("Getting file size from aws bucket")
-    s3Object = s3.Object(bucket_name,file_path)
-    #size in bytes
-    file_size = s3Object.content_length
+    try:
+      s3Object = s3.Object(bucket_name,getFilePath(file_path))
+      #size in bytes
+      file_size = s3Object.content_length
+    except:
+      logging.error("Could not get file size as file was not found in s3 bucket: {0}", getFilePath(file_path))
     return file_size
+
+  def getFileContents(self, file_path):
+    """
+    Gets file as string from aws bucket
+
+    :type file_path: str
+    :param file_path: the aws bucket 'file path' to the file
+    :return: file contents as a string
+    """
+    logging.info("Getting file contents from s3 bucket...")
+    try:
+      s3Object = s3.Object(bucket_name,getFilePath(file_path))
+      s3ObjectContents = s3Object.get()["Body"].read()
+    except:
+      logging.error("File not found in s3 bucket: {0}", getFilePath(file_path))
+    return s3ObjectContents
+
+  def getFilePath(self, file_path)
+    """
+    Gets the correct file_path for the file (preceding / removed)
+
+    :type file_path: str
+    :param file_path: the aws bucket 'file path' to the file
+    :return: file path with the preceding slash removed if it exists
+    """
+    if file_path[0:1] == "/"
+      return file_path[1:]
+    return file_path

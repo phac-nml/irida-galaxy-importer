@@ -137,9 +137,6 @@ class Config:
             self.AZURE_CONTAINER_NAME = config.get('IRIDA', 'azure_container_name')
 
             self.AWS_BUCKET_NAME = config.get('IRIDA', 'aws_bucket_name')
-            self.AWS_BUCKET_REGION = config.get('IRIDA', 'aws_bucket_region')
-            self.AWS_SECRET_KEY = config.get('IRIDA', 'aws_secret_key')
-            self.AWS_ACCESS_KEY = config.get('IRIDA', 'aws_access_key')
 
     def generate_xml(self):
         """
