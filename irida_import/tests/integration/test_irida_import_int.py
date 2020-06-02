@@ -311,6 +311,9 @@ class TestIridaImportInt:
 
     def add_irida_client_password(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.ID, 'clientId'))
+        )
         driver.find_element_by_id("clientId").send_keys(self.IRIDA_PASSWORD_ID)
         driver.find_element_by_id("scope_write").click()
         driver.find_element_by_id("create-client-submit").click()
