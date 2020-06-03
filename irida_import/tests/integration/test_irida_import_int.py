@@ -15,6 +15,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 from ...irida_import import IridaImport
 from . import util
 from requests_oauthlib import OAuth2Session
@@ -136,7 +137,7 @@ class TestIridaImportInt:
         """Set up the Selenium WebDriver"""
         driver = webdriver.Chrome()
         driver.implicitly_wait(1)
-        driver.set_window_size(1024, 768)
+        driver.set_window_size(1280, 1024)
 
         def finalize_driver():
             driver.quit()
@@ -423,18 +424,31 @@ class TestIridaImportInt:
         driver.find_element_by_id("cart-add-btn").click()
         driver.find_element_by_id("cart-show-btn").click()
 
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.XPATH, "//form[contains(@class, 'ant-form')]//input[@type='text']"))
+        )
+
+        driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']").send_keys(Keys.CONTROL + "a")
+        driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']").send_keys(Keys.DELETE)
+
         email_input = driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']")
         email_input.clear()
         email_input.send_keys(self.EMAIL)
 
         # Click "Export Samples to Galaxy" button
-        driver.find_element_by_xpath("//button[span[text()='Export Samples to Galaxy']]").click()
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.XPATH, "//button[span[text()='Export Samples to Galaxy']]"))
+        )
+
+        driver.find_element_by_xpath("//button[span[text()='Export Samples to Galaxy']]").send_keys(Keys.ENTER)
+        time.sleep(10)
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, 'current-history-panel'))
         )
+
         time.sleep(120)  # Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
-        succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+
         assert succeeded - initially_succeeded > 0, \
             "Import did not complete successfully"
