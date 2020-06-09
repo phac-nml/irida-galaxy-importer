@@ -2,8 +2,9 @@ import boto
 from boto.s3.key import Key
 from moto import mock_s3
 import boto3
+import unittest
 
-class TestIridaFileStorageAws:
+class TestIridaFileStorageAws(unittest.TestCase):
   mock_s3 = mock_s3()
 
   def setUp(self):

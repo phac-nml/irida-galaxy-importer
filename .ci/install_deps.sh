@@ -38,7 +38,7 @@ then
   conda create -y --quiet --override-channels --channel iuc --channel conda-forge --channel bioconda --channel defaults --name $CONDA_ENV bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 python=$PYTHON_VERSION pip
 
   source activate $CONDA_ENV
-  pip install pytest pytest-cov pytest-mock mock subprocess32 selenium boto azure-storage-blob==2.1.0 boto3 moto
+  pip install pytest pytest-cov pytest-mock mock subprocess32 selenium boto azure-storage-blob==2.1.0 boto3 moto unittest
 else
   source activate $CONDA_ENV
 fi
