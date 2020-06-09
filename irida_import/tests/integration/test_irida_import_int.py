@@ -442,13 +442,11 @@ class TestIridaImportInt:
         )
 
         exportToGalaxyButton.click()
-        time.sleep(2)
 
         time.sleep(120)  # Wait for import to complete
 
-        driver.switch_to_window(driver.window_handles[0])
+        driver.switch_to_window(main_app_window)
         time.sleep(10)
-
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, 'current-history-panel'))
