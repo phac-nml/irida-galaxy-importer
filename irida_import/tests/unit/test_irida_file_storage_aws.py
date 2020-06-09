@@ -9,7 +9,7 @@ class TestIridaFileStorageAws(unittest.TestCase):
 
   def setUp(self):
       self.mock_s3.start()
-      self.location = "ca-central-1"
+      self.location = "eu-west-1"
       self.bucket_name = 'my_aws_bucket'
       self.key_name = 'path/to/newfile.fasta'
       self.key_contents = ">gi|217332573|gb|CP001175.1| Listeria monocytogenes HCC23, complete genome \
