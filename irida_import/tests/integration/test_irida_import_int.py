@@ -438,7 +438,7 @@ class TestIridaImportInt:
 
         # Click "Export Samples to Galaxy" button
         exportToGalaxyButton = WebDriverWait(driver, self.WAIT).until(
-            EC.element_to_be_clickable(By.CLASS_NAME, 'ant-btn-primary')
+            EC.element_to_be_clickable((By.CLASS_NAME, 'ant-btn-primary'))
         )
 
         exportToGalaxyButton.click()
