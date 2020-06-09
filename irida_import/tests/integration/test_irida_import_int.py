@@ -425,30 +425,36 @@ class TestIridaImportInt:
         driver.find_element_by_id("cart-show-btn").click()
 
         WebDriverWait(driver, self.WAIT).until(
-            EC.presence_of_element_located((By.XPATH, "//form[contains(@class, 'ant-form')]//input[@type='text']"))
+            EC.presence_of_element_located((By.CLASS_NAME, 'ant-input'))
         )
 
-        driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']").send_keys(Keys.CONTROL + "a")
-        driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']").send_keys(Keys.DELETE)
-
-        email_input = driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']")
-        email_input.clear()
+        email_input = driver.find_element_by_class_name('ant-input')
+        email_input.send_keys(Keys.CONTROL + "a")
+        email_input.send_keys(Keys.DELETE)
         email_input.send_keys(self.EMAIL)
+        time.sleep(10)
+
+        main_app_window = driver.window_handles[0]
 
         # Click "Export Samples to Galaxy" button
-        WebDriverWait(driver, self.WAIT).until(
-            EC.presence_of_element_located((By.XPATH, "//button[span[text()='Export Samples to Galaxy']]"))
+        exportToGalaxyButton = WebDriverWait(driver, self.WAIT).until(
+            EC.element_to_be_clickable(By.CLASS_NAME, 'ant-btn-primary')
         )
 
-        driver.find_element_by_xpath("//button[span[text()='Export Samples to Galaxy']]").send_keys(Keys.ENTER)
+        exportToGalaxyButton.click()
+        time.sleep(2)
+
+        time.sleep(120)  # Wait for import to complete
+
+        driver.switch_to_window(driver.window_handles[0])
         time.sleep(10)
+
 
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, 'current-history-panel'))
         )
 
-        time.sleep(120)  # Wait for import to complete
         history_panel = driver.find_element_by_id('current-history-panel')
-
+        succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
         assert succeeded - initially_succeeded > 0, \
             "Import did not complete successfully"
