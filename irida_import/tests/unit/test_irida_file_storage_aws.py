@@ -3,9 +3,16 @@ from boto.s3.key import Key
 from moto import mock_s3
 import boto3
 import unittest
+import pytest
 
 class TestIridaFileStorageAws(unittest.TestCase):
   mock_s3 = mock_s3()
+
+  @pytest.fixture(scope='session')
+  def setup_env():
+      os.environ['AWS_ACCESS_KEY_ID'] = 'foo'
+      os.environ['AWS_SECRET_ACCESS_KEY'] = 'bar'
+      os.environ.pop('AWS_PROFILE', None)
 
   def setUp(self):
       self.mock_s3.start()
