@@ -425,26 +425,29 @@ class TestIridaImportInt:
         driver.find_element_by_id("cart-show-btn").click()
 
         WebDriverWait(driver, self.WAIT).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'ant-input'))
+            EC.presence_of_element_located((By.XPATH, '//input[@id=(//label[text()="Galaxy User Email"]/@for)]'))
         )
 
-        email_input = driver.find_element_by_class_name('ant-input')
+        email_input = driver.find_element_by_xpath('//input[@id=(//label[text()="Galaxy User Email"]/@for)]')
         email_input.send_keys(Keys.CONTROL + "a")
         email_input.send_keys(Keys.DELETE)
         email_input.send_keys(self.EMAIL)
         time.sleep(10)
 
+        # The main application window
         main_app_window = driver.window_handles[0]
 
         # Click "Export Samples to Galaxy" button
         exportToGalaxyButton = WebDriverWait(driver, self.WAIT).until(
-            EC.element_to_be_clickable((By.CLASS_NAME, 'ant-btn-primary'))
+            EC.element_to_be_clickable((By.XPATH, "//button[span[text()='Export Samples to Galaxy']]"))
         )
 
         exportToGalaxyButton.click()
 
         time.sleep(120)  # Wait for import to complete
 
+        # The window gets switched to the authentication is successful popup
+        # so we switch back to the main window
         driver.switch_to_window(main_app_window)
         time.sleep(10)
 
