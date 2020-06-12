@@ -425,10 +425,10 @@ class TestIridaImportInt:
         driver.find_element_by_id("cart-show-btn").click()
 
         WebDriverWait(driver, self.WAIT).until(
-            EC.presence_of_element_located((By.XPATH, "//label[contains(.,'Galaxy User Email')]/following::input[0]"))
+            EC.presence_of_element_located((By.CLASS_NAME, 'ant-input'))
         )
 
-        email_input = driver.find_element_by_xpath("//label[contains(.,'Galaxy User Email')]/following::input[0]")
+        email_input = driver.find_element_by_class_name('ant-input')
         email_input.send_keys(Keys.CONTROL + "a")
         email_input.send_keys(Keys.DELETE)
         email_input.send_keys(self.EMAIL)
