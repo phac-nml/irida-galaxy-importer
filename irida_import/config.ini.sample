@@ -23,7 +23,7 @@ irida_url: http://localhost:8080
 initial_endpoint_suffix: /projects
 
 # Irida file storage mechanism (azure, aws, local)
-irida_storage_type = local
+irida_storage_type: local
 
 
 # Azure configuration
