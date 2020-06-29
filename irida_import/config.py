@@ -195,18 +195,18 @@ class Config:
         Returns if IRIDA_STORAGE_TYPE is azure
 
         """
-        return self.IRIDA_STORAGE_TYPE == AZURE_STORAGE
+        return self.IRIDA_STORAGE_TYPE == self.AZURE_STORAGE
 
     def isAwsStorage(self):
         """
         Returns if IRIDA_STORAGE_TYPE is aws
 
         """
-        return self.IRIDA_STORAGE_TYPE == AWS_STORAGE
+        return self.IRIDA_STORAGE_TYPE == self.AWS_STORAGE
 
     def isLocalStorage(self):
         """
         Returns if IRIDA_STORAGE_TYPE is local
 
         """
-        return self.IRIDA_STORAGE_TYPE == LOCAL_STORAGE
+        return self.IRIDA_STORAGE_TYPE == self.LOCAL_STORAGE
