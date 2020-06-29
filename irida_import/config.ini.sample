@@ -27,9 +27,9 @@ irida_storage_type: local
 
 
 # Azure configuration
-azure_container_name: AZURE_CONTAINER_NAME
-azure_account_name: AZURE_ACCOUNT_NAME
-azure_account_key: AZURE_ACCOUNT_KEY
+#azure_container_name: AZURE_CONTAINER_NAME
+#azure_account_name: AZURE_ACCOUNT_NAME
+#azure_account_key: AZURE_ACCOUNT_KEY
 
 # AWS configuration
-aws_bucket_name: AWS_BUCKET_NAME
+#aws_bucket_name: AWS_BUCKET_NAME

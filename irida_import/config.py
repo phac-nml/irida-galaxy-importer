@@ -75,6 +75,10 @@ class Config:
     SAMPLE_TOOL_FILE = 'irida_import.xml.sample'
     DEFAULT_TOOL_FILE = 'irida_import.xml'
 
+    LOCAL_STORAGE = 'local'
+    AZURE_STORAGE = 'azure'
+    AWS_STORAGE = 'aws'
+
     def __init__(self, config_file):
         self.CONFIG_FILE = config_file
         self._load_from_file()
@@ -129,14 +133,16 @@ class Config:
 
             try:
                 self.IRIDA_STORAGE_TYPE = config.get('IRIDA', 'irida_storage_type')
+
+                if self.isAzureStorage():
+                    self.AZURE_ACCOUNT_NAME = config.get('IRIDA', 'azure_account_name')
+                    self.AZURE_ACCOUNT_KEY = config.get('IRIDA', 'azure_account_key')
+                    self.AZURE_CONTAINER_NAME = config.get('IRIDA', 'azure_container_name')
+
+                if self.isAwsStorage()
+                    self.AWS_BUCKET_NAME = config.get('IRIDA', 'aws_bucket_name')
             except:
                 self.IRIDA_STORAGE_TYPE = 'local'
-
-            self.AZURE_ACCOUNT_NAME = config.get('IRIDA', 'azure_account_name')
-            self.AZURE_ACCOUNT_KEY = config.get('IRIDA', 'azure_account_key')
-            self.AZURE_CONTAINER_NAME = config.get('IRIDA', 'azure_container_name')
-
-            self.AWS_BUCKET_NAME = config.get('IRIDA', 'aws_bucket_name')
 
     def generate_xml(self):
         """
@@ -183,3 +189,12 @@ class Config:
                 param.set('value', new_value)
 
         tree.write(self.TOOL_FILE)
+
+    def isAzureStorage():
+        return self.IRIDA_STORAGE_TYPE == AZURE_STORAGE
+
+    def isAwsStorage():
+        return self.IRIDA_STORAGE_TYPE == AWS_STORAGE
+
+    def isLocalStorage():
+        return self.IRIDA_STORAGE_TYPE == LOCAL_STORAGE
