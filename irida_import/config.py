@@ -139,7 +139,7 @@ class Config:
                     self.AZURE_ACCOUNT_KEY = config.get('IRIDA', 'azure_account_key')
                     self.AZURE_CONTAINER_NAME = config.get('IRIDA', 'azure_container_name')
 
-                if self.isAwsStorage()
+                if self.isAwsStorage():
                     self.AWS_BUCKET_NAME = config.get('IRIDA', 'aws_bucket_name')
             except:
                 self.IRIDA_STORAGE_TYPE = 'local'
