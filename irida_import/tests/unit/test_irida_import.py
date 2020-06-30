@@ -19,6 +19,10 @@ from ...sample_pair import SamplePair
 
 
 class MockConfig:
+    AWS_STORAGE = 'aws'
+    AZURE_STORAGE = 'azure'
+    LOCAL_STORAGE = 'local'
+
     def __init__(self):
         self.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
         self.GALAXY_URL = "http://localhost:8888/"
@@ -33,6 +37,14 @@ class MockConfig:
         self.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
         self.IRIDA_STORAGE_TYPE = 'local'
 
+    def isAzureStorage(self):
+        return self.IRIDA_STORAGE_TYPE == self.AZURE_STORAGE
+
+    def isAwsStorage(self):
+        return self.IRIDA_STORAGE_TYPE == self.AWS_STORAGE
+
+    def isLocalStorage(self):
+        return self.IRIDA_STORAGE_TYPE == self.LOCAL_STORAGE
 
 class TestIridaImport:
 
