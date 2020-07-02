@@ -233,7 +233,17 @@ class TestIridaImportInt:
     def test_tool_visible(self, setup_galaxy, driver):
         """Make sure there is a link to the tool in Galaxy"""
         driver.get(self.GALAXY_URL)
-        driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
+
+        getDataLink = WebDriverWait(driver, self.WAIT).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]"))
+        )
+
+        getDataLink.click()
+
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'irida_import')]"))
+        )
+
         assert (driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]"))
 
     def register_galaxy(self, driver):
@@ -397,18 +407,17 @@ class TestIridaImportInt:
         initially_succeeded = len(history_panel.find_elements_by_class_name(
             'state-ok'))
 
-
-        WebDriverWait(driver, self.WAIT).until(
-            EC.presence_of_element_located((By.XPATH, "//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]"))
+        getDataLink = WebDriverWait(driver, self.WAIT).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]"))
         )
 
-        driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
+        getDataLink.click()
 
-        WebDriverWait(driver, self.WAIT).until(
-            EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'irida_import')]"))
+        iridaImportLink = WebDriverWait(driver, self.WAIT).until(
+            EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'irida_import')]"))
         )
 
-        driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]").click()
+        iridaImportLink.click()
 
         # Sometimes a login is required
         try:
