@@ -386,10 +386,28 @@ class TestIridaImportInt:
 
         # Export to Galaxy using the button on the dropdown menu
         driver.get(self.GALAXY_URL)
+
+        time.sleep(10)
+
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.ID, 'current-history-panel'))
+        )
+
         history_panel = driver.find_element_by_id('current-history-panel')
         initially_succeeded = len(history_panel.find_elements_by_class_name(
             'state-ok'))
+
+
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]"))
+        )
+
         driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
+
+        WebDriverWait(driver, self.WAIT).until(
+            EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'irida_import')]"))
+        )
+
         driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]").click()
 
         # Sometimes a login is required
