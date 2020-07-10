@@ -235,7 +235,7 @@ class TestIridaImportInt:
         driver.get(self.GALAXY_URL)
 
         getDataLink = WebDriverWait(driver, self.WAIT).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]"))
+            EC.element_to_be_clickable((By.XPATH, "//a[span[contains(text(), 'Get Data')]]"))
         )
 
         getDataLink.click()
@@ -408,7 +408,7 @@ class TestIridaImportInt:
             'state-ok'))
 
         getDataLink = WebDriverWait(driver, self.WAIT).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]"))
+            EC.element_to_be_clickable((By.XPATH, "//a[span[contains(text(), 'Get Data')]]"))
         )
 
         getDataLink.click()
