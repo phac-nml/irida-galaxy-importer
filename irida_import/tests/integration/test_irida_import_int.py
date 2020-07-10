@@ -241,10 +241,10 @@ class TestIridaImportInt:
         getDataLink.click()
 
         WebDriverWait(driver, self.WAIT).until(
-            EC.presence_of_element_located((By.XPATH, "//a[contains(@class, 'irida_import')]"))
+            EC.presence_of_element_located((By.XPATH, "//a[span[contains(text(), 'IRIDA')]]"))
         )
 
-        assert (driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]"))
+        assert (driver.find_element_by_xpath("//a[span[contains(text(), 'IRIDA')]]"))
 
     def register_galaxy(self, driver):
         """Register with Galaxy, and then attempt to log in"""
@@ -414,7 +414,7 @@ class TestIridaImportInt:
         getDataLink.click()
 
         iridaImportLink = WebDriverWait(driver, self.WAIT).until(
-            EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'irida_import')]"))
+            EC.element_to_be_clickable((By.XPATH, "//a[span[contains(text(), 'IRIDA')]]"))
         )
 
         iridaImportLink.click()
