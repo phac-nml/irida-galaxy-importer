@@ -322,6 +322,7 @@ class TestIridaImportInt:
 
     def add_irida_client_password(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
+        time.sleep(10)
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, 'clientId'))
         )
