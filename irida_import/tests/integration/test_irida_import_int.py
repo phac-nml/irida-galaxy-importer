@@ -301,7 +301,9 @@ class TestIridaImportInt:
     def login_irida(self, driver, username, password):
         """Log in to IRIDA (assumes the login page is opened by the driver)"""
         try:
+            driver.find_element_by_name("username").click()
             driver.find_element_by_name("username").send_keys(username)
+            driver.find_element_by_name("password").click()
             driver.find_element_by_name(
                 "password").send_keys(password)
             driver.find_element_by_xpath("//button[@type='submit']").click()
@@ -322,7 +324,6 @@ class TestIridaImportInt:
 
     def add_irida_client_password(self, driver):
         driver.get(self.IRIDA_URL + '/clients/create')
-        time.sleep(10)
         WebDriverWait(driver, self.WAIT).until(
             EC.presence_of_element_located((By.ID, 'clientId'))
         )
