@@ -11,6 +11,9 @@ services:
 jdk:
   - openjdk11
 
+addons:
+  chrome: stable
+
 env:
   global:
     - "MYSQL_DATABASE=irida_test"
