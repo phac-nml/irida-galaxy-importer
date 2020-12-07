@@ -25,6 +25,11 @@ jobs:
       MYSQL_HOST: 127.0.0.1
       MYSQL_ROOT_PASSWORD: password
     
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [unit, integration]
+    
     steps:
       - uses: actions/checkout@v2
       - name: Setup MySQL
@@ -53,7 +58,7 @@ jobs:
           sudo mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
           sudo mysql -e "CREATE USER '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}'; GRANT ALL ON ${{ env.MYSQL_DATABASE }}.* to '${{ env.MYSQL_USER }}'@'%';" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
       - name: install python libraries
-        run: pip install pytest
+        run: pip install pytest requests requests_oauthlib bioblend
       - name: Run Tests
-        run: ./run-tests.sh unit
+        run: ./run-tests.sh ${{ matrix.suite }}
       
