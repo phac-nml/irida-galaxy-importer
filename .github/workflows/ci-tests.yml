@@ -1,0 +1,51 @@
+name: Integration Tests
+
+on:
+  pull_request: # Run on all pull requests
+  push:
+    branches:   # Run on any push to development or master
+      - development
+      - master
+  schedule:     # Run weekly on development and master
+    - cron: 0 2 * * 1
+      branches: development
+    - cron: 0 2 * * 1
+      branches: master
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      MYSQL_PORT: 3306
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_DATABASE: irida_test
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_ROOT_PASSWORD: password
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache Maven dependencies #Pull the cache for Maven.  This caches all dependencies assuming the pom file is the same
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+      - name: Verify MySQL connection
+        timeout-minutes: 10
+        run: |
+          while ! mysqladmin ping -h"${{ env.MYSQL_HOST }}" -P"${{ env.MYSQL_PORT }}" --silent; do
+            sleep 1
+          done
+      - name: Set up JDK 11 # Installs java 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: MySQL Setup (SUDO) # Sets ONLY_FULL_GROUP_BY flag and gives runner privileges over database
+        run: |
+          sudo mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
+          sudo mysql -e "CREATE USER '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}'; GRANT ALL ON ${{ env.MYSQL_DATABASE }}.* to '${{ env.MYSQL_USER }}'@'%';" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
+          psql -c 'create database galaxy_test;';
+      - name: Run Tests
+        run: ./run-tests.sh
+      
