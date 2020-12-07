@@ -27,10 +27,6 @@ jobs:
     
     steps:
       - uses: actions/checkout@v2
-      - name: Cache Maven dependencies #Pull the cache for Maven.  This caches all dependencies assuming the pom file is the same
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
       - name: Verify MySQL connection
         timeout-minutes: 10
         run: |
