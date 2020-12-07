@@ -75,7 +75,7 @@ case "$1" in
 		exit_code=$?
 	;;
 	unit)
-		pytest tests/unit/*.py
+		python -m pytest tests/unit/*.py
 		exit_code=$?
 	;;
 	*)
