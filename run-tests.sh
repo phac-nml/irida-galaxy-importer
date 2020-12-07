@@ -68,9 +68,9 @@ case "$1" in
 		# If xvfb is already started, don't bother with 'xvfb-run'. Useful for TravisCI tests.
 		if [ "$XVFB_STARTED" = "1" ];
 		then
-			pytest tests/integration/*.py
+			python -m pytest tests/integration/*.py
 		else
-			xvfb-run pytest tests/integration/*.py
+			xvfb-run python -m pytest tests/integration/*.py
 		fi
 		exit_code=$?
 	;;
@@ -82,9 +82,9 @@ case "$1" in
 		# If xvfb is already started, don't bother with 'xvfb-run'. Useful for TravisCI tests.
 		if [ "$XVFB_STARTED" = "1" ];
 		then
-			py.test -s
+			python -m pytest -s
 		else
-			xvfb-run py.test -s
+			xvfb-run python -m pytest -s
 		fi
 		exit_code=$?
 	;;
