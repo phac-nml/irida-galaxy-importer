@@ -5,10 +5,10 @@ import json
 import logging
 import pprint
 import pytest
-import mock
+from unittest import mock
 
 from requests_oauthlib import OAuth2Session
-from mock import Mock
+from unittest.mock import Mock
 from bioblend import galaxy
 from bioblend.galaxy.objects import (GalaxyInstance, Library, Folder, client)
 from bioblend.galaxy.objects.wrappers import LibraryContentInfo
@@ -379,9 +379,9 @@ class TestIridaImport:
         # TODO: write the functionality for this to test
         return True
 
-    def test_import_to_galaxy(self, setup_json, mocker):
+    def test_import_to_galaxy(self, setup_json):
         """Test reading a file and running apropriate methods"""
-        mocker.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
+        mock.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
         mocked_open_function = mock.mock_open(read_data=setup_json)
 
         open_function_name = "builtins.open"
