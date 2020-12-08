@@ -58,7 +58,9 @@ jobs:
           sudo mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
           sudo mysql -e "CREATE USER '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}'; GRANT ALL ON ${{ env.MYSQL_DATABASE }}.* to '${{ env.MYSQL_USER }}'@'%';" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
       - name: install python libraries
-        run: pip3 install pytest requests requests_oauthlib bioblend
+        run: |
+                pip3 install setuptools
+                pip3 install pytest requests requests_oauthlib bioblend
       - name: Run Tests
         run: ./run-tests.sh ${{ matrix.suite }}
       
