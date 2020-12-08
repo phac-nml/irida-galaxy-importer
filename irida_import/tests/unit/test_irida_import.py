@@ -5,7 +5,7 @@ import json
 import logging
 import pprint
 import pytest
-from unittest import mock
+import unittest.mock as mock
 
 from requests_oauthlib import OAuth2Session
 from unittest.mock import Mock
