@@ -65,11 +65,10 @@ jobs:
         with:
           auto-update-conda: true
           python-version: 3.6.7
-      - name: Conda info and init
+          activate-environment: __irida_importer_py3.6.7
+      - name: Conda info
         shell: bash -l {0}
-        run: |
-          conda info;
-          conda init bash
+        run: conda info
       - name: Run Tests
         shell: bash -l {0}
         run: ./run-tests.sh ${{ matrix.suite }}
