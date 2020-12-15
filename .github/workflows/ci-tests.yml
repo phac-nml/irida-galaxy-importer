@@ -65,9 +65,11 @@ jobs:
         with:
           auto-update-conda: true
           python-version: 3.6.7
-      - name: Conda info
+      - name: Conda info and init
         shell: bash -l {0}
-        run: conda info
+        run: |
+          conda info;
+          conda init bash
       - name: Run Tests
         shell: bash -l {0}
         run: ./run-tests.sh ${{ matrix.suite }}
