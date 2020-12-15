@@ -57,10 +57,6 @@ jobs:
         run: |
           sudo mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
           sudo mysql -e "CREATE USER '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}'; GRANT ALL ON ${{ env.MYSQL_DATABASE }}.* to '${{ env.MYSQL_USER }}'@'%';" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
-#       - name: install python libraries
-#         run: |
-#                 pip3 install setuptools
-#                 pip3 install pytest requests requests_oauthlib bioblend
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
@@ -69,6 +65,19 @@ jobs:
       - name: Conda info
         shell: bash -l {0}
         run: conda info
+      - name: Install conda packages
+        shell: bash -l {0}
+        run: |
+          conda config --add channels defaults
+          conda config --add channels conda-forge
+          conda config --add channels bioconda
+          conda config --add channels iuc
+          conda install bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 pip3
+      - name: install python libraries
+        shell: bash -l {0}
+        run: |
+          pip3 install setuptools
+          pip3 install pytest pytest-cov pytest-mock mock subprocess32 selenium
       - name: Run Tests
         shell: bash -l {0}
         run: ./run-tests.sh ${{ matrix.suite }}
