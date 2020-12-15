@@ -57,10 +57,18 @@ jobs:
         run: |
           sudo mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
           sudo mysql -e "CREATE USER '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}'; GRANT ALL ON ${{ env.MYSQL_DATABASE }}.* to '${{ env.MYSQL_USER }}'@'%';" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
-      - name: install python libraries
-        run: |
-                pip3 install setuptools
-                pip3 install pytest requests requests_oauthlib bioblend
+#       - name: install python libraries
+#         run: |
+#                 pip3 install setuptools
+#                 pip3 install pytest requests requests_oauthlib bioblend
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: 3.6.7
+      - name: Conda info
+        shell: bash -l {0}
+        run: conda info
       - name: Run Tests
+        shell: bash -l {0}
         run: ./run-tests.sh ${{ matrix.suite }}
       
