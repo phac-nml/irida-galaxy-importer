@@ -37,10 +37,10 @@ then
 
   conda create -y --quiet --override-channels --channel iuc --channel conda-forge --channel bioconda --channel defaults --name $CONDA_ENV bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 python=$PYTHON_VERSION pip
 
-  . $WORKSPACE/miniconda/bin/activate $CONDA_ENV
+  conda activate $CONDA_ENV
   pip install pytest pytest-cov pytest-mock mock subprocess32 selenium
 else
-  . $WORKSPACE/miniconda/bin/activate $CONDA_ENV
+  conda activate $CONDA_ENV
 fi
 
 # Install chromedriver if not correct version
