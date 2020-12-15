@@ -72,7 +72,7 @@ jobs:
           conda config --add channels conda-forge
           conda config --add channels bioconda
           conda config --add channels iuc
-          conda install bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 pip3
+          conda install bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1
       - name: install python libraries
         shell: bash -l {0}
         run: |
