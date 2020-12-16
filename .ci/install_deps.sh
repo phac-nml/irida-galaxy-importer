@@ -28,19 +28,22 @@ then
   fi
 fi
 
-# check for conda environment
-conda list -n $CONDA_ENV 2>/dev/null 1>/dev/null
-if [ $? -ne 0 ];
-then
-  echo "Installing conda environment $CONDA_ENV"
+# check conda environment, if we are already in it, continue,
+if [ "$CONDA_DEFAULT_ENV" != "$CONDA_ENV" ]; then
+	# if it exists use it, otherwise create it
+	conda list -n $CONDA_ENV 2>/dev/null 1>/dev/null
+	if [ $? -ne 0 ];
+	then
+	  echo "Installing conda environment $CONDA_ENV"
 
 
-  conda create -y --quiet --override-channels --channel iuc --channel conda-forge --channel bioconda --channel defaults --name $CONDA_ENV bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 python=$PYTHON_VERSION pip
+	  conda create -y --quiet --override-channels --channel iuc --channel conda-forge --channel bioconda --channel defaults --name $CONDA_ENV bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1 python=$PYTHON_VERSION pip
 
-  conda activate $CONDA_ENV
-  pip install pytest pytest-cov pytest-mock mock subprocess32 selenium
-else
-  conda activate $CONDA_ENV
+	  conda activate $CONDA_ENV
+	  pip install pytest pytest-cov pytest-mock mock subprocess32 selenium
+	else
+	  conda activate $CONDA_ENV
+	fi
 fi
 
 # Install chromedriver if not correct version
