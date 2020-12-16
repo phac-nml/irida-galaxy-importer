@@ -67,6 +67,10 @@ jobs:
           python-version: 3.6.7
           activate-environment: __irida_importer_py3.6.7
 
+      - uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: '11'  # See https://hub.docker.com/_/postgres for available versions
+
       - name: Conda info
         shell: bash -l {0}
         run: conda info
