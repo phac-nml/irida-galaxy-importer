@@ -17,23 +17,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      # Label used to access the service container
-      postgres:
-        # Docker Hub image
-        image: postgres
-        # Provide the password for postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          # Maps tcp port 5432 on service container to the host
-          - 5432:5432
+#     services:
+#       # Label used to access the service container
+#       postgres:
+#         # Docker Hub image
+#         image: postgres
+#         # Provide the password for postgres
+#         env:
+#           POSTGRES_PASSWORD: postgres
+#         # Set health checks to wait until postgres has started
+#         options: >-
+#           --health-cmd pg_isready
+#           --health-interval 10s
+#           --health-timeout 5s
+#           --health-retries 5
+#         ports:
+#           # Maps tcp port 5432 on service container to the host
+#           - 5432:5432
  
     env:
       MYSQL_PORT: 3306
@@ -74,6 +74,12 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+      
+      - name: Set up PostgreSQL
+        run: |
+          sudo apt-get install postgresql libpq-dev
+          sudo service postgresql start
+          sudo -u postgres createuser --superuser "$USER"
 
       - name: MySQL Setup (SUDO) # Sets ONLY_FULL_GROUP_BY flag and gives runner privileges over database
         run: |
