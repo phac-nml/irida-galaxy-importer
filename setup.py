@@ -36,7 +36,8 @@ setup(name='irida_import',
           'oauthlib',
           'requests',
           'requests-oauthlib',
-          'simplejson'
+          'simplejson',
+          'azure-storage-blob'
       ],
       zip_safe=False,
       classifiers=[
