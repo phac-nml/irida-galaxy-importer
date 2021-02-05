@@ -135,8 +135,8 @@ class Config:
                 self.IRIDA_STORAGE_TYPE = config.get('IRIDA', 'irida_storage_type')
 
                 if self.isAzureStorage():
-                    self.AZURE_ACCOUNT_NAME = config.get('IRIDA', 'azure_account_name')
-                    self.AZURE_ACCOUNT_KEY = config.get('IRIDA', 'azure_account_key')
+                    self.AZURE_ACCOUNT_URL = config.get('IRIDA', 'azure_account_url')
+                    self.AZURE_SAS_TOKEN = config.get('IRIDA', 'azure_sas_token')
                     self.AZURE_CONTAINER_NAME = config.get('IRIDA', 'azure_container_name')
 
                 if self.isAwsStorage():
