@@ -640,10 +640,9 @@ class IridaImport:
                 file_type=file_type
             )
         else:
-            file_contents = self.iridaFileStorage.getFileContents(file_path)
             added = self.reg_gi.libraries.upload_file_contents(
                 self.library.id,
-                file_contents,
+                self.iridaFileStorage.getFileContents(file_path),
                 folder_id=folder_id,
                 file_type=file_type
             )

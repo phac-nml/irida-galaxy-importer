@@ -1,19 +1,20 @@
 from __future__ import absolute_import
 
 import logging
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from azure.storage.blob import baseblobservice
 
 class IridaFileStorageAzure:
 
   def __init__(self, config):
       self.config = config
-      self.logger = logging.getLogger('irida_import')
+      self.logger = logging.getLogger('irida_import_azure')
       self.container_name = self.config.AZURE_CONTAINER_NAME
-      self.blob_service = BlobServiceClient(
-        account_url=self.config.AZURE_ACCOUNT_URL,
-        credential=self.config.AZURE_SAS_TOKEN
+
+      self.blob_service = baseblobservice.BaseBlobService(
+        account_name=self.config.AZURE_ACCOUNT_NAME,
+        sas_token=self.config.AZURE_SAS_TOKEN,
+        endpoint_suffix=self.config.AZURE_ACCOUNT_ENDPOINT
       )
-      self.container_client = self.blob_service.get_container_client(self.container_name)
 
   def fileExists(self, file_path):
     """
@@ -24,7 +25,7 @@ class IridaFileStorageAzure:
     :return: boolean indicating whether blob exists
     """
     logging.info("Checking if file exists in azure blob...")
-    blob_exists = self.container_client.get_blob_client(self.getFilePath(file_path)).exists()
+    blob_exists = self.blob_service.exists(self.container_name, self.getFilePath(file_path))
     return blob_exists
 
   def getFileSize(self, file_path):
@@ -38,9 +39,9 @@ class IridaFileStorageAzure:
     size = 0
     logging.info("Getting file size from azure blob...")
     try:
-      blob = self.container_client.get_blob_client(self.getFilePath(file_path)).get_blob_properties()
+      blob = self.blob_service.get_blob_properties(self.container_name, self.getFilePath(file_path))
       #size in bytes
-      size = blob.size
+      size = blob.properties.content_length
     except:
       logging.error("Could not get file size as file was not found in azure container: {0}", self.getFilePath(file_path))
     return size
@@ -54,13 +55,11 @@ class IridaFileStorageAzure:
     :return: file contents as a text
     """
     logging.info("Getting file contents from azure blob...")
-    file_contents = ""
     try:
-      blob_item = self.container_client.get_blob_client(self.getFilePath(file_path)).download_blob()
-      file_contents = blob_item.content_as_text(max_concurrency=1, encoding='UTF-8')
+      blob_item = self.blob_service.get_blob_to_text(self.container_name, self.getFilePath(file_path))
     except:
       logging.error("Unable to get file contents as file was not found in azure container: {0}", self.getFilePath(file_path))
-    return file_contents
+    return blob_item.content
 
   def getFilePath(self, file_path):
     """
