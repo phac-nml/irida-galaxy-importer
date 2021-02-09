@@ -8,6 +8,7 @@ import pprint
 import re
 import sys
 import time
+import shutil
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
@@ -640,9 +641,11 @@ class IridaImport:
                 file_type=file_type
             )
         else:
+            import_temp_file = self.iridaFileStorage.getFileContents(file_path)
+            contents_file = open(import_temp_file.file_path, 'r')
             added = self.reg_gi.libraries.upload_file_contents(
                 self.library.id,
-                self.iridaFileStorage.getFileContents(file_path),
+                contents_file.read(),
                 folder_id=folder_id,
                 file_type=file_type
             )
@@ -651,6 +654,10 @@ class IridaImport:
                 dataset_id=added[0]['id'],
                 name=sample_file.name
             )
+
+            logging.info("Removing directory {0} and it's contents....", import_temp_file.dir_path)
+            # Remove the temp directory and contents
+            shutil.rmtree(import_temp_file.dir_path)
 
         return added
 
