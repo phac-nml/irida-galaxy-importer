@@ -10,7 +10,7 @@ class IridaFileStorageAws:
   def __init__(self, config):
       self.config = config
       self.logger = logging.getLogger('irida_import_aws')
-      self.s3 = boto3.resource('s3')
+      self.s3 = boto3.client('s3', aws_access_key_id=self.config.AWS_ACCESS_KEY, aws_secret_access_key=self.config.AWS_SECRET_KEY)
       self.bucket_name = self.config.AWS_BUCKET_NAME
 
   def file_exists(self, file_path):

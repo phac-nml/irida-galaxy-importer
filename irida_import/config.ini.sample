@@ -33,3 +33,5 @@ irida_storage_type: local
 
 # AWS configuration
 #aws_bucket_name: AWS_BUCKET_NAME
+#aws_access_key: AWS_ACCESS_KEY
+#aws_secret_key: AWS_SECRET_KEY
