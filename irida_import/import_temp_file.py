@@ -1,5 +1,5 @@
 """
-Copyright Government of Canada 2015-2021
+Copyright Government of Canada 2015-2020
 
 Written by: National Microbiology Laboratory, Public Health Agency of Canada
 
@@ -14,7 +14,6 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
 
 class ImportTempFile:
 
