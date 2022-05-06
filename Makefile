@@ -21,4 +21,5 @@ env:
 unittests: clean env
 	source .virtualenv/bin/activate
 	pip3 install -e .
+	pip3 install pytest
 	pytest irida_import/tests/unit/*.py
