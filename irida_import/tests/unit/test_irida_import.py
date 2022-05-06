@@ -47,7 +47,7 @@ class TestIridaImport:
     def setup_json(self):
         """Create a json string from a text file"""
         logging.debug("Opening a test json string")
-        test_path = 'tests/unit/data/test.dat'
+        test_path = 'irida_import/tests/unit/data/test.dat'
         # Pytest messes up the paths to modules and packages.
         # I haven't found a way to get around it without hardcoding paths.
         # Reading a file is neccessary to avoid writing large PEP8 commpliant
