@@ -38,6 +38,9 @@ setup(name='irida_import',
           'requests-oauthlib',
           'simplejson'
       ],
+      extras_require={
+          "TEST": ["pytest", "pytest-cov", "pytest-mock", "mock", "subprocess32", "selenium", "rauth"],
+      },
       zip_safe=False,
       classifiers=[
           'License :: OSI Approved :: Apache Software License',
