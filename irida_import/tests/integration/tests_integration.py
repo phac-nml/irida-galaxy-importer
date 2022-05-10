@@ -7,7 +7,7 @@ from irida_import.tests.integration.irida_data_setup import SetupIridaData
 from irida_import.tests.integration.test_irida_importer import IridaImporterTestSuite
 
 # Modules level variables that can/will be changed when the setup starts
-base_url = "http://localhost:8080/api"
+base_url = "http://localhost:8080/api/"
 username = "jeff"
 password = "password1"
 client_id = "myClient"

@@ -32,7 +32,7 @@ class SetupIridaData:
         # Database info
         self.DB_HOST = db_host
         self.DB_PORT = db_port
-        self.DB_NAME = "irida_uploader_test"
+        self.DB_NAME = "irida_importer_test"
         self.DB_USERNAME = "test"
         self.DB_PASSWORD = "test"
         self.DB_JDBC_URL = "jdbc:mysql://" + self.DB_HOST + ":" + self.DB_PORT + "/" + self.DB_NAME

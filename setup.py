@@ -39,7 +39,7 @@ setup(name='irida_import',
           'simplejson'
       ],
       extras_require={
-          "TEST": ["pytest", "pytest-cov", "pytest-mock", "mock", "subprocess32", "selenium", "rauth"],
+          "TEST": ["pytest", "pytest-cov", "pytest-mock", "mock", "subprocess32", "selenium", "rauth", "argparse"],
       },
       zip_safe=False,
       classifiers=[

@@ -268,25 +268,18 @@ mysql -u root -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROU
 ```
 
 ## 3.2. Running tests
-
-To run all the test, you can run:
-
-```bash
-./run-tests.sh
-```
-
-If you just want to run just the unit tests (much quicker) you can do:
+Unit tests can be run with:
 
 ```bash
-./run-tests.sh unit
+make unittests
 ```
 
-If you just want to run just the integration tests you can do:
+Integration tests can be run with
 
 ```bash
-./run-tests.sh integration
+make integrationtests branch=master
 ```
-
+This tests against the `master` branch of IRIDA
 
 [galaxy]: https://galaxyproject.org/
 [irida]: https://www.irida.ca/

@@ -28,4 +28,4 @@ integrationtests: clean env
 	python3 -m pip install -e .[TEST]
 	python3 -m pip install pytest
 	mkdir irida_import/tests/integration/repos
-	python3 irida_import/tests/integration/start_integration_tests.py
+	python3 irida_import/tests/integration/start_integration_tests.py $(branch) $(db_host) $(db_port)

@@ -30,6 +30,55 @@ jobs:
       - name: Run Unit Tests
         run: make unittests
 
+  build-irida-integration:
+    runs-on: ubuntu-20.04 #See pre-installed software at https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+
+    env:
+      MYSQL_PORT: 3306
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_DATABASE: irida_importer_test
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_ROOT_PASSWORD: password
+      NODE_OPTIONS: "--max-old-space-size=4096"
+
+    strategy:
+      fail-fast: False #Setting so that if one of the test suites fail, the other will continue
+      matrix:
+        branch: ['master','development'] # IRIDA Branches to test against
+
+    steps:
+      - uses: actions/checkout@v2 #Checkout the project from git
+      - name: Setup MySQL
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          host port: ${{ env.MYSQL_PORT }}
+          character set server: 'utf8'
+          collation server: 'utf8_general_ci'
+          mysql version: '5.7'
+          mysql database: ${{ env.MYSQL_DATABASE }}
+          mysql user: ${{ env.MYSQL_USER }}
+          mysql password: ${{ env.MYSQL_PASSWORD }}
+          mysql root password: ${{ env.MYSQL_ROOT_PASSWORD }} #The root superuser password
+      - name: Verify MySQL connection
+        timeout-minutes: 10
+        run: |
+          while ! mysqladmin ping -h"${{ env.MYSQL_HOST }}" -P"${{ env.MYSQL_PORT }}" --silent; do
+            sleep 1
+          done
+      - name: Set up JDK 11 # Installs java 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: MySQL Setup (SUDO) # Sets ONLY_FULL_GROUP_BY flag and gives runner privileges over database
+        run: |
+          sudo mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
+          sudo mysql -e "CREATE USER '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}'; GRANT ALL ON ${{ env.MYSQL_DATABASE }}.* to '${{ env.MYSQL_USER }}'@'%';" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
+      - name: Run Integration Tests ${{ matrix.branch }}
+        timeout-minutes: 60
+        run: make integrationtests branch=${{ matrix.branch }} db_host=${{ env.MYSQL_HOST }} db_port=${{ env.MYSQL_PORT }}
+
+
 #  build:
 #    runs-on: ubuntu-latest
 #
@@ -59,11 +108,6 @@ jobs:
 #      MYSQL_HOST: 127.0.0.1
 #      MYSQL_ROOT_PASSWORD: password
 #      MAVEN_OPTS: -Djava.awt.headless=true
-#
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        suite: [unit, integration]
 #
 #    steps:
 #      - uses: actions/checkout@v2

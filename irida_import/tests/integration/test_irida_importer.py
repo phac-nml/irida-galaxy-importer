@@ -6,7 +6,8 @@ import sys
 import logging
 import os
 import configparser
-import pytest
+import unittest
+import ast
 import subprocess
 from tempfile import mkdtemp
 from selenium import webdriver
@@ -21,6 +22,15 @@ from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import LegacyApplicationClient
 from bioblend import galaxy
 
+from urllib.parse import urljoin, urlparse
+from rauth import OAuth2Service
+
+
+import irida_import.tests.integration.tests_integration as tests_integration
+
+
+import pytest
+
 
 # These variables are to stop Galaxy and Irida from being changed
 # during script execution. This is required if you are using your
@@ -29,6 +39,68 @@ from bioblend import galaxy
 # os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_GALAXY'] = "1"
 # os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_STOP_GALAXY'] = "1"
 # os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA'] = "1"
+
+class IridaImporterTestSuite(unittest.TestCase):
+
+    def setUp(self):
+        print("\nStarting " + self.__module__ + ": " + self._testMethodName)
+
+    def tearDown(self):
+        return
+
+    def get_irida_oauth_session(self):
+        def token_decoder(return_dict):
+            """
+            safely parse given dictionary
+
+            arguments:
+                return_dict -- access token dictionary
+
+            returns evaluated dictionary
+            """
+            # It is supposedly safer to decode bytes to string and then use ast.literal_eval than just use eval()
+            try:
+                irida_dict = ast.literal_eval(return_dict.decode("utf-8"))
+            except (SyntaxError, ValueError):
+                # SyntaxError happens when something that looks nothing like a token is returned (ex: 404 page)
+                # ValueError happens with the path returns something that looks like a token, but is invalid
+                #   (ex: forgetting the /api/ part of the url)
+                raise ConnectionError("Unexpected response from server, URL may be incorrect")
+            return irida_dict
+
+        access_token_url = urljoin(tests_integration.base_url, "oauth/token")
+        oauth_service = OAuth2Service(
+            client_id=tests_integration.client_id,
+            client_secret=tests_integration.client_secret,
+            name="irida",
+            access_token_url=access_token_url,
+            base_url=tests_integration.base_url
+        )
+
+        params = {
+            "data": {
+                "grant_type": "password",
+                "client_id": tests_integration.client_id,
+                "client_secret": tests_integration.client_secret,
+                "username": tests_integration.username,
+                "password": tests_integration.password
+            }
+        }
+
+        access_token = oauth_service.get_access_token(
+            decoder=token_decoder, **params)
+
+        return oauth_service.get_session(access_token)
+
+    def test_something(self):
+        """
+        Tests sending and receiving project data
+        :return:
+        """
+        # do something
+        url = f"{tests_integration.base_url}projects"
+        self.get_irida_oauth_session().get(url)
+        self.assertEqual(True, True)
 
 
 class TestIridaImportInt:
@@ -146,44 +218,7 @@ class TestIridaImportInt:
 
     @pytest.fixture(scope='class')
     def setup_irida(self, request, driver):
-        """Set up IRIDA for tests (Start if required, register, log in)"""
-
-        def stop_irida():
-            print('Stopping IRIDA nicely')
-            stopper = subprocess.Popen(self.IRIDA_STOP, cwd=self.IRIDA,
-                                         shell=True)
-            stopper.wait()
-
-        try:
-            os.environ['IRIDA_GALAXY_TOOL_TESTS_DONT_START_IRIDA']
-        except KeyError:
-            stop_irida()
-
-            # create temporary directories for IRIDA data
-            data_dir = mkdtemp(prefix='irida-tmp-')
-            sequence_file_dir = mkdtemp(prefix='sequence-files-', dir=data_dir)
-            reference_file_dir = mkdtemp(prefix='reference-files-', dir=data_dir)
-            output_file_dir = mkdtemp(prefix='output-files-', dir=data_dir)
-            self.IRIDA_CMD.append('-Dsequence.file.base.directory=' + sequence_file_dir)
-            self.IRIDA_CMD.append('-Dreference.file.base.directory=' + reference_file_dir)
-            self.IRIDA_CMD.append('-Doutput.file.base.directory=' + output_file_dir)
-
-            subprocess.call(self.IRIDA_DB_RESET, shell=True)
-            FNULL = open(os.devnull, 'w')
-            subprocess.Popen(self.IRIDA_CMD, cwd=self.IRIDA, env=os.environ,stdout=FNULL)
-            util.wait_until_up(self.IRIDA_DOMAIN, self.IRIDA_PORT,
-                               self.TIMEOUT)
-
-            def finalize_irida():
-                stop_irida()
-
-            request.addfinalizer(finalize_irida)
-        self.register_irida(driver)
-        self.add_irida_client_password(driver)
-        self.add_irida_client_auth_code(driver)
-        self.configure_irida_client_secret(driver)
-
-        # Return an OAuth 2.0 authorized session with IRIDA
+        # THIS JUST RETURNS THE OAUTH SESSION
         return self.get_irida_oauth(driver)
 
     @pytest.fixture(scope='class')
