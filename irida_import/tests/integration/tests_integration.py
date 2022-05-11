@@ -4,14 +4,17 @@ This file is responsible for managing the execution of an IRIDA instance and Tes
 import unittest
 
 from irida_import.tests.integration.irida_data_setup import SetupIridaData
+from irida_import.tests.integration.galaxy_data_setup import SetupGalaxyData
 from irida_import.tests.integration.test_irida_importer import IridaImporterTestSuite
 
 # Modules level variables that can/will be changed when the setup starts
-base_url = "http://localhost:8080/api/"
+irida_base_url = "http://localhost:8080/api/"
 username = "jeff"
 password = "password1"
 client_id = "myClient"
 client_secret = "myClientSecret"
+
+galaxy_url = None
 
 
 def init_irida_setup(branch, db_host, db_port):
@@ -22,13 +25,21 @@ def init_irida_setup(branch, db_host, db_port):
     :param db_port: database port override
     :return: SetupIridaData object
     """
-    global base_url
+    global irida_base_url
     global username
     global password
     global client_id
     global client_secret
 
-    return SetupIridaData(base_url[:base_url.index("/api")], username, password, branch, db_host, db_port)
+    return SetupIridaData(irida_base_url[:irida_base_url.index("/api")], username, password, branch, db_host, db_port)
+
+
+def init_galaxy_setup():
+    """
+    Initializes the Galaxy setup object
+    :return:
+    """
+    return SetupGalaxyData()
 
 
 def create_test_suite():
@@ -50,12 +61,12 @@ def create_test_suite():
     return suite
 
 
-def start(branch="master", db_host="localhost", db_port="3306"):
+def start(irida_branch="master", db_host="localhost", db_port="3306"):
     """
     Start running the integration tests
 
     This is the entry point for the integration tests
-    :param branch: what branch from github to check out
+    :param irida_branch: what branch from github to check out
     :param db_host: database host override
     :param db_port: database port override
     :return:
@@ -63,7 +74,7 @@ def start(branch="master", db_host="localhost", db_port="3306"):
     exit_code = 0
 
     # create a handler to manage a headless IRIDA instance
-    irida_handler = init_irida_setup(branch, db_host, db_port)
+    irida_handler = init_irida_setup(irida_branch, db_host, db_port)
     # Install IRIDA packages
     irida_handler.install_irida()
     # Delete and recreate the database
@@ -74,6 +85,19 @@ def start(branch="master", db_host="localhost", db_port="3306"):
     irida_handler.run_irida()
     # Add data to database that the tests depend on
     irida_handler.update_irida_db()
+
+    # Create handler for Galaxy
+    galaxy_handler = init_galaxy_setup()
+    global galaxy_url
+    galaxy_url = galaxy_handler.GALAXY_URL
+    # install an instance of galaxy
+    galaxy_handler.install_galaxy()
+    # setup data for galaxy
+    galaxy_handler.setup_galaxy()
+
+    # galaxy_handler.register_galaxy(driver)
+    # galaxy_handler.configure_galaxy_api_key(driver)
+    # galaxy_handler.configure_tool('Galaxy', 'galaxy_url', self.GALAXY_URL)
 
     # Run tests
     try:
@@ -86,7 +110,8 @@ def start(branch="master", db_host="localhost", db_port="3306"):
     except Exception as e:
         raise e
     finally:
-        # Make sure IRIDA is stopped even when an exception is raised
+        # Make sure IRIDA and Galaxy are stopped even when an exception is raised
         irida_handler.stop_irida()
+        galaxy_handler.stop_galaxy()
 
     return exit_code

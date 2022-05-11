@@ -11,6 +11,7 @@ clean:
 	rm -rf irida_import.egg-info/
 	find -name "*pyc" -delete
 	rm -rf irida_import/tests/integration/repos
+	rm -rf irida_import/tests/integration/tmp
 
 env:
 	python3 -m venv .virtualenv

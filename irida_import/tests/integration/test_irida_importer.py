@@ -44,11 +44,24 @@ class IridaImporterTestSuite(unittest.TestCase):
 
     def setUp(self):
         print("\nStarting " + self.__module__ + ": " + self._testMethodName)
+        self.driver = self._init_driver()
+        self.irida_session = self._get_irida_oauth_session()
 
     def tearDown(self):
+        self.driver.quit()
         return
 
-    def get_irida_oauth_session(self):
+    @staticmethod
+    def _init_driver():
+        """Set up the Selenium WebDriver"""
+        driver = webdriver.Chrome()
+        driver.implicitly_wait(1)
+        driver.set_window_size(1024, 768)
+
+        return driver
+
+    @staticmethod
+    def _get_irida_oauth_session():
         def token_decoder(return_dict):
             """
             safely parse given dictionary
@@ -68,13 +81,13 @@ class IridaImporterTestSuite(unittest.TestCase):
                 raise ConnectionError("Unexpected response from server, URL may be incorrect")
             return irida_dict
 
-        access_token_url = urljoin(tests_integration.base_url, "oauth/token")
+        access_token_url = urljoin(tests_integration.irida_base_url, "oauth/token")
         oauth_service = OAuth2Service(
             client_id=tests_integration.client_id,
             client_secret=tests_integration.client_secret,
             name="irida",
             access_token_url=access_token_url,
-            base_url=tests_integration.base_url
+            base_url=tests_integration.irida_base_url
         )
 
         params = {
@@ -92,14 +105,20 @@ class IridaImporterTestSuite(unittest.TestCase):
 
         return oauth_service.get_session(access_token)
 
-    def test_something(self):
+    def test_irida_alive(self):
         """
         Tests sending and receiving project data
         :return:
         """
         # do something
-        url = f"{tests_integration.base_url}projects"
-        self.get_irida_oauth_session().get(url)
+        url = f"{tests_integration.irida_base_url}projects"
+        response = self.irida_session.get(url)
+        print(response)
+        self.assertEqual(True, True)
+
+    def test_galaxy_alive(self):
+        response = self.driver.get(tests_integration.galaxy_url)
+        print(response)
         self.assertEqual(True, True)
 
 

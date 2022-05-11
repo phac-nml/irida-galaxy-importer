@@ -4,26 +4,7 @@ args=("$@")
 tool_loc=${args[0]}
 galaxy_port=${args[1]}
 
-mkdir repos
 pushd repos
-
-echo "Downloading IRIDA..."
-git clone https://github.com/phac-nml/irida.git
-pushd irida
-git checkout master > irida-checkout.log 2>&1
-git fetch
-git reset --hard
-git clean -fd
-git pull
-echo "Preparing IRIDA for first excecution..."
-rm -rf /tmp/shed_tools/
-pkill -u $USER -f "python ./scripts/paster.py" || true
-
-pushd lib
-./install-libs.sh > /dev/null
-popd
-popd
-echo "IRIDA has been installed"
 
 echo "Downloading Galaxy..."
 git clone https://github.com/galaxyproject/galaxy/ > galaxy-clone.log 2>&1
@@ -82,4 +63,4 @@ popd
 
 popd
 
-echo "IRIDA, Galaxy, and the IRIDA export tool have been installed"
+echo "Galaxy and the IRIDA export tool have been installed"
