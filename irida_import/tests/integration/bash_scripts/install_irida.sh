@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pushd repos
+pushd /tmp/repos
 
 echo "Downloading IRIDA..."
 if ! git clone https://github.com/phac-nml/irida.git --branch $1

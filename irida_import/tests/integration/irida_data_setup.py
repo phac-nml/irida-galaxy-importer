@@ -15,7 +15,7 @@ from pathlib import Path
 
 class SetupIridaData:
 
-    def __init__(self, base_url, user, password, branch, db_host, db_port):
+    def __init__(self, base_url, user, password, branch, db_host, db_port, repo_dir):
         """
         :param base_url: url of the IRIDA instance's API
         :param user: default admin username
@@ -80,7 +80,7 @@ class SetupIridaData:
         self.INSTALL_IRIDA_EXEC = path.join(
             self.SCRIPT_FOLDER, "install_irida.sh")
 
-        self.REPO_PATH = path.join(self.PATH_TO_MODULE, "repos")
+        self.REPO_PATH = repo_dir
         self.IRIDA_PATH = path.join(self.REPO_PATH, "irida")
 
     def install_irida(self):

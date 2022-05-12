@@ -2,6 +2,7 @@
 This file is responsible for managing the execution of an IRIDA instance and Test Suites
 """
 import unittest
+from os import path
 
 from irida_import.tests.integration.irida_data_setup import SetupIridaData
 from irida_import.tests.integration.galaxy_data_setup import SetupGalaxyData
@@ -15,6 +16,9 @@ client_id = "myClient"
 client_secret = "myClientSecret"
 
 galaxy_url = None
+
+# Deal with 'AF_UNIX path too long' errors
+repo_path = path.join('/tmp', 'repos')
 
 
 def init_irida_setup(branch, db_host, db_port):
@@ -31,7 +35,7 @@ def init_irida_setup(branch, db_host, db_port):
     global client_id
     global client_secret
 
-    return SetupIridaData(irida_base_url[:irida_base_url.index("/api")], username, password, branch, db_host, db_port)
+    return SetupIridaData(irida_base_url[:irida_base_url.index("/api")], username, password, branch, db_host, db_port, repo_dir=repo_path)
 
 
 def init_galaxy_setup():
@@ -39,7 +43,7 @@ def init_galaxy_setup():
     Initializes the Galaxy setup object
     :return:
     """
-    return SetupGalaxyData()
+    return SetupGalaxyData(repo_dir=repo_path)
 
 
 def create_test_suite():

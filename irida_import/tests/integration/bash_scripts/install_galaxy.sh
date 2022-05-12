@@ -4,7 +4,7 @@ args=("$@")
 tool_loc=${args[0]}
 galaxy_port=${args[1]}
 
-pushd repos
+pushd /tmp/repos
 
 echo "Downloading Galaxy..."
 git clone https://github.com/galaxyproject/galaxy/ > galaxy-clone.log 2>&1

@@ -16,14 +16,14 @@ from ...irida_import import IridaImport
 
 class SetupGalaxyData:
 
-    def __init__(self):
+    def __init__(self, repo_dir):
 
         self.log = self._setup_galaxy_logger()
 
         module_dir = path.dirname(path.abspath(__file__))
         self.SCRIPTS = path.join(module_dir, 'bash_scripts')
         self.REPOS_PARENT = module_dir
-        self.REPOS = path.join(module_dir, 'repos')
+        self.REPOS = repo_dir
         self.GALAXY_REPO = path.join(self.REPOS, 'galaxy')
         self.TOOL_DIRECTORY = path.dirname(inspect.getfile(IridaImport))
         self.CONFIG_PATH = path.join(self.TOOL_DIRECTORY, 'tests',
@@ -32,9 +32,10 @@ class SetupGalaxyData:
                                      'config.ini')
         self.INSTALL_EXEC = 'install_galaxy.sh'
         self.GALAXY_DOMAIN = 'localhost'
-        self.GALAXY_STOP = ['bash', 'run.sh', '--stop-daemon']
+        self.CONDA_INIT = '. $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate _galaxy_ && '
+        self.GALAXY_STOP = self.CONDA_INIT + 'bash run.sh --stop_daemon'
         self.GALAXY_DB_RESET = 'echo "drop database if exists galaxy_test; create database galaxy_test;" | psql'
-        self.GALAXY_CMD = ['bash', 'run.sh', '--daemon']
+        self.GALAXY_RUN = self.CONDA_INIT + '. run.sh --daemon'
 
         # setup galaxy socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,7 +70,7 @@ class SetupGalaxyData:
 
     def stop_galaxy(self):
         self.log.info('Killing Galaxy')
-        subprocess.Popen(self.GALAXY_STOP, cwd=self.GALAXY_REPO)
+        subprocess.Popen(self.GALAXY_STOP, shell=True, cwd=self.GALAXY_REPO)
 
     def setup_galaxy(self):
         """
@@ -78,10 +79,13 @@ class SetupGalaxyData:
         """
         # Stop galaxy
         self.stop_galaxy()
+        return
         # reset the galaxy database
+        self.log.info("Resetting galaxy database")
         subprocess.call(self.GALAXY_DB_RESET, shell=True)
         # start galaxy again
-        subprocess.Popen(self.GALAXY_CMD, cwd=self.GALAXY_REPO)
+        self.log.info("Running galaxy")
+        subprocess.Popen(self.GALAXY_RUN, shell=True, cwd=self.GALAXY_REPO)
         self.log.debug("Waiting for Galaxy database migration [%s]. Sleeping for [%s] seconds", self.GALAXY_URL, 360)
         sleep(360)
         self.log.debug("Galaxy database migration should have (hopefully) finished, checking if it is up")
