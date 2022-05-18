@@ -32,17 +32,13 @@ class SetupGalaxyData:
                                      'config.ini')
         self.INSTALL_EXEC = 'install_galaxy.sh'
         self.GALAXY_DOMAIN = 'localhost'
-        self.CONDA_INIT = '. $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate _galaxy_ && '
-        self.GALAXY_STOP = self.CONDA_INIT + 'bash run.sh --stop_daemon'
-        self.GALAXY_DB_RESET = 'echo "drop database if exists galaxy_test; create database galaxy_test;" | psql'
-        self.GALAXY_RUN = self.CONDA_INIT + '. run.sh --daemon'
-
-        # setup galaxy socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('', 0))
-        self.GALAXY_PORT = sock.getsockname()[1]
+        self.GALAXY_PORT = 8080
         self.GALAXY_URL = 'http://' + self.GALAXY_DOMAIN + ':' + str(
             self.GALAXY_PORT)
+        self.CONDA_INIT = '. $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate _galaxy_ && '
+        self.GALAXY_STOP = self.CONDA_INIT + 'bash run.sh --stop-daemon'
+        self.GALAXY_DB_RESET = 'echo "drop database if exists galaxy_test; create database galaxy_test;" | psql'
+        self.GALAXY_RUN = self.CONDA_INIT + 'bash run.sh --daemon'
 
     @staticmethod
     def _setup_galaxy_logger():
@@ -72,18 +68,7 @@ class SetupGalaxyData:
         self.log.info('Killing Galaxy')
         subprocess.Popen(self.GALAXY_STOP, shell=True, cwd=self.GALAXY_REPO)
 
-    def setup_galaxy(self):
-        """
-        Stops galaxy, resets db, and starts it up again
-        :return:
-        """
-        # Stop galaxy
-        self.stop_galaxy()
-        return
-        # reset the galaxy database
-        self.log.info("Resetting galaxy database")
-        subprocess.call(self.GALAXY_DB_RESET, shell=True)
-        # start galaxy again
+    def start_galaxy(self):
         self.log.info("Running galaxy")
         subprocess.Popen(self.GALAXY_RUN, shell=True, cwd=self.GALAXY_REPO)
         self.log.debug("Waiting for Galaxy database migration [%s]. Sleeping for [%s] seconds", self.GALAXY_URL, 360)
@@ -95,8 +80,16 @@ class SetupGalaxyData:
             600)
         self.log.debug("Galaxy should now be up on [%s]", self.GALAXY_URL)
 
-    @staticmethod
-    def _wait_until_up(address, port, timeout):
+    def setup_galaxy(self):
+        """
+        Stops galaxy, resets db, and starts it up again
+        :return:
+        """
+        # reset the galaxy database
+        self.log.info("Resetting galaxy database")
+        subprocess.call(self.GALAXY_DB_RESET, shell=True)
+
+    def _wait_until_up(self, address, port, timeout):
         """
         Wait until a port at an address is occupied, or time out
 
@@ -124,6 +117,7 @@ class SetupGalaxyData:
         max_time = time() + timeout
         up = False
         while not up and time() < max_time:
+            self.log.debug("Checking if Galaxy is up...")
             up = check_up(address, port)
 
             # If we query Galaxy immediately it may reset the connection:
