@@ -74,6 +74,27 @@ jobs:
         run: |
           sudo mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
           sudo mysql -e "CREATE USER '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}'; GRANT ALL ON ${{ env.MYSQL_DATABASE }}.* to '${{ env.MYSQL_USER }}'@'%';" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
+      - name: Set up PostgreSQL
+        run: |
+          sudo apt-get install postgresql libpq-dev
+          sudo service postgresql start
+          sudo -u postgres createuser --superuser "$USER"
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: 3.6.7
+          activate-environment: __irida_importer_py3.6.7
+      - name: Conda info
+        shell: bash -l {0}
+        run: conda info
+      - name: Install conda packages
+        shell: bash -l {0}
+        run: |
+          conda config --add channels defaults
+          conda config --add channels conda-forge
+          conda config --add channels bioconda
+          conda config --add channels iuc
+          conda install bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1
       - name: Run Integration Tests ${{ matrix.branch }}
         timeout-minutes: 60
         run: make integrationtests branch=${{ matrix.branch }} db_host=${{ env.MYSQL_HOST }} db_port=${{ env.MYSQL_PORT }}
