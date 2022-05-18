@@ -107,19 +107,26 @@ class IridaImporterTestSuite(unittest.TestCase):
 
     def test_irida_alive(self):
         """
-        Tests sending and receiving project data
+        Tests an endpoint on irida to check alive status
         :return:
         """
-        # do something
-        url = f"{tests_integration.irida_base_url}projects"
-        response = self.irida_session.get(url)
-        print(response)
-        self.assertEqual(True, True)
+        try:
+            url = f"{tests_integration.irida_base_url}projects"
+            response = self.irida_session.get(url)
+            print(response)
+        except Exception as e:
+            self.fail("Could not verify that IRIDA is up: " + str(e))
 
     def test_galaxy_alive(self):
-        response = self.driver.get(tests_integration.galaxy_url)
-        print(response)
-        self.assertEqual(True, True)
+        """
+        Tests an endpoint on galaxy to check alive status
+        :return:
+        """
+        try:
+            response = self.driver.get(tests_integration.galaxy_url)
+            print(response)
+        except Exception as e:
+            self.fail("Could not verify that IRIDA is up: " + str(e))
 
 
 class TestIridaImportInt:

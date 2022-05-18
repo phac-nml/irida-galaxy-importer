@@ -32,7 +32,7 @@ class SetupGalaxyData:
                                      'config.ini')
         self.INSTALL_EXEC = 'install_galaxy.sh'
         self.GALAXY_DOMAIN = 'localhost'
-        self.GALAXY_PORT = 8080
+        self.GALAXY_PORT = 8888
         self.GALAXY_URL = 'http://' + self.GALAXY_DOMAIN + ':' + str(
             self.GALAXY_PORT)
         self.CONDA_INIT = '. $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate _galaxy_ && '

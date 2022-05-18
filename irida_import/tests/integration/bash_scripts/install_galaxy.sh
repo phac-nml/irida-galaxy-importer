@@ -36,7 +36,8 @@ echo "  database_connection: postgresql:///galaxy_test" | cat >> galaxy.yml
 sed -i 's/#admin_users:.*/admin_users: "irida@irida.ca"/' galaxy.yml
 
 # run galaxy on port 8888 instead of 8080; Tomcat runs on 8080 by default.
-sed -i "s|http: 127.0.0.1:8080|http: 127.0.0.1:$galaxy_port|" galaxy.yml
+sed -i "s|# bind: localhost:8080|bind: localhost:$galaxy_port|" galaxy.yml
+
 popd
 popd
 echo "Galaxy has been installed"
