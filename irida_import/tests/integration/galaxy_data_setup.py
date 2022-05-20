@@ -134,8 +134,9 @@ class SetupGalaxyData:
             raise Exception('There was no response at {} on port {} for {} seconds'
                             .format(address, port, timeout))
 
-    def register_galaxy(self, driver):
+    def register_galaxy(self):
         """Register with Galaxy, and then attempt to log in"""
+        driver = self._get_webdriver()
 
         driver.get(self.GALAXY_URL)
         driver.find_element_by_link_text("Login or Register").click()
