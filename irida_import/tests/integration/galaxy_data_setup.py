@@ -4,12 +4,16 @@ database management.
 """
 
 import logging
+import configparser
 from os import path
 from time import time, sleep
 import sys
 import subprocess
 import inspect
 import socket
+from selenium import webdriver
+from selenium.common import exceptions as selenium_exceptions
+from bioblend import galaxy as bioblend_galaxy
 
 from ...irida_import import IridaImport
 
@@ -39,6 +43,9 @@ class SetupGalaxyData:
         self.GALAXY_STOP = self.CONDA_INIT + 'bash run.sh --stop-daemon'
         self.GALAXY_DB_RESET = 'echo "drop database if exists galaxy_test; create database galaxy_test;" | psql'
         self.GALAXY_RUN = self.CONDA_INIT + 'bash run.sh --daemon'
+
+        self.GALAXY_EMAIL = 'irida@irida.ca'
+        self.GALAXY_PASSWORD = 'Password1'
 
     @staticmethod
     def _setup_galaxy_logger():
@@ -126,3 +133,50 @@ class SetupGalaxyData:
         if not up:
             raise Exception('There was no response at {} on port {} for {} seconds'
                             .format(address, port, timeout))
+
+    def register_galaxy(self, driver):
+        """Register with Galaxy, and then attempt to log in"""
+
+        driver.get(self.GALAXY_URL)
+        driver.find_element_by_link_text("Login or Register").click()
+        driver.find_element_by_id("register-toggle").click()
+        driver.find_element_by_name("email").send_keys(self.GALAXY_EMAIL)
+        driver.find_element_by_name("password").send_keys(self.GALAXY_PASSWORD)
+        driver.find_element_by_name("confirm").send_keys(self.GALAXY_PASSWORD)
+        driver.find_element_by_name("username").send_keys("irida-test")
+        driver.find_element_by_name("create").click()
+
+        try:
+            driver.get(self.GALAXY_URL)
+            driver.find_element_by_link_text("Login or Register").click()
+            driver.find_element_by_name("login").send_keys(self.GALAXY_EMAIL)
+            driver.find_element_by_name("password").send_keys(self.GALAXY_PASSWORD)
+            driver.find_element_by_name("login").click()
+        except selenium_exceptions.NoSuchElementException:
+            pass
+
+    def configure_galaxy_api_key(self):
+        """Make a new Galaxy admin API key and configure the tool to use it"""
+        gal = bioblend_galaxy.GalaxyInstance(
+            self.GALAXY_URL,
+            email=self.GALAXY_EMAIL,
+            password=self.GALAXY_PASSWORD)
+        self.configure_tool('Galaxy', 'admin_key', gal.key)
+        self.log.info('Galaxy admin_key:' + gal.key)
+
+    def configure_tool(self, section, option, value):
+        """Write tool configuration data"""
+        config = configparser.ConfigParser()
+        config.read(self.CONFIG_PATH)
+        config.set(section, option, value)
+        with open(self.CONFIG_PATH, 'w') as config_file:
+            config.write(config_file)
+
+    @staticmethod
+    def _get_webdriver():
+        """Set up the Selenium WebDriver"""
+        driver = webdriver.Chrome()
+        driver.implicitly_wait(1)
+        driver.set_window_size(1024, 768)
+
+        return driver

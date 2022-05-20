@@ -101,9 +101,10 @@ def start(irida_branch="master", db_host="localhost", db_port="3306"):
     # start galaxy
     galaxy_handler.start_galaxy()
 
-    # galaxy_handler.register_galaxy(driver)
-    # galaxy_handler.configure_galaxy_api_key(driver)
-    # galaxy_handler.configure_tool('Galaxy', 'galaxy_url', self.GALAXY_URL)
+    # configure galaxy post startup
+    galaxy_handler.register_galaxy()
+    galaxy_handler.configure_galaxy_api_key()
+    galaxy_handler.configure_tool('Galaxy', 'galaxy_url', galaxy_url)
 
     # Run tests
     try:
