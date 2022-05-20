@@ -30,8 +30,7 @@ class SetupGalaxyData:
         self.REPOS = repo_dir
         self.GALAXY_REPO = path.join(self.REPOS, 'galaxy')
         self.TOOL_DIRECTORY = path.dirname(inspect.getfile(IridaImport))
-        self.CONFIG_PATH = path.join(self.TOOL_DIRECTORY, 'tests',
-                                     'integration', 'repos', 'galaxy',
+        self.CONFIG_PATH = path.join(self.GALAXY_REPO,
                                      'tools', 'irida-galaxy-importer', 'irida_import',
                                      'config.ini')
         self.INSTALL_EXEC = 'install_galaxy.sh'
@@ -138,23 +137,26 @@ class SetupGalaxyData:
         """Register with Galaxy, and then attempt to log in"""
         driver = self._get_webdriver()
 
-        driver.get(self.GALAXY_URL)
-        driver.find_element_by_link_text("Login or Register").click()
-        driver.find_element_by_id("register-toggle").click()
-        driver.find_element_by_name("email").send_keys(self.GALAXY_EMAIL)
-        driver.find_element_by_name("password").send_keys(self.GALAXY_PASSWORD)
-        driver.find_element_by_name("confirm").send_keys(self.GALAXY_PASSWORD)
-        driver.find_element_by_name("username").send_keys("irida-test")
-        driver.find_element_by_name("create").click()
-
         try:
+            driver.get(self.GALAXY_URL)
+            driver.find_element_by_link_text("Login or Register").click()
+            driver.find_element_by_id("register-toggle").click()
+            driver.find_element_by_name("email").send_keys(self.GALAXY_EMAIL)
+            driver.find_element_by_name("password").send_keys(self.GALAXY_PASSWORD)
+            driver.find_element_by_name("confirm").send_keys(self.GALAXY_PASSWORD)
+            driver.find_element_by_name("username").send_keys("irida-test")
+            driver.find_element_by_name("create").click()
+
             driver.get(self.GALAXY_URL)
             driver.find_element_by_link_text("Login or Register").click()
             driver.find_element_by_name("login").send_keys(self.GALAXY_EMAIL)
             driver.find_element_by_name("password").send_keys(self.GALAXY_PASSWORD)
+            driver.find_element_by_xpath("//button[@name='login']").click()
             driver.find_element_by_name("login").click()
         except selenium_exceptions.NoSuchElementException:
             pass
+        finally:
+            driver.quit()
 
     def configure_galaxy_api_key(self):
         """Make a new Galaxy admin API key and configure the tool to use it"""
