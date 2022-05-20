@@ -79,35 +79,37 @@ def start(irida_branch="master", db_host="localhost", db_port="3306"):
 
     # create a handler to manage a headless IRIDA instance
     irida_handler = init_irida_setup(irida_branch, db_host, db_port)
-    # Install IRIDA packages
-    irida_handler.install_irida()
-    # Delete and recreate the database
-    irida_handler.reset_irida_db()
-    # Launch IRIDA
-    # Note: This initializes the database tables
-    # Note: This call waits until IRIDA is running
-    irida_handler.run_irida()
-    # Add data to database that the tests depend on
-    irida_handler.update_irida_db()
 
     # Create handler for Galaxy
     galaxy_handler = init_galaxy_setup()
     global galaxy_url
     galaxy_url = galaxy_handler.GALAXY_URL
-    # install an instance of galaxy
-    galaxy_handler.install_galaxy()
-    # setup data for galaxy
-    galaxy_handler.setup_galaxy()
-    # start galaxy
-    galaxy_handler.start_galaxy()
 
-    # configure galaxy post startup
-    galaxy_handler.register_galaxy()
-    galaxy_handler.configure_galaxy_api_key()
-    galaxy_handler.configure_tool('Galaxy', 'galaxy_url', galaxy_url)
-
-    # Run tests
     try:
+        # Install IRIDA packages
+        irida_handler.install_irida()
+        # Delete and recreate the database
+        irida_handler.reset_irida_db()
+        # Launch IRIDA
+        # Note: This initializes the database tables
+        # Note: This call waits until IRIDA is running
+        irida_handler.run_irida()
+        # Add data to database that the tests depend on
+        irida_handler.update_irida_db()
+
+        # install an instance of galaxy
+        galaxy_handler.install_galaxy()
+        # setup data for galaxy
+        galaxy_handler.setup_galaxy()
+        # start galaxy
+        galaxy_handler.start_galaxy()
+
+        # configure galaxy post startup
+        galaxy_handler.register_galaxy()
+        galaxy_handler.configure_galaxy_api_key()
+        galaxy_handler.configure_tool('Galaxy', 'galaxy_url', galaxy_url)
+
+        # Run tests
         full_suite = create_test_suite()
 
         runner = unittest.TextTestRunner()
