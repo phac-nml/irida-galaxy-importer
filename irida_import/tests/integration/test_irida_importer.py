@@ -128,6 +128,12 @@ class IridaImporterTestSuite(unittest.TestCase):
         except Exception as e:
             self.fail("Could not verify that IRIDA is up: " + str(e))
 
+    def test_tool_visible(self):
+        """Make sure there is a link to the tool in Galaxy"""
+        self.driver.get(tests_integration.galaxy_url)
+        self.driver.find_element_by_xpath("//div[@id='Get Data']/a[span[contains(text(), 'Get Data')]]").click()
+        self.assertIsNotNone(self.driver.find_element_by_xpath("//a[contains(@class, 'irida_import')]"))
+
 
 class TestIridaImportInt:
     """
