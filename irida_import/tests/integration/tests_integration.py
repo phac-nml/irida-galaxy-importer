@@ -109,11 +109,7 @@ def start(irida_branch="master", db_host="localhost", db_port="3306"):
         # configure galaxy post startup
         galaxy_handler.register_galaxy()
         galaxy_handler.configure_galaxy_api_key()
-        galaxy_handler.configure_tool('Galaxy', 'galaxy_url', galaxy_url)
-
-        # todo remove this
-        ii = IridaImporterTestSuite()
-        ii.nottest_project_samples_import_single_end()
+        galaxy_handler.configure_irida_galaxy_connection(galaxy_url)
 
         # Run tests
         full_suite = create_test_suite()

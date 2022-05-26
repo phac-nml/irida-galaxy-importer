@@ -45,6 +45,8 @@ class SetupGalaxyData:
 
         self.GALAXY_EMAIL = email
         self.GALAXY_PASSWORD = 'Password1'
+        # defined in create_client.sql
+        self.REDIRECT_CLIENT_SECRET = "auth_code_secret"
 
     @staticmethod
     def _setup_galaxy_logger():
@@ -166,6 +168,11 @@ class SetupGalaxyData:
             password=self.GALAXY_PASSWORD)
         self.configure_tool('Galaxy', 'admin_key', gal.key)
         self.log.info('Galaxy admin_key:' + gal.key)
+
+    def configure_irida_galaxy_connection(self, galaxy_url):
+        """configures the tool to know the redirect secret for the irida->galaxy connection"""
+        self.configure_tool('IRIDA', 'client_secret', self.REDIRECT_CLIENT_SECRET)
+        self.configure_tool('Galaxy', 'galaxy_url', galaxy_url)
 
     def configure_tool(self, section, option, value):
         """Write tool configuration data"""

@@ -135,7 +135,7 @@ class IridaImporterTestSuite(unittest.TestCase):
         self.driver.find_element_by_xpath("//a[span[contains(text(), 'Get Data')]]").click()
         self.assertIsNotNone(self.driver.find_element_by_xpath("//a[span[contains(text(), 'IRIDA')]]"))
 
-    def nottest_project_samples_import_single_end(self):
+    def test_project_samples_import_single_end(self):
         """Verify that sequence files can be imported from IRIDA to Galaxy"""
 
         def _get_href(response, rel):
@@ -228,10 +228,14 @@ class IridaImporterTestSuite(unittest.TestCase):
         email_input.send_keys(Keys.CONTROL, "a")
         email_input.send_keys(tests_integration.galaxy_email)
 
-        # todo remove breakpoint
-        import pdb;pdb.set_trace()
         # Click "Export Samples to Galaxy" button
         self.driver.find_element_by_xpath("//button[span[text()='Export Samples to Galaxy']]").click()
+
+        # handle auth confirmation popup
+        if len(self.driver.window_handles) > 1:
+            self.driver.switch_to_window(self.driver.window_handles[1])
+            self.driver.find_element_by_id('authorize-btn').click()
+            self.driver.switch_to_window(self.driver.window_handles[0])
 
         WebDriverWait(self.driver, 120).until(
             EC.presence_of_element_located((By.ID, 'current-history-panel'))
@@ -473,6 +477,7 @@ class TestIridaImportInt:
             pass
 
     def add_irida_client_auth_code(self, driver):
+        #todo here
         driver.get(self.IRIDA_URL + '/clients/create')
         driver.find_element_by_id("clientId").send_keys(
             self.IRIDA_AUTH_CODE_ID)
