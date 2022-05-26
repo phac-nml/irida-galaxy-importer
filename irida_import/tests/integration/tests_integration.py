@@ -16,6 +16,7 @@ client_id = "myClient"
 client_secret = "myClientSecret"
 
 galaxy_url = None
+galaxy_email = 'irida@irida.ca'
 
 # Deal with 'AF_UNIX path too long' errors
 repo_path = path.join('/tmp', 'repos')
@@ -35,7 +36,8 @@ def init_irida_setup(branch, db_host, db_port):
     global client_id
     global client_secret
 
-    return SetupIridaData(irida_base_url[:irida_base_url.index("/api")], username, password, branch, db_host, db_port, repo_dir=repo_path)
+    return SetupIridaData(irida_base_url[:irida_base_url.index("/api")],
+                          username, password, branch, db_host, db_port, repo_dir=repo_path)
 
 
 def init_galaxy_setup():
@@ -43,7 +45,7 @@ def init_galaxy_setup():
     Initializes the Galaxy setup object
     :return:
     """
-    return SetupGalaxyData(repo_dir=repo_path)
+    return SetupGalaxyData(repo_dir=repo_path, email=galaxy_email)
 
 
 def create_test_suite():
@@ -108,6 +110,10 @@ def start(irida_branch="master", db_host="localhost", db_port="3306"):
         galaxy_handler.register_galaxy()
         galaxy_handler.configure_galaxy_api_key()
         galaxy_handler.configure_tool('Galaxy', 'galaxy_url', galaxy_url)
+
+        # todo remove this
+        ii = IridaImporterTestSuite()
+        ii.nottest_project_samples_import_single_end()
 
         # Run tests
         full_suite = create_test_suite()

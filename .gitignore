@@ -17,3 +17,4 @@ miniconda*
 .vscode
 .virtualenv
 irida_import.egg-info
+irida_import/tests/integration/tmp

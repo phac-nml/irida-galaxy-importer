@@ -20,7 +20,7 @@ from ...irida_import import IridaImport
 
 class SetupGalaxyData:
 
-    def __init__(self, repo_dir):
+    def __init__(self, repo_dir, email):
 
         self.log = self._setup_galaxy_logger()
 
@@ -43,7 +43,7 @@ class SetupGalaxyData:
         self.GALAXY_DB_RESET = 'echo "drop database if exists galaxy_test; create database galaxy_test;" | psql'
         self.GALAXY_RUN = self.CONDA_INIT + 'bash run.sh --daemon'
 
-        self.GALAXY_EMAIL = 'irida@irida.ca'
+        self.GALAXY_EMAIL = email
         self.GALAXY_PASSWORD = 'Password1'
 
     @staticmethod
