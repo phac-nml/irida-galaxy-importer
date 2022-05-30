@@ -33,23 +33,23 @@ jobs:
   build-irida-integration:
     runs-on: ubuntu-20.04 #See pre-installed software at https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
 
-    services:
-       # Label used to access the service container
-       postgres:
-         # Docker Hub image
-         image: postgres
-         # Provide the password for postgres
-         env:
-           POSTGRES_PASSWORD: postgres
-         # Set health checks to wait until postgres has started
-         options: >-
-           --health-cmd pg_isready
-           --health-interval 10s
-           --health-timeout 5s
-           --health-retries 5
-         ports:
-           # Maps tcp port 5432 on service container to the host
-           - 5432:5432
+#    services:
+#       # Label used to access the service container
+#       postgres:
+#         # Docker Hub image
+#         image: postgres
+#         # Provide the password for postgres
+#         env:
+#           POSTGRES_PASSWORD: postgres
+#         # Set health checks to wait until postgres has started
+#         options: >-
+#           --health-cmd pg_isready
+#           --health-interval 10s
+#           --health-timeout 5s
+#           --health-retries 5
+#         ports:
+#           # Maps tcp port 5432 on service container to the host
+#           - 5432:5432
 
     env:
       MYSQL_PORT: 3306
@@ -59,6 +59,7 @@ jobs:
       MYSQL_HOST: 127.0.0.1
       MYSQL_ROOT_PASSWORD: password
       NODE_OPTIONS: "--max-old-space-size=4096"
+      CONDA_PREFIX: /usr/share/miniconda
 
     strategy:
       fail-fast: False #Setting so that if one of the test suites fail, the other will continue
@@ -92,11 +93,11 @@ jobs:
         run: |
           sudo mysql -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
           sudo mysql -e "CREATE USER '${{ env.MYSQL_USER }}'@'%' IDENTIFIED BY '${{ env.MYSQL_PASSWORD }}'; GRANT ALL ON ${{ env.MYSQL_DATABASE }}.* to '${{ env.MYSQL_USER }}'@'%';" -h ${{ env.MYSQL_HOST }} -P ${{ env.MYSQL_PORT }} -p${{ env.MYSQL_ROOT_PASSWORD }};
-#      - name: Set up PostgreSQL
-#        run: |
-#          sudo apt-get install postgresql libpq-dev
-#          sudo service postgresql start
-#          sudo -u postgres createuser --superuser "$USER"
+      - name: Set up PostgreSQL
+        run: |
+          sudo apt-get install postgresql libpq-dev
+          sudo service postgresql start
+          sudo -u postgres createuser --superuser "$USER"
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
