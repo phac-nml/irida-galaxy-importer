@@ -97,6 +97,7 @@ jobs:
         run: |
           sudo apt-get install postgresql libpq-dev
           sudo service postgresql start
+          sudo createdb
           sudo -u postgres createuser --superuser "$USER"
       - uses: conda-incubator/setup-miniconda@v2
         with:
@@ -114,6 +115,12 @@ jobs:
           conda config --add channels bioconda
           conda config --add channels iuc
           conda install bioblend=0.13.0 oauthlib=3.0.1 requests=2.22.0 requests-oauthlib=1.2.0 simplejson=3.8.1
+      - name: Setup galaxy conda env
+        shell: bash -l {0}
+        run: conda create --name _galaxy_ python=3.7.6
+      - name: list conda envs
+        shell: bash -l {0}
+        run: conda list
       - name: Run Integration Tests ${{ matrix.branch }}
         timeout-minutes: 60
         run: make integrationtests branch=${{ matrix.branch }} db_host=${{ env.MYSQL_HOST }} db_port=${{ env.MYSQL_PORT }}
