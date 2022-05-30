@@ -97,8 +97,7 @@ jobs:
         run: |
           sudo apt-get install postgresql libpq-dev
           sudo service postgresql start
-          createdb
-          sudo -u postgres createuser --superuser "$USER"
+#          sudo -u postgres createuser --superuser "$USER"
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
