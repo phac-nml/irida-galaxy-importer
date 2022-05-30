@@ -17,6 +17,10 @@ git pull
 echo "Preparing Galaxy for first execution (installing eggs)..."
 ./scripts/common_startup.sh > galaxy-common-startup.log 2>&1
 
+# reset galaxy psql db
+echo "dropping galaxy_test database in psql"
+echo "drop database if exists galaxy_test; create database galaxy_test;" | psql
+
 echo "Configuring Galaxy."
 pushd config
 

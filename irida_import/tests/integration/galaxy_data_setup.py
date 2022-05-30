@@ -40,7 +40,6 @@ class SetupGalaxyData:
             self.GALAXY_PORT)
         self.CONDA_INIT = '. $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate _galaxy_ && '
         self.GALAXY_STOP = self.CONDA_INIT + 'bash run.sh --stop-daemon'
-        self.GALAXY_DB_RESET = 'echo "drop database if exists galaxy_test; create database galaxy_test;" | psql'
         self.GALAXY_RUN = self.CONDA_INIT + 'bash run.sh --daemon'
 
         self.GALAXY_EMAIL = email
@@ -87,15 +86,6 @@ class SetupGalaxyData:
             self.GALAXY_PORT,
             600)
         self.log.debug("Galaxy should now be up on [%s]", self.GALAXY_URL)
-
-    def setup_galaxy(self):
-        """
-        Stops galaxy, resets db, and starts it up again
-        :return:
-        """
-        # reset the galaxy database
-        self.log.info("Resetting galaxy database")
-        subprocess.call(self.GALAXY_DB_RESET, shell=True)
 
     def _wait_until_up(self, address, port, timeout):
         """

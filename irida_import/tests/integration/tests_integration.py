@@ -101,8 +101,6 @@ def start(irida_branch="master", db_host="localhost", db_port="3306"):
 
         # install an instance of galaxy
         galaxy_handler.install_galaxy()
-        # setup data for galaxy
-        galaxy_handler.setup_galaxy()
         # start galaxy
         galaxy_handler.start_galaxy()
 
