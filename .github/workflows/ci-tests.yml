@@ -32,26 +32,6 @@ jobs:
 
   build-irida-integration:
     runs-on: ubuntu-20.04 #See pre-installed software at https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
-
-#    services:
-#       # Label used to access the service container
-#       postgres:
-#         # Docker Hub image
-#         image: postgres:latest
-#         # Provide the password for postgres
-#         env:
-#           POSTGRES_USER: postgres
-#           POSTGRES_PASSWORD: postgres
-#         # Set health checks to wait until postgres has started
-#         options: >-
-#           --health-cmd pg_isready
-#           --health-interval 10s
-#           --health-timeout 5s
-#           --health-retries 5
-#         ports:
-#           # Maps tcp port 5432 on service container to the host
-#           - 5432:5432
-
     env:
       MYSQL_PORT: 3306
       MYSQL_USER: test
@@ -120,6 +100,9 @@ jobs:
       - name: Setup galaxy conda env
         shell: bash -l {0}
         run: conda create --name _galaxy_ python=3.7.6
+      - uses: nanasess/setup-chromedriver@v1
+      - uses: browser-actions/setup-chrome@latest
+      - run: chrome --version
       - name: Run Integration Tests ${{ matrix.branch }}
         timeout-minutes: 60
         run: make integrationtests branch=${{ matrix.branch }} db_host=${{ env.MYSQL_HOST }} db_port=${{ env.MYSQL_PORT }}
