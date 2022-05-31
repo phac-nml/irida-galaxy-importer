@@ -6,6 +6,7 @@ from os import path
 
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.utils import ChromeType
+from selenium.webdriver.chrome.options import Options as ChromeDriverOptions
 
 from irida_import.tests.integration.irida_data_setup import SetupIridaData
 from irida_import.tests.integration.galaxy_data_setup import SetupGalaxyData
@@ -26,6 +27,10 @@ repo_path = path.join('/tmp', 'repos')
 
 # Have ChromeDriverManager handle chrome installation and driver for compatibility with github actions
 chrome_driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+chrome_driver_options = ChromeDriverOptions()
+# When creating new tests, these can be commented out to have driver window display
+chrome_driver_options.add_argument('--headless')
+chrome_driver_options.add_argument('--disable-gpu')
 
 
 def init_irida_setup(branch, db_host, db_port):
@@ -51,7 +56,12 @@ def init_galaxy_setup():
     Initializes the Galaxy setup object
     :return:
     """
-    return SetupGalaxyData(repo_dir=repo_path, email=galaxy_email, chrome_driver_path=chrome_driver_path)
+    return SetupGalaxyData(
+        repo_dir=repo_path,
+        email=galaxy_email,
+        chrome_driver_path=chrome_driver_path,
+        chrome_driver_options=chrome_driver_options,
+    )
 
 
 def create_test_suite():
