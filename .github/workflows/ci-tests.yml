@@ -100,6 +100,10 @@ jobs:
       - name: Setup galaxy conda env
         shell: bash -l {0}
         run: conda create --name _galaxy_ python=3.7.6
+      - run: |
+          VERSION_STRING="79.0.3945.36"
+          wget "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${VERSION_STRING}_amd64.deb"
+          sudo dpkg -i "google-chrome-stable_${VERSION_STRING}_amd64.deb"
       - name: Run Integration Tests ${{ matrix.branch }}
         timeout-minutes: 60
         run: make integrationtests branch=${{ matrix.branch }} db_host=${{ env.MYSQL_HOST }} db_port=${{ env.MYSQL_PORT }}
