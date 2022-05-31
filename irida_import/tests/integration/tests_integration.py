@@ -26,7 +26,7 @@ galaxy_email = 'irida@irida.ca'
 repo_path = path.join('/tmp', 'repos')
 
 # Have ChromeDriverManager handle chrome installation and driver for compatibility with github actions
-chrome_driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM, version="79.0.3945.36").install()
+chrome_driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
 chrome_driver_options = ChromeDriverOptions()
 # When creating new tests, these can be commented out to have driver window display
 chrome_driver_options.add_argument('--headless')
