@@ -20,7 +20,7 @@ from ...irida_import import IridaImport
 
 class SetupGalaxyData:
 
-    def __init__(self, repo_dir, email):
+    def __init__(self, repo_dir, email, chrome_driver_path):
 
         self.log = self._setup_galaxy_logger()
 
@@ -46,6 +46,8 @@ class SetupGalaxyData:
         self.GALAXY_PASSWORD = 'Password1'
         # defined in create_client.sql
         self.REDIRECT_CLIENT_SECRET = "auth_code_secret"
+
+        self.CHROME_DRIVER_PATH = chrome_driver_path
 
     @staticmethod
     def _setup_galaxy_logger():
@@ -172,10 +174,9 @@ class SetupGalaxyData:
         with open(self.CONFIG_PATH, 'w') as config_file:
             config.write(config_file)
 
-    @staticmethod
-    def _get_webdriver():
+    def _get_webdriver(self):
         """Set up the Selenium WebDriver"""
-        driver = webdriver.Chrome()
+        driver = webdriver.Chrome(self.CHROME_DRIVER_PATH)
         driver.implicitly_wait(1)
         driver.set_window_size(1024, 768)
 

@@ -29,7 +29,7 @@ class IridaImporterTestSuite(unittest.TestCase):
     @staticmethod
     def _init_driver():
         """Set up the Selenium WebDriver"""
-        driver = webdriver.Chrome()
+        driver = webdriver.Chrome(tests_integration.chrome_driver_path)
         driver.implicitly_wait(1)
         driver.set_window_size(1024, 768)
 

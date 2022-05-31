@@ -4,6 +4,9 @@ This file is responsible for managing the execution of an IRIDA instance and Tes
 import unittest
 from os import path
 
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.utils import ChromeType
+
 from irida_import.tests.integration.irida_data_setup import SetupIridaData
 from irida_import.tests.integration.galaxy_data_setup import SetupGalaxyData
 from irida_import.tests.integration.test_irida_importer import IridaImporterTestSuite
@@ -20,6 +23,9 @@ galaxy_email = 'irida@irida.ca'
 
 # Deal with 'AF_UNIX path too long' errors
 repo_path = path.join('/tmp', 'repos')
+
+# Have ChromeDriverManager handle chrome installation and driver for compatibility with github actions
+chrome_driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
 
 
 def init_irida_setup(branch, db_host, db_port):
@@ -45,7 +51,7 @@ def init_galaxy_setup():
     Initializes the Galaxy setup object
     :return:
     """
-    return SetupGalaxyData(repo_dir=repo_path, email=galaxy_email)
+    return SetupGalaxyData(repo_dir=repo_path, email=galaxy_email, chrome_driver_path=chrome_driver_path)
 
 
 def create_test_suite():
