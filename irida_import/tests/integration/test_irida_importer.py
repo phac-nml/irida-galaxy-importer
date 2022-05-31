@@ -1,3 +1,6 @@
+"""
+Runs integration tests via selenium
+"""
 import time
 import unittest
 import ast

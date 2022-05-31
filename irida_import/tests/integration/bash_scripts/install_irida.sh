@@ -17,4 +17,3 @@ else
   popd
   echo "IRIDA has been installed"
 fi
-

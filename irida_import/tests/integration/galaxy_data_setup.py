@@ -21,6 +21,12 @@ from ...irida_import import IridaImport
 class SetupGalaxyData:
 
     def __init__(self, repo_dir, email, chrome_driver_path, chrome_driver_options):
+        """
+        :param repo_dir: where to download and install galaxy
+        :param email: email for galaxy account (for connection to irida)
+        :param chrome_driver_path: where chromedriver is installed
+        :param chrome_driver_options: options for chrome while using chromedriver
+        """
 
         self.log = self._setup_galaxy_logger()
 
@@ -52,6 +58,10 @@ class SetupGalaxyData:
 
     @staticmethod
     def _setup_galaxy_logger():
+        """
+        setup logging to debug level for tests
+        :return: logger object
+        """
         log = logging.getLogger()
         log.setLevel(logging.DEBUG)
         log_out = logging.StreamHandler(sys.stdout)
@@ -75,10 +85,18 @@ class SetupGalaxyData:
         install.wait()  # Block until installed
 
     def stop_galaxy(self):
+        """
+        Kill galaxy process
+        :return:
+        """
         self.log.info('Killing Galaxy')
         subprocess.Popen(self.GALAXY_STOP, shell=True, cwd=self.GALAXY_REPO)
 
     def start_galaxy(self):
+        """
+        Starts Galaxy and blocks until db migration is finihsed and web ui up
+        :return:
+        """
         self.log.info("Running galaxy")
         subprocess.Popen(self.GALAXY_RUN, shell=True, cwd=self.GALAXY_REPO)
         self.log.debug("Waiting for Galaxy database migration [%s]. Sleeping for [%s] seconds", self.GALAXY_URL, 360)

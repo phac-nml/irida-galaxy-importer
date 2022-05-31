@@ -21,6 +21,9 @@ class SetupIridaData:
         :param user: default admin username
         :param password: default admin password
         :param branch: the github branch to run the integration tests on (e.g. 'master' or 'development')
+        :param db_host: mysql database host
+        :param db_port: mysql database port
+        :param repo_dir: where to download and install irida
         """
 
         # Login info
