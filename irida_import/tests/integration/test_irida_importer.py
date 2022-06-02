@@ -174,18 +174,13 @@ class IridaImporterTestSuite(unittest.TestCase):
         # Pick the last matching project on this page
         self.driver.find_elements_by_link_text(project_name)[-1].click()
 
-        # These checkbox elements cannot be clicked directly
-        # Using IDs would complicate running the tests without restarting IRIDA
         stale = True
         timeout = 0
         while stale:
             try:
-                checkboxes = self.driver.find_elements_by_xpath(
-                    "//table[contains(@id, 'samplesTable')]/tbody/tr/td[1]/input[@type='checkbox']")
-
+                checkboxes = self.driver.find_elements_by_xpath("//input[@type='checkbox']")
+                # first checkbox is "select all samples checkbox"
                 checkboxes[0].click()
-                checkboxes[1].click()
-
                 stale = False
             except (StaleElementReferenceException, NoSuchElementException):
                 time.sleep(1)
@@ -194,7 +189,7 @@ class IridaImporterTestSuite(unittest.TestCase):
                 if timeout == 60:
                     raise
 
-        self.driver.find_element_by_id("cart-add-btn").click()
+        self.driver.find_elements_by_class_name("t-add-cart-btn")[0].click()
         self.driver.find_element_by_xpath("//a[@href='/cart/galaxy']").click()
 
         email_input = self.driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']")
