@@ -190,6 +190,7 @@ class IridaImporterTestSuite(unittest.TestCase):
                     raise
 
         self.driver.find_elements_by_class_name("t-add-cart-btn")[0].click()
+        time.sleep(10)  # wait 10 seconds for popup to disappear
         self.driver.find_element_by_xpath("//a[@href='/cart/galaxy']").click()
 
         email_input = self.driver.find_element_by_xpath("//form[contains(@class, 'ant-form')]//input[@type='text']")
