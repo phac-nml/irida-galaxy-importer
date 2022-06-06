@@ -202,9 +202,9 @@ class IridaImporterTestSuite(unittest.TestCase):
 
         # handle auth confirmation popup
         if len(self.driver.window_handles) > 1:
-            self.driver.switch_to_window(self.driver.window_handles[1])
+            self.driver.switch_to.window(self.driver.window_handles[1])
             self.driver.find_element_by_id('authorize-btn').click()
-            self.driver.switch_to_window(self.driver.window_handles[0])
+            self.driver.switch_to.window(self.driver.window_handles[0])
 
         WebDriverWait(self.driver, 120).until(
             EC.presence_of_element_located((By.ID, 'current-history-panel'))
