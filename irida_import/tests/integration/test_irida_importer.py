@@ -211,4 +211,6 @@ class IridaImporterTestSuite(unittest.TestCase):
         time.sleep(120)  # Wait for import to complete
         history_panel = self.driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+        # This currently fails, as the tool is broken because of this following issue
+        # https://github.com/galaxyproject/galaxy/issues/11066
         self.assertTrue(succeeded - initially_succeeded > 0, "Import did not complete successfully")
