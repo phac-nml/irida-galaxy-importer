@@ -23,6 +23,7 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+
 setup(name='irida_import',
       version='2.0.0',
       description='A tool for importing data from IRIDA into Galaxy',
@@ -38,6 +39,19 @@ setup(name='irida_import',
           'requests-oauthlib',
           'simplejson'
       ],
+      extras_require={
+          "TEST": [
+              "pytest",
+              "pytest-cov",
+              "pytest-mock",
+              "mock",
+              "subprocess32",
+              "selenium",
+              "rauth",
+              "argparse",
+              "webdriver-manager",
+          ],
+      },
       zip_safe=False,
       classifiers=[
           'License :: OSI Approved :: Apache Software License',
