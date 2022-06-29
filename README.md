@@ -246,7 +246,7 @@ If you wish to make additions to the code, the below instructions can be used to
 The script `run-tests.sh` can be used to run the tests. This should check for some of the dependencies and let you know which is missing. However, you will have to have the following dependencies installed:
 
 * Java 11
-* Maven
+* Gradle
 * MySQL/MariaDB (Server and Client)
 * PostgreSQL (Server and Client)
 * Git
@@ -256,7 +256,7 @@ The script `run-tests.sh` can be used to run the tests. This should check for so
 On Ubuntu, you can install these with:
 
 ```bash
-sudo apt-get install openjdk-11-jdk maven mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
+sudo apt-get install openjdk-11-jdk gradle mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
 ```
 
 MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases `irida_test`. MySQL must also be configured to disable `ONLY_FULL_GROUP_BY` mode.

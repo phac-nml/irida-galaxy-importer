@@ -4,6 +4,7 @@ All notable changes to irida-galaxy-importer will be documeted in this file.
 
 ## 2.0.1
 * Switched from travisCI tests to Github Actions
+* Switched integration tests to launch irida via gradle
 
 ## 2.0.0
 
