@@ -1,4 +1,5 @@
 #!/bin/bash
+# This file creates a repos directory and pulls the irida branch with the name in $1
 
 pushd /tmp/repos
 
@@ -8,12 +9,5 @@ then
     echo >&2 "Failed to clone"
     exit 1
 else
-  pushd irida
-  echo "Preparing IRIDA for first excecution..."
-
-  pushd lib
-  ./install-libs.sh
-  popd
-  popd
   echo "IRIDA has been installed"
 fi
