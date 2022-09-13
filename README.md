@@ -181,7 +181,7 @@ You will next want to make the appropriate changes with your connection informat
 
 ### MODIFY THESE ###
 admin_key: d9c54f0b38b75dd6513035e4dd786a0b
-galaxy_url: http://localhost:48888
+galaxy_url: http://127.0.0.1:48888
 ####################
 
 illumina_path: /illumina_reads
@@ -196,7 +196,7 @@ client_http_retry_delay: 30
 ### MODIFY THESE ###
 client_secret: qlB82t7Ct917127lL7oQ82bd9o2iAP8bT0rJohpz7s
 client_id: galaxy
-irida_url: http://localhost:8080
+irida_url: http://127.0.0.1:8080
 ####################
 
 initial_endpoint_suffix: /projects
