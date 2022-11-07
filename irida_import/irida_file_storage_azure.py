@@ -1,5 +1,5 @@
 import logging
-from azure.storage.blob import baseblobservice
+from azure.storage.blob import BlobServiceClient
 
 class IridaFileStorageAzure:
 
@@ -7,9 +7,9 @@ class IridaFileStorageAzure:
       self.config = config
       self.logger = logging.getLogger('irida_import')
       self.container_name = self.config.AZURE_CONTAINER_NAME
-      self.blob_service = baseblobservice.BaseBlobService(
-        account_name=self.config.AZURE_ACCOUNT_NAME,
-        account_key=self.config.AZURE_ACCOUNT_KEY
+      self.blob_service = BlobServiceClient(
+        account_url=self.config.AZURE_ACCOUNT_URL,
+        credential=self.config.AZURE_SAS_TOKEN
       )
 
   def fileExists(self, file_path):

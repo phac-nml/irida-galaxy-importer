@@ -131,18 +131,8 @@ class Config:
             self.CLIENT_ID = config.get('IRIDA', 'client_id')
             self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
 
-            try:
-                self.IRIDA_STORAGE_TYPE = config.get('IRIDA', 'irida_storage_type')
-
-                if self.isAzureStorage():
-                    self.AZURE_ACCOUNT_NAME = config.get('IRIDA', 'azure_account_name')
-                    self.AZURE_ACCOUNT_KEY = config.get('IRIDA', 'azure_account_key')
-                    self.AZURE_CONTAINER_NAME = config.get('IRIDA', 'azure_container_name')
-
-                if self.isAwsStorage():
-                    self.AWS_BUCKET_NAME = config.get('IRIDA', 'aws_bucket_name')
-            except:
-                self.IRIDA_STORAGE_TYPE = 'local'
+            self.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT = irida_loc + "/api/get-file-storage-type"
+            self.IRIDA_GET_FILE_CONTENTS_ENDPOINT = irida_loc + "/api/get-file-contents?filePath="
 
     def generate_xml(self):
         """

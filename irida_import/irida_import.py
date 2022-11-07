@@ -8,6 +8,7 @@ import pprint
 import re
 import sys
 import time
+import requests
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
@@ -17,9 +18,9 @@ from irida_import.sample import Sample
 from irida_import.sample_file import SampleFile
 from irida_import.sample_pair import SamplePair
 
-from irida_import.irida_file_storage_azure import IridaFileStorageAzure
-from irida_import.irida_file_storage_aws import IridaFileStorageAws
-from irida_import.irida_file_storage_local import IridaFileStorageLocal
+# from irida_import.irida_file_storage_azure import IridaFileStorageAzure
+# from irida_import.irida_file_storage_aws import IridaFileStorageAws
+# from irida_import.irida_file_storage_local import IridaFileStorageLocal
 
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
@@ -46,12 +47,18 @@ class IridaImport:
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger('irida_import')
-        if self.config.isAzureStorage():
-            self.iridaFileStorage = IridaFileStorageAzure(config)
-        elif self.config.isAwsStorage():
-            self.iridaFileStorage = IridaFileStorageAws(config)
-        else:
-            self.iridaFileStorage = IridaFileStorageLocal(config)
+
+        response = self.irida.get(self.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT)
+        self.IRIDA_FILE_STORAGE_TYPE = response.json()['resource']
+        # Raise an exception if we get 4XX or 5XX server response
+        response.raise_for_status()
+
+        # if self.config.isAzureStorage():
+        #     self.iridaFileStorage = IridaFileStorageAzure(config)
+        # elif self.config.isAwsStorage():
+        #     self.iridaFileStorage = IridaFileStorageAws(config)
+        # else:
+        #     self.iridaFileStorage = IridaFileStorageLocal(config)
 
     def initial_lib_state(self):
 
@@ -631,7 +638,7 @@ class IridaImport:
         if os.path.splitext(file_path)[1] == '.fastq':
             file_type = 'fastqsanger'
 
-        if self.config.isLocalStorage():
+        if storage_type == "local":
             added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
                 file_path,
@@ -640,7 +647,8 @@ class IridaImport:
                 file_type=file_type
             )
         else:
-            file_contents = self.iridaFileStorage.getFileContents(file_path)
+            file_contents = self.get_stream(self.IRIDA_GET_FILE_CONTENTS_ENDPOINT + file_path)
+
             added = self.reg_gi.libraries.upload_file_contents(
                 self.library.id,
                 file_contents,
@@ -654,6 +662,33 @@ class IridaImport:
             )
 
         return added
+
+    def get_stream(self, url):
+        #s = requests.Session()
+        text = ""
+        encoding = 'utf-8'
+        count = 0
+        #f = open("/galaxy-central/database/job_working_directory/myfile.txt", "w")
+        try:
+            with self.irida.get(url, headers=None, stream=True) as resp:
+                f = open("/galaxy-central/database/job_working_directory/myfile.txt", "w+")
+                print(resp.iter_lines())
+                for line in resp.iter_lines():
+                    if line:
+                        if count != 0:
+                           text += "\n"
+                        #if line != bytes():
+                        text += (line.decode())
+                        #print(line)
+                        #f.write(line)
+                        f.write(line.decode())
+                        #text += "a"
+                        count = count + 1
+                f.close()
+        except:
+            return 0
+        #return text
+        return text
 
     def print_summary(self, failed=False):
         """
