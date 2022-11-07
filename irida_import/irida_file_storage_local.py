@@ -7,7 +7,7 @@ class IridaFileStorageLocal:
       self.config = config
       self.logger = logging.getLogger('irida_import')
 
-  def fileExists(self, file_path):
+  def file_exists(self, file_path):
     """
     Checks to see if file exists
 
@@ -15,10 +15,11 @@ class IridaFileStorageLocal:
     :param file_path: the local path to the file
     :return: boolean indicating whether file exists at path
     """
-    logging.info("Checking if file exists on local drive")
+
+    logging.info("Checking if file {0} exists on local drive", file_path)
     return os.path.isfile(file_path)
 
-  def getFileSize(self, file_path):
+  def get_file_size(self, file_path):
     """
     Gets file size in bytes of local file
 
@@ -26,7 +27,9 @@ class IridaFileStorageLocal:
     :param file_path: the local path to the file
     :return: file size in bytes
     """
-    logging.info("Getting file size from local drive")
+
+    logging.info("Getting the size of the file {0} from local drive", file_path)
+
     #size in bytes
     size = os.path.getsize(file_path)
     return size

@@ -339,7 +339,7 @@ class IridaImport:
             "Getting dataset ID for existing file: " +
             galaxy_name)
         found = False
-        size = self.iridaFileStorage.getFileSize(sample_file_path)
+        size = self.iridaFileStorage.get_file_size(sample_file_path)
 
         # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
@@ -580,7 +580,7 @@ class IridaImport:
         :return: dataset object or the id of an existing dataset
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
-        if self.iridaFileStorage.fileExists(sample_file.path):
+        if self.iridaFileStorage.file_exists(sample_file.path):
             if sample_file.library_dataset_id == None:
                 #grab dataset_id if it does exist, if not will be given False
                 dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
@@ -660,6 +660,11 @@ class IridaImport:
                 dataset_id=added[0]['id'],
                 name=sample_file.name
             )
+
+            logging.info("Removing directory {0} and it's contents", import_temp_file.dir_path)
+
+            # Cleanup the temporary downloaded files
+            self.iridaFileStorage.cleanup_temp_downloaded_files(import_temp_file)
 
         return added
 
