@@ -177,24 +177,3 @@ class Config:
                 param.set('value', new_value)
 
         tree.write(self.TOOL_FILE)
-
-    def isAzureStorage(self):
-        """
-        Returns if IRIDA_STORAGE_TYPE is azure
-
-        """
-        return self.IRIDA_STORAGE_TYPE == self.AZURE_STORAGE
-
-    def isAwsStorage(self):
-        """
-        Returns if IRIDA_STORAGE_TYPE is aws
-
-        """
-        return self.IRIDA_STORAGE_TYPE == self.AWS_STORAGE
-
-    def isLocalStorage(self):
-        """
-        Returns if IRIDA_STORAGE_TYPE is local
-
-        """
-        return self.IRIDA_STORAGE_TYPE == self.LOCAL_STORAGE

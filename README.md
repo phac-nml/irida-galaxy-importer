@@ -201,17 +201,6 @@ irida_url: http://localhost:8080
 
 initial_endpoint_suffix: /projects
 token_endpoint_suffix: /api/oauth/token
-
-# Irida file storage mechanism (azure, aws, local)
-irida_storage_type: local
-
-# Azure configuration
-azure_container_name: AZURE_CONTAINER_NAME
-azure_account_name: AZURE_ACCOUNT_NAME
-azure_account_key: AZURE_ACCOUNT_KEY
-
-# AWS configuration
-aws_bucket_name: AWS_BUCKET_NAME
 ```
 
 You will want to modify the URL values and connection information (for both IRIDA and Galaxy).
