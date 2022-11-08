@@ -220,28 +220,6 @@ That is, for Galaxy, modify `admin_key`, and `galaxy_url`. For IRIDA modify `iri
 It is also possible to configure the folders in which sample files and reference data are stored, and the endpoints at which the tool
 expects to access IRIDA resources (but the defaults are fine).
 
-If the IRIDA instance is using Microsoft Azure then you will need to make the appropriate changes in config.ini to the `irida_storage_type`, `azure_container_name`, `azure_account_name`, and `azure_account_key` values. The Azure configuration values can be obtained from your azure account.
-
-```
-# Irida file storage mechanism (azure, aws, local)
-irida_storage_type: azure
-
-# Azure configuration
-azure_container_name: AZURE_CONTAINER_NAME
-azure_account_name: AZURE_ACCOUNT_NAME
-azure_account_key: AZURE_ACCOUNT_KEY
-```
-
-If the IRIDA instance is using Amazon AWS S3 then you will need to make the appropriate changes in config.ini to the `irida_storage_type` and `aws_bucket_name`. You will also need to set up a credentials file as well as, a config file on your machine. For instructions on how to set these up please see [boto3][boto3]. The values required can be found in your Amazon AWS account.
-
-```
-# Irida file storage mechanism (azure, aws, local)
-irida_storage_type: aws
-
-# AWS configuration
-aws_bucket_name: AWS_BUCKET_NAME
-```
-
 ### 2.2.4. Generate tool XML file
 
 Once you've set the appropriate connection details in the `config.ini` file, please run the following command from the root of the repository:
@@ -344,4 +322,3 @@ If you just want to run just the integration tests you can do:
 [irida-galaxy-export.png]: doc/images/irida-galaxy-export.png
 [galaxy-history-datasets.png]: doc/images/galaxy-history-datasets.png
 [section-2.1.2]: #212-install-dependencies
-[boto3]: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html

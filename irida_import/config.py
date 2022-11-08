@@ -75,10 +75,6 @@ class Config:
     SAMPLE_TOOL_FILE = 'irida_import.xml.sample'
     DEFAULT_TOOL_FILE = 'irida_import.xml'
 
-    LOCAL_STORAGE = 'local'
-    AZURE_STORAGE = 'azure'
-    AWS_STORAGE = 'aws'
-
     def __init__(self, config_file):
         self.CONFIG_FILE = config_file
         self._load_from_file()
@@ -132,7 +128,9 @@ class Config:
             self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
 
             self.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT = irida_loc + "/api/get-file-storage-type"
-            self.IRIDA_GET_FILE_CONTENTS_ENDPOINT = irida_loc + "/api/get-file-contents?filePath="
+            self.IRIDA_GET_FILE_CONTENTS_ENDPOINT = irida_loc + "/api/files/get-file-contents?filePath="
+            self.IRIDA_GET_FILE_SIZE_ENDPOINT = irida_loc + "/api/files/get-file-size?filePath="
+            self.IRIDA_GET_FILE_EXISTS_ENDPOINT = irida_loc + "/api/files/get-file-exists?filePath="
 
     def generate_xml(self):
         """

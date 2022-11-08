@@ -5,10 +5,8 @@ import json
 import logging
 import os.path
 import pprint
-import re
-import sys
 import time
-import requests
+
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
@@ -17,10 +15,6 @@ from requests_oauthlib import OAuth2Session
 from irida_import.sample import Sample
 from irida_import.sample_file import SampleFile
 from irida_import.sample_pair import SamplePair
-
-# from irida_import.irida_file_storage_azure import IridaFileStorageAzure
-# from irida_import.irida_file_storage_aws import IridaFileStorageAws
-# from irida_import.irida_file_storage_local import IridaFileStorageLocal
 
 # FOR DEVELOPMENT ONLY!!
 # This value only exists for this process and processes that fork from it
@@ -47,18 +41,6 @@ class IridaImport:
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger('irida_import')
-
-        response = self.irida.get(self.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT)
-        self.IRIDA_FILE_STORAGE_TYPE = response.json()['resource']
-        # Raise an exception if we get 4XX or 5XX server response
-        response.raise_for_status()
-
-        # if self.config.isAzureStorage():
-        #     self.iridaFileStorage = IridaFileStorageAzure(config)
-        # elif self.config.isAwsStorage():
-        #     self.iridaFileStorage = IridaFileStorageAws(config)
-        # else:
-        #     self.iridaFileStorage = IridaFileStorageLocal(config)
 
     def initial_lib_state(self):
 
@@ -339,7 +321,10 @@ class IridaImport:
             "Getting dataset ID for existing file: " +
             galaxy_name)
         found = False
-        size = self.iridaFileStorage.get_file_size(sample_file_path)
+        response = self.irida.get(self.config.IRIDA_GET_FILE_SIZE_ENDPOINT + sample_file_path)
+        response.raise_for_status()
+        size = response.json()['resource']
+
 
         # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
@@ -580,7 +565,14 @@ class IridaImport:
         :return: dataset object or the id of an existing dataset
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
-        if self.iridaFileStorage.file_exists(sample_file.path):
+
+        response = self.irida.get(self.config.IRIDA_GET_FILE_EXISTS_ENDPOINT + sample_file.path)
+        # Raise an exception if we get 4XX or 5XX server response
+        response.raise_for_status()
+
+        file_exists = response.json()['resource']
+
+        if file_exists == True:
             if sample_file.library_dataset_id == None:
                 #grab dataset_id if it does exist, if not will be given False
                 dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
@@ -638,6 +630,11 @@ class IridaImport:
         if os.path.splitext(file_path)[1] == '.fastq':
             file_type = 'fastqsanger'
 
+        response = self.irida.get(self.config.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT)
+        # Raise an exception if we get 4XX or 5XX server response
+        response.raise_for_status()
+        storage_type = response.json()['resource']
+
         if storage_type == "local":
             added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
@@ -647,7 +644,7 @@ class IridaImport:
                 file_type=file_type
             )
         else:
-            file_contents = self.get_stream(self.IRIDA_GET_FILE_CONTENTS_ENDPOINT + file_path)
+            file_contents = self.get_stream(self.config.IRIDA_GET_FILE_CONTENTS_ENDPOINT + file_path)
 
             added = self.reg_gi.libraries.upload_file_contents(
                 self.library.id,
@@ -660,39 +657,21 @@ class IridaImport:
                 dataset_id=added[0]['id'],
                 name=sample_file.name
             )
-
-            logging.info("Removing directory {0} and it's contents", import_temp_file.dir_path)
-
-            # Cleanup the temporary downloaded files
-            self.iridaFileStorage.cleanup_temp_downloaded_files(import_temp_file)
-
         return added
 
     def get_stream(self, url):
-        #s = requests.Session()
         text = ""
-        encoding = 'utf-8'
         count = 0
-        #f = open("/galaxy-central/database/job_working_directory/myfile.txt", "w")
         try:
             with self.irida.get(url, headers=None, stream=True) as resp:
-                f = open("/galaxy-central/database/job_working_directory/myfile.txt", "w+")
-                print(resp.iter_lines())
                 for line in resp.iter_lines():
                     if line:
                         if count != 0:
                            text += "\n"
-                        #if line != bytes():
                         text += (line.decode())
-                        #print(line)
-                        #f.write(line)
-                        f.write(line.decode())
-                        #text += "a"
-                        count = count + 1
-                f.close()
+                        count += 1
         except:
             return 0
-        #return text
         return text
 
     def print_summary(self, failed=False):
