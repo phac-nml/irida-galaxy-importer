@@ -5,10 +5,10 @@ import json
 import logging
 import pprint
 import pytest
-import mock
+import unittest.mock as mock
 
 from requests_oauthlib import OAuth2Session
-from mock import Mock
+from unittest.mock import Mock
 from bioblend import galaxy
 from bioblend.galaxy.objects import (GalaxyInstance, Library, Folder, client)
 from bioblend.galaxy.objects.wrappers import LibraryContentInfo
@@ -60,7 +60,7 @@ class TestIridaImport:
     def setup_json(self):
         """Create a json string from a text file"""
         logging.debug("Opening a test json string")
-        test_path = 'tests/unit/data/test.dat'
+        test_path = 'irida_import/tests/unit/data/test.dat'
         # Pytest messes up the paths to modules and packages.
         # I haven't found a way to get around it without hardcoding paths.
         # Reading a file is neccessary to avoid writing large PEP8 commpliant
@@ -392,9 +392,9 @@ class TestIridaImport:
         # TODO: write the functionality for this to test
         return True
 
-    def test_import_to_galaxy(self, setup_json, mocker):
+    def test_import_to_galaxy(self, setup_json):
         """Test reading a file and running apropriate methods"""
-        mocker.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
+        mock.patch('bioblend.galaxy.objects.GalaxyInstance', autospec=True)
         mocked_open_function = mock.mock_open(read_data=setup_json)
 
         open_function_name = "builtins.open"

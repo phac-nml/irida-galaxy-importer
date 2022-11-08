@@ -246,7 +246,7 @@ If you wish to make additions to the code, the below instructions can be used to
 The script `run-tests.sh` can be used to run the tests. This should check for some of the dependencies and let you know which is missing. However, you will have to have the following dependencies installed:
 
 * Java 11
-* Maven
+* Gradle
 * MySQL/MariaDB (Server and Client)
 * PostgreSQL (Server and Client)
 * Git
@@ -256,7 +256,7 @@ The script `run-tests.sh` can be used to run the tests. This should check for so
 On Ubuntu, you can install these with:
 
 ```bash
-sudo apt-get install openjdk-11-jdk maven mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
+sudo apt-get install openjdk-11-jdk gradle mariadb-client mariadb-server postgresql git chromium-chromedriver xvfb
 ```
 
 MySQL must be configured to grant all privileges to the user `test` with password `test` for the databases `irida_test`. MySQL must also be configured to disable `ONLY_FULL_GROUP_BY` mode.
@@ -268,25 +268,18 @@ mysql -u root -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROU
 ```
 
 ## 3.2. Running tests
-
-To run all the test, you can run:
-
-```bash
-./run-tests.sh
-```
-
-If you just want to run just the unit tests (much quicker) you can do:
+Unit tests can be run with:
 
 ```bash
-./run-tests.sh unit
+make unittests
 ```
 
-If you just want to run just the integration tests you can do:
+Integration tests can be run with
 
 ```bash
-./run-tests.sh integration
+make integrationtests branch=master
 ```
-
+This tests against the `master` branch of IRIDA
 
 [galaxy]: https://galaxyproject.org/
 [irida]: https://www.irida.ca/
