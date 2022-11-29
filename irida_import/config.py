@@ -120,6 +120,11 @@ class Config:
             self.INITIAL_ENDPOINT_SUFFIX = config.get('IRIDA',
                                                       'initial_endpoint_suffix')
 
+            self.FILE_STORAGE_TYPE_ENDPOINT = config.get('IRIDA', 'file_storage_type_endpoint')
+            self.FILE_CONTENTS_ENDPOINT = config.get('IRIDA', 'file_contents_endpoint')
+            self.FILE_SIZE_ENDPOINT = config.get('IRIDA', 'file_size_endpoint')
+            self.FILE_EXISTS_ENDPOINT = config.get('IRIDA', 'file_exists_endpoint')
+
             irida_loc = config.get('IRIDA', 'irida_url')
             self.TOKEN_ENDPOINT = irida_loc + self.TOKEN_ENDPOINT_SUFFIX
             self.IRIDA_ENDPOINT = irida_loc + self.INITIAL_ENDPOINT_SUFFIX
@@ -127,10 +132,10 @@ class Config:
             self.CLIENT_ID = config.get('IRIDA', 'client_id')
             self.CLIENT_SECRET = config.get('IRIDA', 'client_secret')
 
-            self.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT = irida_loc + "/api/get-file-storage-type"
-            self.IRIDA_GET_FILE_CONTENTS_ENDPOINT = irida_loc + "/api/files/get-file-contents?filePath="
-            self.IRIDA_GET_FILE_SIZE_ENDPOINT = irida_loc + "/api/files/get-file-size?filePath="
-            self.IRIDA_GET_FILE_EXISTS_ENDPOINT = irida_loc + "/api/files/get-file-exists?filePath="
+            self.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT = irida_loc + self.FILE_STORAGE_TYPE_ENDPOINT
+            self.IRIDA_GET_FILE_CONTENTS_ENDPOINT = irida_loc + self.FILE_CONTENTS_ENDPOINT
+            self.IRIDA_GET_FILE_SIZE_ENDPOINT = irida_loc + self.FILE_SIZE_ENDPOINT
+            self.IRIDA_GET_FILE_EXISTS_ENDPOINT = irida_loc + self.FILE_EXISTS_ENDPOINT
 
     def generate_xml(self):
         """

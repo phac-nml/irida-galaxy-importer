@@ -21,3 +21,8 @@ token_endpoint_suffix: /api/oauth/token
 client_id: auth_code_client
 irida_url: http://localhost:8080
 initial_endpoint_suffix: /projects
+
+file_storage_type_endpoint: /api/get-file-storage-type
+file_contents_endpoint: /api/files/get-file-contents?filePath=
+file_size_endpoint: /api/files/get-file-size?filePath=
+file_exists_endpoint: /api/files/get-file-exists?filePath=
