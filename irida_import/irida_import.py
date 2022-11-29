@@ -645,37 +645,6 @@ class IridaImport:
                 file_type=file_type
             )
         else:
-            # file_contents = self.get_stream(self.config.IRIDA_GET_FILE_CONTENTS_ENDPOINT + file_path, file_ext)
-            # # UPDATE TO CHECK IF FILE IS BINARY INSTEAD OF EXT == .fast5 to make it reusable for other files that are binary
-            # if file_ext == ".fast5":
-            #     tmp_file = tempfile.NamedTemporaryFile(mode="w", prefix=sample_file.name)
-            #     tmp_file.name = sample_file.name
-            #     # Open the file for writing.
-            #     with open(tmp_file.name, 'wb') as f:
-            #         f.write(file_contents)
-
-            #     added = self.reg_gi.libraries.upload_file_from_local_path(
-            #         self.library.id,
-            #         tmp_file.name,
-            #         folder_id=folder_id,
-            #         file_type=file_type
-            #     )
-            #     # closes and removes the temporary file
-            #     tmp_file.close()
-
-            # else:
-            #     added = self.reg_gi.libraries.upload_file_contents(
-            #         self.library.id,
-            #         file_contents,
-            #         folder_id=folder_id,
-            #         file_type=file_type
-            #     )
-            #     added[0]['name'] = sample_file.name
-
-            # self.reg_gi.libraries.update_library_dataset(
-            #     dataset_id=added[0]['id'],
-            #     name=added[0]['name'],
-            # )
             tmp_file = tempfile.NamedTemporaryFile(mode="w", prefix=sample_file.name)
             tmp_file_mode = 'w+b'
             tmp_file.name = sample_file.name
@@ -687,39 +656,20 @@ class IridaImport:
                     with self.irida.get(url, headers=None, stream=True) as resp:
                         f.write(resp.content)
                 except:
-                    raise Exception("Unable to get stream to file")
+                    return 0
 
-            added = self.reg_gi.libraries.upload_file_from_local_path(
-               self.library.id,
-               tmp_file.name,
-               folder_id=folder_id,
-               file_type=file_type
+            # Copies the file into the library
+            added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
+                self.library.id,
+                file_path,
+                folder_id=folder_id,
+                file_type=file_type
             )
 
             # closes and removes the temporary file
             tmp_file.close()
 
         return added
-
-    # def get_stream(self, url, file_ext):
-    #     text = ""
-    #     count = 0
-    #     try:
-    #         with self.irida.get(url, headers=None, stream=True) as resp:
-    #             if file_ext == ".fast5":
-    #                 text = resp.content
-    #             else:
-    #                 for line in resp.iter_lines():
-    #                     if line:
-    #                         if count != 0:
-    #                             text += line.decode() + "\n"
-    #                         else:
-    #                             text += (line.decode())
-    #                         count += 1
-    #     except:
-    #         return 0
-    #     return text
-
 
     def print_summary(self, failed=False):
         """
