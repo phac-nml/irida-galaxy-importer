@@ -31,6 +31,10 @@ class MockConfig:
         self.CLIENT_ID = 'webClient'
         self.CLIENT_SECRET = 'webClientSecret'
         self.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
+        self.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT = 'http://localhost:8080/api/get-file-storage-type'
+        self.IRIDA_GET_FILE_CONTENTS_ENDPOINT = 'http://localhost:8080/api/files/get-file-contents?filePath='
+        self.IRIDA_GET_FILE_SIZE_ENDPOINT = 'http://localhost:8080/api/files/get-file-size?filePath='
+        self.IRIDA_GET_FILE_EXISTS_ENDPOINT = 'http://localhost:8080/api/files/get-file-exists?filePath='
 
 class TestIridaImport:
 
