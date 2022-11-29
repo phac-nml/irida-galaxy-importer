@@ -647,8 +647,6 @@ class IridaImport:
             )
         else:
             tmp_dir = tempfile.mkdtemp()
-            print("Temp Dir is")
-            print(tmp_dir)
             tmp_file_mode = 'w+b'
             try:
                 tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
@@ -658,22 +656,24 @@ class IridaImport:
                 with open(tmp_file.name, tmp_file_mode) as f:
                     url = self.config.IRIDA_GET_FILE_CONTENTS_ENDPOINT + file_path
                     try:
+                        # Write the stream to the file
                         with self.irida.get(url, headers=None, stream=True) as resp:
                             f.write(resp.content)
                     except:
                         return 0
 
-                # Copies the file into the library
-                added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
+                # Copies the file into the galaxy library
+                added = self.reg_gi.libraries.upload_file_from_local_path(
                     self.library.id,
                     tmp_file.name,
                     folder_id=folder_id,
                     file_type=file_type
                 )
 
-                # closes and removes the temporary file
+                # closes and removes the temp file
                 tmp_file.close()
             finally:
+                # Remove the temp directory
                 shutil.rmtree(tmp_dir)
 
         return added
