@@ -375,7 +375,7 @@ class IridaImport:
                     self.logger.debug(time.strftime("[%D %H:%M:%S]:") + ' NOT OK! ')
                     # delete the dataset from the library
                     retries = 0
-                    while retries <= self.MAX_RETRIES:
+                    while retries <= self.config.MAX_RETRIES:
                         if sample_file.delete(self.reg_gi, self.library.id):
                             sample_file.library_dataset_id = None
                             break
@@ -652,7 +652,7 @@ class IridaImport:
             tmp_file_mode = 'w+b'
             try:
                 tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
-                tmp_file.name = sample_file.name
+                tmp_file.name = tmp_dir + "/" + sample_file.name
 
                 # Open the file for writing.
                 with open(tmp_file.name, tmp_file_mode) as f:
