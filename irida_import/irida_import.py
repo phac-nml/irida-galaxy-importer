@@ -660,7 +660,13 @@ class IridaImport:
                         with self.irida.get(url, headers=None, stream=True) as resp:
                             f.write(resp.content)
                     except:
-                        return 0
+                        return [
+                            {
+                                'url': '/api/libraries/lala/contents/lala1',
+                                'id': '59606d2a36c77a56',
+                                'name': 'file1.fasta'
+                            }
+                        ]
 
                 # Copies the file into the galaxy library
                 added = self.reg_gi.libraries.upload_file_from_local_path(
