@@ -637,7 +637,7 @@ class IridaImport:
         response.raise_for_status()
         storage_type = response.json()['resource']
 
-        if storage_type == "local":
+        if storage_type == "local" or storage_type == None:
             added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
                 file_path,
