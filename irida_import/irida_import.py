@@ -7,6 +7,7 @@ import os.path
 import pprint
 import time
 import tempfile
+import shutil
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
@@ -645,29 +646,35 @@ class IridaImport:
                 file_type=file_type
             )
         else:
-            tmp_file = tempfile.NamedTemporaryFile(mode="w", prefix=sample_file.name)
+            tmp_dir = tempfile.mkdtemp()
+            print("Temp Dir is")
+            print(tmp_dir)
             tmp_file_mode = 'w+b'
-            tmp_file.name = sample_file.name
+            try:
+                tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
+                tmp_file.name = sample_file.name
 
-            # Open the file for writing.
-            with open(tmp_file.name, tmp_file_mode) as f:
-                url = self.config.IRIDA_GET_FILE_CONTENTS_ENDPOINT + file_path
-                try:
-                    with self.irida.get(url, headers=None, stream=True) as resp:
-                        f.write(resp.content)
-                except:
-                    return 0
+                # Open the file for writing.
+                with open(tmp_file.name, tmp_file_mode) as f:
+                    url = self.config.IRIDA_GET_FILE_CONTENTS_ENDPOINT + file_path
+                    try:
+                        with self.irida.get(url, headers=None, stream=True) as resp:
+                            f.write(resp.content)
+                    except:
+                        return 0
 
-            # Copies the file into the library
-            added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
-                self.library.id,
-                file_path,
-                folder_id=folder_id,
-                file_type=file_type
-            )
+                # Copies the file into the library
+                added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
+                    self.library.id,
+                    tmp_file.name,
+                    folder_id=folder_id,
+                    file_type=file_type
+                )
 
-            # closes and removes the temporary file
-            tmp_file.close()
+                # closes and removes the temporary file
+                tmp_file.close()
+            finally:
+                shutil.rmtree(tmp_dir)
 
         return added
 
