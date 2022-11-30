@@ -637,7 +637,7 @@ class IridaImport:
         response.raise_for_status()
         storage_type = response.json()['resource']
 
-        if storage_type == "local" or storage_type == None:
+        if storage_type == "local":
             added = self.reg_gi.libraries.upload_from_galaxy_filesystem(
                 self.library.id,
                 file_path,
@@ -660,13 +660,7 @@ class IridaImport:
                         with self.irida.get(url, headers=None, stream=True) as resp:
                             f.write(resp.content)
                     except:
-                        return [
-                            {
-                                'url': '/api/libraries/lala/contents/lala1',
-                                'id': '59606d2a36c77a56',
-                                'name': 'file1.fasta'
-                            }
-                        ]
+                        return 0
 
                 # Copies the file into the galaxy library
                 added = self.reg_gi.libraries.upload_file_from_local_path(
