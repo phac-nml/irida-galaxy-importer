@@ -71,6 +71,9 @@ class SetupIridaData:
             '--output.file.base.directory={} '.format(output_files) +\
             '--assembly.file.base.directory={} '.format(assembly_files) +\
             '--logging.pattern.console=' +\
+            '--azure.container.url={} '.format("http://127.0.0.1:10000/devstoreaccount1/test?sv=2018-03-28&st=2022-07-27T20%3A18%3A38Z&se=2023-07-28T20%3A18%3A00Z&sr=c&sp=racwdl&sig=0tP8J5KnMNIjK6gRfG8WmaefnF8Fo4APcAl%2F8lLBL3g%3D") +\
+            '--irida.storage.type={} '.format("azure") +\
+            '--azure.container.name={} '.format("testIridaAzure") +\
             '\"'
 
         self.PATH_TO_MODULE = path.dirname(__file__)
@@ -80,6 +83,8 @@ class SetupIridaData:
         self.SCRIPT_FOLDER = path.join(self.PATH_TO_MODULE, "bash_scripts")
         self.INSTALL_IRIDA_EXEC = path.join(
             self.SCRIPT_FOLDER, "install_irida.sh")
+        self.INSTALL_AZURITE_EXEC = path.join(
+            self.SCRIPT_FOLDER, "install_azurite.sh")
 
         self.REPO_PATH = repo_dir
         self.IRIDA_PATH = path.join(self.REPO_PATH, "irida")
@@ -94,6 +99,17 @@ class SetupIridaData:
         """
         install_proc = subprocess.Popen(
             [self.INSTALL_IRIDA_EXEC, self.branch], cwd=self.PATH_TO_MODULE)
+        proc_res = install_proc.wait()
+        if proc_res == 1:  # failed to execute
+            sys.exit(1)
+
+    def install_azurite(self):
+        """
+        Pulls and starts up Azurite docker image
+        :return:
+        """
+        install_proc = subprocess.Popen(
+            [self.INSTALL_AZURITE_EXEC, self.branch])
         proc_res = install_proc.wait()
         if proc_res == 1:  # failed to execute
             sys.exit(1)
