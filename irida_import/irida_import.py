@@ -323,9 +323,20 @@ class IridaImport:
             galaxy_name)
         found = False
         response = self.irida.get(self.config.IRIDA_GET_FILE_SIZE_ENDPOINT + sample_file_path)
-        response.raise_for_status()
-        size = response.json()['resource']
 
+        # Raise an exception if we get 4XX or 5XX server response
+        try:
+            response.raise_for_status()
+        except:
+            if response["status_code"] >= 400 and response["status_code"] < 600:
+                invalid_request_reason = response["text"]
+                raise Exception(f"Your request has failed because: {invalid_request_reason}")
+
+        # Only deserialize to json if the response isn't already a json object
+        try:
+            size = response.json()['resource']
+        except:
+            size = response['resource']
 
         # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
@@ -568,10 +579,21 @@ class IridaImport:
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
 
         response = self.irida.get(self.config.IRIDA_GET_FILE_EXISTS_ENDPOINT + sample_file.path)
-        # Raise an exception if we get 4XX or 5XX server response
-        response.raise_for_status()
 
-        file_exists = response.json()['resource']
+        # Raise an exception if we get 4XX or 5XX server response
+        try:
+            response.raise_for_status()
+        except:
+            if response["status_code"] >= 400 and response["status_code"] < 600:
+                invalid_request_reason = response["text"]
+                raise Exception(f"Your request has failed because: {invalid_request_reason}")
+
+
+        # Only deserialize to json if the response isn't already a json object
+        try:
+            file_exists = response.json()['resource']
+        except:
+            file_exists = response['resource']
 
         if file_exists == True:
             if sample_file.library_dataset_id == None:
@@ -633,9 +655,20 @@ class IridaImport:
             file_type = 'fastqsanger'
 
         response = self.irida.get(self.config.IRIDA_GET_FILE_STORAGE_TYPE_ENDPOINT)
+
         # Raise an exception if we get 4XX or 5XX server response
-        response.raise_for_status()
-        storage_type = response.json()['resource']
+        try:
+            response.raise_for_status()
+        except:
+            if response["status_code"] >= 400 and response["status_code"] < 600:
+                invalid_request_reason = response["text"]
+                raise Exception(f"Your request has failed because: {invalid_request_reason}")
+
+        # Only deserialize to json if the response isn't already a json object
+        try:
+            storage_type = response.json()["resource"]
+        except:
+            storage_type = response["resource"]
 
         if storage_type == "local":
             added = self.reg_gi.libraries.upload_from_galaxy_filesystem(

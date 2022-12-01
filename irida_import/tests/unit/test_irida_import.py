@@ -6,7 +6,6 @@ import logging
 import pprint
 import pytest
 import unittest.mock as mock
-import requests
 
 from requests_oauthlib import OAuth2Session
 from unittest.mock import Mock
@@ -124,13 +123,6 @@ class TestIridaImport:
             }
         ]
         return folder_list
-
-    @pytest.fixture(scope="function")
-    def mock_get_storage_type_response(requests_mock):
-        storage_type_endpoint = "http://localhost:8080/api/get-file-storage-type"
-        requests_mock.get(storage_type_endpoint, [{'json': {"resource": "local"}, 'status_code': 200}])
-        resp = requests.get(storage_type_endpoint)
-        return resp
 
     def test_get_samples(self, imp, setup_json):
         """
@@ -380,6 +372,10 @@ class TestIridaImport:
         ]
         imp.reg_gi.libraries.upload_from_galaxy_filesystem = Mock(
             return_value=single_file_list)
+
+        response_result = {"resource": "local", "status_code":200, "text":"success"}
+
+        imp.irida.get = Mock(return_value=response_result)
 
         sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta')
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
