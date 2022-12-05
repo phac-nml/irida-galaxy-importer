@@ -55,6 +55,7 @@ pushd galaxy/tools/irida-galaxy-importer/
 cp irida_import/config.ini.sample irida_import/config.ini
 sed -i "s/^max_waits: .*$/max_waits: 1/" irida_import/config.ini
 sed -i "s|^galaxy_url: http://localhost:8888$|galaxy_url: http://127.0.0.1:$galaxy_port|" irida_import/config.ini
+sed -i "s|^irida_url: http://localhost:8080$|irida_url: http://127.0.0.1:8080|" irida_import/config.ini
 
 echo "Configuring the tool's XML file"
 python -m irida_import.main --generate_xml

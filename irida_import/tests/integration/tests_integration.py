@@ -5,7 +5,6 @@ import unittest
 from os import path
 
 from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.utils import ChromeType
 from selenium.webdriver.chrome.options import Options as ChromeDriverOptions
 
 from irida_import.tests.integration.irida_data_setup import SetupIridaData
@@ -26,7 +25,7 @@ galaxy_email = 'irida@irida.ca'
 repo_path = path.join('/tmp', 'repos')
 
 # Have ChromeDriverManager handle chrome installation and driver for compatibility with github actions
-chrome_driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+chrome_driver_path = ChromeDriverManager().install()
 chrome_driver_options = ChromeDriverOptions()
 # When creating new tests, these can be commented out to have driver window display
 chrome_driver_options.add_argument('--headless')
