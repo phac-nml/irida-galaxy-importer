@@ -9,7 +9,7 @@ pushd /tmp/repos
 echo "Downloading Galaxy..."
 git clone https://github.com/galaxyproject/galaxy/ > galaxy-clone.log 2>&1
 pushd galaxy
-git checkout master > galaxy-checkout.log 2>&1
+git checkout v22.01 > galaxy-checkout.log 2>&1
 git fetch
 git reset --hard
 git clean -fd
@@ -40,7 +40,7 @@ echo "  database_connection: postgresql:///galaxy_test" | cat >> galaxy.yml
 sed -i 's/#admin_users:.*/admin_users: "irida@irida.ca"/' galaxy.yml
 
 # run galaxy on port 8888 instead of 8080; Tomcat runs on 8080 by default.
-sed -i "s|# bind: localhost:8080|bind: localhost:$galaxy_port|" galaxy.yml
+sed -i "s|# bind: localhost:8080|bind: 127.0.0.1:$galaxy_port|" galaxy.yml
 
 popd
 popd
@@ -54,7 +54,8 @@ echo "Initializing the tool's configuration file."
 pushd galaxy/tools/irida-galaxy-importer/
 cp irida_import/config.ini.sample irida_import/config.ini
 sed -i "s/^max_waits: .*$/max_waits: 1/" irida_import/config.ini
-sed -i "s|^galaxy_url: http://localhost:8888$|galaxy_url: http://localhost:$galaxy_port|" irida_import/config.ini
+sed -i "s|^galaxy_url: http://localhost:8888$|galaxy_url: http://127.0.0.1:$galaxy_port|" irida_import/config.ini
+sed -i "s|^irida_url: http://localhost:8080$|irida_url: http://127.0.0.1:8080|" irida_import/config.ini
 
 echo "Configuring the tool's XML file"
 python -m irida_import.main --generate_xml

@@ -21,7 +21,7 @@ from ...sample_pair import SamplePair
 class MockConfig:
     def __init__(self):
         self.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
-        self.GALAXY_URL = "http://localhost:8888/"
+        self.GALAXY_URL = "http://127.0.0.1:8888/"
         self.ILLUMINA_PATH = '/illumina_reads'
         self.REFERENCE_PATH = '/references'
         self.MAX_WAITS = 1
@@ -30,7 +30,7 @@ class MockConfig:
         self.CLIENT_RETRY_DELAY = 30
         self.CLIENT_ID = 'webClient'
         self.CLIENT_SECRET = 'webClientSecret'
-        self.TOKEN_ENDPOINT = 'http://localhost:8080/api/oauth/token'
+        self.TOKEN_ENDPOINT = 'http://127.0.0.1:8080/api/oauth/token'
 
 
 class TestIridaImport:

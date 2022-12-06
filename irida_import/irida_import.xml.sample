@@ -7,7 +7,7 @@
         --log-file $log_file
         --history-id "$__app__.security.encode_id($output.history.id)"
     ]]></command>
-    <inputs action="http://localhost:8080/projects" check_values="False" method="post">
+    <inputs action="http://127.0.0.1:8080/projects" check_values="False" method="post">
         <display>import data from IRIDA to Galaxy</display>
         <param name="galaxyCallbackUrl" type="hidden" value="GALAXY_URL/tool_runner?tool_id=TOOL_ID&amp;runtool_btn=Execute" />
         <param name="appName" type="hidden" value="Galaxy" />

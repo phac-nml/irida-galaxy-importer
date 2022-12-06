@@ -154,7 +154,6 @@ class IridaImporterTestSuite(unittest.TestCase):
 
         seq3 = _create_temp_file("seq3.fastq", fastq_contents)
         self.irida_session.post(sequences2, files={'file': open(seq3, 'rb')})
-
         # Export to Galaxy using the button on the dropdown menu
         self.driver.get(tests_integration.galaxy_url)
         history_panel = self.driver.find_element_by_id('current-history-panel')
