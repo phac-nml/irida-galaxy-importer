@@ -72,9 +72,7 @@ class SetupIridaData:
             '--output.file.base.directory={} '.format(output_files) +\
             '--assembly.file.base.directory={} '.format(assembly_files) +\
             '--logging.pattern.console=' +\
-            '--azure.container.url={} '.format("http://127.0.0.1:10000/devstoreaccount1/test?sv=2018-03-28&st=2022-07-27T20%3A18%3A38Z&se=2023-07-28T20%3A18%3A00Z&sr=c&sp=racwdl&sig=0tP8J5KnMNIjK6gRfG8WmaefnF8Fo4APcAl%2F8lLBL3g%3D") +\
-            '--irida.storage.type={} '.format("azure") +\
-            '--azure.container.name={} '.format("testIridaAzure") +\
+            '--irida.storage.type={} '.format("local") +\
             '\"'
 
         self.PATH_TO_MODULE = path.dirname(__file__)
