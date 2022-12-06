@@ -40,7 +40,7 @@ class SetupGalaxyData:
                                      'tools', 'irida-galaxy-importer', 'irida_import',
                                      'config.ini')
         self.INSTALL_EXEC = 'install_galaxy.sh'
-        self.GALAXY_DOMAIN = 'localhost'
+        self.GALAXY_DOMAIN = '127.0.0.1'
         self.GALAXY_PORT = 8888
         self.GALAXY_URL = 'http://' + self.GALAXY_DOMAIN + ':' + str(
             self.GALAXY_PORT)
@@ -113,7 +113,7 @@ class SetupGalaxyData:
         Wait until a port at an address is occupied, or time out
 
         :type address: str
-        :param address: e.g. 'localhost' or '127.0.0.1'
+        :param address: e.g. '127.0.0.1'
         :type port: int
         :param port: e.g. 8888
         :type timeout: int

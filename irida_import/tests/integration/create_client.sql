@@ -4,7 +4,7 @@ INSERT INTO client_details_grant_types (client_details_id,grant_value) VALUES (1
 INSERT INTO client_details_scope (client_details_id,scope) VALUES (1,"read");
 INSERT INTO client_details_scope (client_details_id,scope) VALUES (1,"write");
 -- galaxy auth connection
-INSERT INTO client_details (id,clientId,clientSecret,token_validity,refresh_validity,createdDate,modifiedDate,redirect_uri) VALUES (2,"auth_code_client","auth_code_secret",100000,2592000,now(),now(),"http://localhost:8080/galaxy/auth_code");
+INSERT INTO client_details (id,clientId,clientSecret,token_validity,refresh_validity,createdDate,modifiedDate,redirect_uri) VALUES (2,"auth_code_client","auth_code_secret",100000,2592000,now(),now(),"http://127.0.0.1:8080/galaxy/auth_code");
 INSERT INTO client_details_grant_types (client_details_id,grant_value) VALUES (2,"authorization_code");
 INSERT INTO client_details_scope (client_details_id,scope) VALUES (2,"read");
 

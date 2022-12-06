@@ -5,7 +5,6 @@ import unittest
 from os import path
 
 from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.utils import ChromeType
 from selenium.webdriver.chrome.options import Options as ChromeDriverOptions
 
 from irida_import.tests.integration.irida_data_setup import SetupIridaData
@@ -13,7 +12,7 @@ from irida_import.tests.integration.galaxy_data_setup import SetupGalaxyData
 from irida_import.tests.integration.test_irida_importer import IridaImporterTestSuite
 
 # Modules level variables that can/will be changed when the setup starts
-irida_base_url = "http://localhost:8080/api/"
+irida_base_url = "http://127.0.0.1:8080/api/"
 username = "jeff"
 password = "password1"
 client_id = "myClient"
@@ -26,7 +25,7 @@ galaxy_email = 'irida@irida.ca'
 repo_path = path.join('/tmp', 'repos')
 
 # Have ChromeDriverManager handle chrome installation and driver for compatibility with github actions
-chrome_driver_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+chrome_driver_path = ChromeDriverManager().install()
 chrome_driver_options = ChromeDriverOptions()
 # When creating new tests, these can be commented out to have driver window display
 chrome_driver_options.add_argument('--headless')
@@ -127,6 +126,7 @@ def start(irida_branch="master", db_host="localhost", db_port="3306"):
         galaxy_handler.configure_galaxy_api_key()
         galaxy_handler.configure_irida_galaxy_connection(galaxy_url)
 
+        # import pdb;pdb.set_trace()
         # Run tests
         full_suite = create_test_suite()
 

@@ -63,6 +63,7 @@ class SetupIridaData:
             '--spring.datasource.url={} '.format(self.DB_JDBC_URL) +\
             '--spring.datasource.username={} '.format(self.DB_USERNAME) +\
             '--spring.datasource.password={} '.format(self.DB_PASSWORD) +\
+            '--server.base.url=http://127.0.0.1:8080 ' +\
             '--liquibase.update.database.schema=true ' +\
             '--spring.jpa.hibernate.ddl-auto= ' +\
             '--spring.jpa.properties.hibernate.hbm2ddl.import_files= ' +\
