@@ -105,10 +105,10 @@ def start(irida_branch="master", db_host="localhost", db_port="3306"):
     try:
         # Install IRIDA packages
         irida_handler.install_irida()
-        # Install Azurite
-        irida_handler.install_azurite()
         # Delete and recreate the database
         irida_handler.reset_irida_db()
+        # # Install Azurite
+        # irida_handler.install_azurite()
         # Launch IRIDA
         # Note: This initializes the database tables
         # Note: This call waits until IRIDA is running

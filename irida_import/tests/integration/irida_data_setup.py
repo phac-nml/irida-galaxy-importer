@@ -104,16 +104,16 @@ class SetupIridaData:
         if proc_res == 1:  # failed to execute
             sys.exit(1)
 
-    def install_azurite(self):
-        """
-        Pulls and starts up Azurite docker image
-        :return:
-        """
-        install_proc = subprocess.Popen(
-            [self.INSTALL_AZURITE_EXEC, self.branch])
-        proc_res = install_proc.wait()
-        if proc_res == 1:  # failed to execute
-            sys.exit(1)
+    # def install_azurite(self):
+    #     """
+    #     Pulls and starts up Azurite docker image
+    #     :return:
+    #     """
+    #     install_proc = subprocess.Popen(
+    #         [self.INSTALL_AZURITE_EXEC, self.branch])
+    #     proc_res = install_proc.wait()
+    #     if proc_res == 1:  # failed to execute
+    #         sys.exit(1)
 
     def reset_irida_db(self):
         """
