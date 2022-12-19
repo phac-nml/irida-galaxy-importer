@@ -178,12 +178,14 @@ class IridaImport:
         :param file_dict: the URL to get the sample file representation
         :return: a sample file with a name and path
         """
-        print("FILE DICT")
-        print(file_dict)
         resource = file_dict
         name = resource['fileName']
         path = resource['file']
-        href = resource['links']['href']
+        links = file_dict['links']
+        for link in links:
+            if link['href']:
+                href = link['href']
+
 
         return SampleFile(name, path, href)
 
@@ -564,39 +566,50 @@ class IridaImport:
         :return: dataset object or the id of an existing dataset
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
-        if os.path.isfile(sample_file.path):
-            if sample_file.library_dataset_id == None:
-                #grab dataset_id if it does exist, if not will be given False
-                dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
 
-                if dataset_id:
-                    # Return dataset id of existing file
-                    added_to_galaxy = [{'id': dataset_id}]
+        if sample_file.library_dataset_id == None:
+            #grab dataset_id if it does exist, if not will be given False
+            dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
+
+            if os.path.isfile(sample_file.path) and dataset_id:
+                # Return dataset id of existing file
+                added_to_galaxy = [{'id': dataset_id}]
+                self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                    ' Skipped file with Galaxy path: ' +
+                                    galaxy_sample_file_name)
+                sample_file.verified = True
+                self.skipped_files_log.append(
+                    {'galaxy_name': galaxy_sample_file_name})
+            elif os.path.isfile(sample_file.path) and not dataset_id:
+                self.logger.debug(
+                    "  Sample file does not exist so linking it")
+                added = self.link(
+                    sample_file, sample_folder_id)
+                if(added):
+                    added_to_galaxy = added
                     self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                      ' Skipped file with Galaxy path: ' +
-                                      galaxy_sample_file_name)
-                    sample_file.verified = True
-                    self.skipped_files_log.append(
+                                        ' Imported file with Galaxy path: ' +
+                                        galaxy_sample_file_name)
+                    self.uploaded_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
-                else:
-                    self.logger.debug(
-                        "  Sample file does not exist so uploading/linking it")
-                    added = self.link(
-                        sample_file, sample_folder_id)
-                    if(added):
-                        added_to_galaxy = added
-                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                          ' Imported file with Galaxy path: ' +
-                                          galaxy_sample_file_name)
-                        self.uploaded_files_log.append(
-                            {'galaxy_name': galaxy_sample_file_name})
+            elif not os.path.isfile(sample_file.path) and not dataset_id:
+                self.logger.debug(
+                    "  Sample file does not exist so uploading/linking it")
+                added = self.upload_file_to_galaxy(
+                    sample_file, sample_folder_id)
+                if(added):
+                    added_to_galaxy = added
+                    self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                        ' Imported file with Galaxy path: ' +
+                                        galaxy_sample_file_name)
+                    self.uploaded_files_log.append(
+                        {'galaxy_name': galaxy_sample_file_name})
+            else:
+                error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
+                         ).format(galaxy_sample_file_name, sample_file.path)
+                raise ValueError(error)
 
-                sample_file.library_dataset_id = added_to_galaxy[0]['id']
-
-        else:
-            error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
-                     ).format(galaxy_sample_file_name, sample_file.path)
-            raise ValueError(error)
+            sample_file.library_dataset_id = added_to_galaxy[0]['id']
 
         return added_to_galaxy
 
