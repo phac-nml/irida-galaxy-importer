@@ -5,9 +5,9 @@ import json
 import logging
 import os.path
 import pprint
-import re
-import sys
 import time
+import tempfile
+import shutil
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
@@ -178,11 +178,14 @@ class IridaImport:
         :param file_dict: the URL to get the sample file representation
         :return: a sample file with a name and path
         """
+        print("FILE DICT")
+        print(file_dict)
         resource = file_dict
         name = resource['fileName']
         path = resource['file']
+        href = resource['links']['href']
 
-        return SampleFile(name, path)
+        return SampleFile(name, path, href)
 
     def get_first_or_make_lib(self, desired_lib_name, email):
         """"
@@ -598,6 +601,7 @@ class IridaImport:
         return added_to_galaxy
 
     def link(self, sample_file, folder_id):
+        print(sample_file)
         """
         Add a sample file to Galaxy, linking to it locally
 
@@ -608,7 +612,7 @@ class IridaImport:
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
-        self.logger.debug('      Attempting to upload a file')
+        self.logger.debug('Attempting to link to file')
         added = None
         file_path = sample_file.path
         self.logger.debug(
@@ -625,6 +629,68 @@ class IridaImport:
             link_data_only='link_to_files',
             file_type=file_type
         )
+
+        return added
+
+    def upload_file_to_galaxy(self, sample_file, folder_id):
+        """
+        Upload a sample file to Galaxy
+
+        :type sample_file: SampleFile
+        :param sample_file: the sample file to upload
+        :type folder_id: ID of folder to upload file to
+        :param sample_folder_path: the folder in Galaxy to store the file in
+        :return: a list containing a single dict with the file's
+        url, id, and name.
+        """
+        self.logger.debug('Attempting to upload file')
+        added = None
+        file_path = sample_file.path
+        self.logger.debug(
+            "       Sample file's local path is" + file_path)
+        file_type = 'auto'
+        file_ext = os.path.splitext(file_path)[1]
+
+        # Assume fastq files are fastqsanger:
+        if file_ext == '.fastq':
+            file_type = 'fastqsanger'
+
+        tmp_dir = tempfile.mkdtemp()
+        tmp_file_mode = 'w+b'
+
+        try:
+            tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
+            tmp_file.name = tmp_dir + "/" + sample_file.name
+
+            headers = ""
+            if file_ext == ".fastq":
+                headers = "Accept: application/fastq"
+            elif file_ext == ".fasta":
+                headers = "Accept: application/fasta"
+
+            # Open the file for writing.
+            with open(tmp_file.name, tmp_file_mode) as f:
+                
+                try:
+                    # Write the stream to the file
+                    with self.irida.get(sample_file.href, headers=headers, stream=False) as resp:
+                        f.write(resp.content)
+                except:
+                    return 0
+
+            # Copies the file into the galaxy library
+            added = self.reg_gi.libraries.upload_file_from_local_path(
+                self.library.id,
+                tmp_file.name,
+                folder_id=folder_id,
+                file_type=file_type
+            )
+
+            # closes and removes the temp file
+            tmp_file.close()
+        finally:
+            # Remove the temp directory
+            shutil.rmtree(tmp_dir)
 
         return added
 

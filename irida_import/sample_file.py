@@ -20,7 +20,7 @@ class SampleFile:
 
     """A representation of a sample file obtained from IRIDA"""
 
-    def __init__(self, name, path):
+    def __init__(self, name, path, href):
         """
         Create a sample file instance.
 
@@ -28,10 +28,13 @@ class SampleFile:
         :param name: the name of the sample file
         :type path: str
         :param path: the URI of the sample file
+        :type href: str
+        :param href: the url of the sample file
         """
 
         self.path = path
         self.name = name
+        self.href = href
         self.library_dataset_id = None
         self.verified = False
 
@@ -47,7 +50,7 @@ class SampleFile:
         return equal
 
     def __repr__(self):
-        return self.name + " @ " + self.path
+        return self.name + " @ " + self.path + " @ " + self.href
 
     def state(self, gi, library_id):
         return gi.libraries.show_dataset(library_id, self.library_dataset_id)['state']
