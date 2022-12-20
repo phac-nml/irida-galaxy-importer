@@ -595,7 +595,7 @@ class IridaImport:
                                             galaxy_sample_file_name)
                         self.uploaded_files_log.append(
                             {'galaxy_name': galaxy_sample_file_name})
-        elif not file_exists_locally:
+        else:
             try:
                 self.logger.debug(
                     "  Sample file does not exist so uploading it")
@@ -659,7 +659,6 @@ class IridaImport:
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
-        print(sample_file)
         self.logger.debug('Attempting to upload file')
         added = None
         file_path = sample_file.path
@@ -681,19 +680,22 @@ class IridaImport:
 
             headers = ""
             if file_ext == ".fastq":
-                headers = "Accept: application/fastq"
+                headers = {'Accept': 'application/fastq'}
             elif file_ext == ".fasta":
-                headers = "Accept: application/fasta"
+                headers = {'Accept': 'application/fasta'}
+            else:
+                headers = {'Accept': 'application/fastq'}
 
             # Open the file for writing.
             with open(tmp_file.name, tmp_file_mode) as f:
-                
                 try:
                     # Write the stream to the file
                     with self.irida.get(sample_file.href, headers=headers, stream=False) as resp:
                         f.write(resp.content)
                 except:
-                    return 0
+                    error = ("Unable to download file as it was not found:\nLocal path:{0}"
+                        ).format(sample_file.path)
+                    raise ValueError(error)
 
             # Copies the file into the galaxy library
             added = self.reg_gi.libraries.upload_file_from_local_path(
