@@ -129,7 +129,7 @@ class TestIridaImport:
         """
         param_dict = json.loads(setup_json)['param_dict']
         json_params = json.loads(param_dict['json_params'])
-        sample_file = SampleFile('nameish', 'pathish')
+        sample_file = SampleFile('nameish', 'pathish', "http://127.0.0.1/api/samples/1/pairs/1/files/1")
         imp.get_sample_file = Mock(return_value=sample_file)
 
         samples = imp.get_samples(json_params['_embedded']['samples'],False,False)
@@ -279,8 +279,8 @@ class TestIridaImport:
         os.path.isfile = Mock(return_value=True)
         imp.unique_file = Mock(return_value=True)
 
-        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
-        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
+        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta","http://127.0.0.1/api/samples/1/pairs/1/files/1")
+        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta","http://127.0.0.1/api/samples/1/pairs/1/files/2")
         samplePair1 = SamplePair(
             'pair1',
             sampleFile1,
@@ -321,8 +321,8 @@ class TestIridaImport:
 
         history = imp.reg_gi.histories.create_history()
 
-        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
-        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
+        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta", "http://127.0.0.1/api/samples/1/pairs/1/files/1")
+        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta", "http://127.0.0.1/api/samples/1/pairs/1/files/2")
         samplePair1 = SamplePair(
             'pair1',
             sampleFile1,
@@ -370,7 +370,7 @@ class TestIridaImport:
         imp.reg_gi.libraries.upload_from_galaxy_filesystem = Mock(
             return_value=single_file_list)
 
-        sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta')
+        sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta', "http://127.0.0.1/api/samples/1/pairs/1/files/1")
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
         uploaded = imp.link(sample_file, sample_folder_path)
         assert uploaded == single_file_list, 'The correct file must be made'
