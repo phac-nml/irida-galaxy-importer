@@ -678,10 +678,7 @@ class IridaImport:
             tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
             tmp_file.name = tmp_dir + "/" + sample_file.name
 
-            headers = ""
-            if file_ext == ".fastq":
-                headers = {'Accept': 'application/fastq'}
-            elif file_ext == ".fasta":
+            if file_ext == ".fasta":
                 headers = {'Accept': 'application/fasta'}
             else:
                 headers = {'Accept': 'application/fastq'}
@@ -689,7 +686,7 @@ class IridaImport:
             # Open the file for writing.
             with open(tmp_file.name, tmp_file_mode) as f:
                 try:
-                    # Write the stream to the file
+                    # Write the content to the file
                     with self.irida.get(sample_file.href, headers=headers, stream=False) as resp:
                         f.write(resp.content)
                 except:
