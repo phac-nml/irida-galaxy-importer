@@ -566,35 +566,39 @@ class IridaImport:
         :return: dataset object or the id of an existing dataset
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
+        file_exists_locally = os.path.isfile(sample_file.path)
 
-        if sample_file.library_dataset_id == None:
-            #grab dataset_id if it does exist, if not will be given False
-            dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
+        if file_exists_locally:
+            if sample_file.library_dataset_id == None:
 
-            if os.path.isfile(sample_file.path) and dataset_id:
-                # Return dataset id of existing file
-                added_to_galaxy = [{'id': dataset_id}]
-                self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                    ' Skipped file with Galaxy path: ' +
-                                    galaxy_sample_file_name)
-                sample_file.verified = True
-                self.skipped_files_log.append(
-                    {'galaxy_name': galaxy_sample_file_name})
-            elif os.path.isfile(sample_file.path) and not dataset_id:
-                self.logger.debug(
-                    "  Sample file does not exist so linking it")
-                added = self.link(
-                    sample_file, sample_folder_id)
-                if(added):
-                    added_to_galaxy = added
+                #grab dataset_id if it does exist, if not will be given False
+                dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
+
+                if dataset_id:
+                    # Return dataset id of existing file
+                    added_to_galaxy = [{'id': dataset_id}]
                     self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                        ' Imported file with Galaxy path: ' +
+                                        ' Skipped file with Galaxy path: ' +
                                         galaxy_sample_file_name)
-                    self.uploaded_files_log.append(
+                    sample_file.verified = True
+                    self.skipped_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
-            elif not os.path.isfile(sample_file.path) and not dataset_id:
+                else:
+                    self.logger.debug(
+                        "  Sample file does not exist so linking it")
+                    added = self.link(
+                        sample_file, sample_folder_id)
+                    if(added):
+                        added_to_galaxy = added
+                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                            ' Imported file with Galaxy path: ' +
+                                            galaxy_sample_file_name)
+                        self.uploaded_files_log.append(
+                            {'galaxy_name': galaxy_sample_file_name})
+        elif not file_exists_locally:
+            try:
                 self.logger.debug(
-                    "  Sample file does not exist so uploading/linking it")
+                    "  Sample file does not exist so uploading it")
                 added = self.upload_file_to_galaxy(
                     sample_file, sample_folder_id)
                 if(added):
@@ -604,17 +608,16 @@ class IridaImport:
                                         galaxy_sample_file_name)
                     self.uploaded_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
-            else:
+            except:
                 error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
-                         ).format(galaxy_sample_file_name, sample_file.path)
+                        ).format(galaxy_sample_file_name, sample_file.path)
                 raise ValueError(error)
 
-            sample_file.library_dataset_id = added_to_galaxy[0]['id']
+        sample_file.library_dataset_id = added_to_galaxy[0]['id']
 
         return added_to_galaxy
 
     def link(self, sample_file, folder_id):
-        print(sample_file)
         """
         Add a sample file to Galaxy, linking to it locally
 
@@ -656,6 +659,7 @@ class IridaImport:
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
+        print(sample_file)
         self.logger.debug('Attempting to upload file')
         added = None
         file_path = sample_file.path
