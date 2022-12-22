@@ -158,6 +158,8 @@ class IridaImporterTestSuite(unittest.TestCase):
         self.driver.get(tests_integration.galaxy_url)
         history_panel = self.driver.find_element_by_id('current-history-panel')
         initially_succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+        print("INITIALLY SUCCEEDED")
+        print(initially_succeeded)
         self.driver.find_element_by_xpath("//a[span[contains(text(), 'Get Data')]]").click()
         self.driver.find_element_by_xpath("//a[span[contains(text(), 'IRIDA')]]").click()
 
@@ -211,6 +213,8 @@ class IridaImporterTestSuite(unittest.TestCase):
         time.sleep(120)  # Wait for import to complete
         history_panel = self.driver.find_element_by_id('current-history-panel')
         succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
+        print("SUCCEEDED")
+        print(succeeded)
         # This currently fails, as the tool is broken because of this following issue
         # https://github.com/galaxyproject/galaxy/issues/11066
         self.assertTrue(succeeded - initially_succeeded > 0, "Import did not complete successfully")
