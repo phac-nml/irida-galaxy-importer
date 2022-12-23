@@ -569,6 +569,7 @@ class IridaImport:
         file_exists_locally = os.path.isfile(sample_file.path)
 
         if file_exists_locally:
+            print("LINKING")
             if sample_file.library_dataset_id == None:
 
                 #grab dataset_id if it does exist, if not will be given False
@@ -596,6 +597,7 @@ class IridaImport:
                         self.uploaded_files_log.append(
                             {'galaxy_name': galaxy_sample_file_name})
         else:
+            print("ATTEMPTING TO UPLOAD")
             try:
                 self.logger.debug(
                     "  Sample file does not exist so uploading it")
@@ -609,6 +611,7 @@ class IridaImport:
                     self.uploaded_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
             except:
+                print("ERRRRRRRORRRRR")
                 error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
                         ).format(galaxy_sample_file_name, sample_file.path)
                 raise ValueError(error)
