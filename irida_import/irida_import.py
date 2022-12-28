@@ -567,8 +567,6 @@ class IridaImport:
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
         file_exists_locally = os.path.isfile(sample_file.path)
-        added_to_galaxy = None
-        added = None
 
         if file_exists_locally:
             if sample_file.library_dataset_id == None:
