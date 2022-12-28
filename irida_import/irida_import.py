@@ -567,6 +567,8 @@ class IridaImport:
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
         file_exists_locally = os.path.isfile(sample_file.path)
+        added_to_galaxy = None
+        added = False
 
         if file_exists_locally:
             if sample_file.library_dataset_id == None:
@@ -588,32 +590,24 @@ class IridaImport:
                         "  Sample file does not exist so linking it")
                     added = self.link(
                         sample_file, sample_folder_id)
-                    if(added):
-                        added_to_galaxy = added
-                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                            ' Imported file with Galaxy path: ' +
-                                            galaxy_sample_file_name)
-                        self.uploaded_files_log.append(
-                            {'galaxy_name': galaxy_sample_file_name})
-                sample_file.library_dataset_id = added_to_galaxy[0]['id']
         else:
             try:
                 self.logger.debug(
                     "  Sample file does not exist so uploading it")
                 added = self.upload_file_to_galaxy(
                     sample_file, sample_folder_id)
-                if(added):
-                    added_to_galaxy = added
-                    self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                        ' Imported file with Galaxy path: ' +
-                                        galaxy_sample_file_name)
-                    self.uploaded_files_log.append(
-                        {'galaxy_name': galaxy_sample_file_name})
-                sample_file.library_dataset_id = added_to_galaxy[0]['id']
             except:
                 error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
                         ).format(galaxy_sample_file_name, sample_file.path)
                 raise ValueError(error)
+        if(added):
+            added_to_galaxy = added
+            self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                ' Imported file with Galaxy path: ' +
+                                galaxy_sample_file_name)
+            self.uploaded_files_log.append(
+                {'galaxy_name': galaxy_sample_file_name})
+        sample_file.library_dataset_id = added_to_galaxy[0]['id']
 
         return added_to_galaxy
 

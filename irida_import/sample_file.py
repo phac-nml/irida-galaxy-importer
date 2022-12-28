@@ -20,7 +20,7 @@ class SampleFile:
 
     """A representation of a sample file obtained from IRIDA"""
 
-    def __init__(self, name, path, href=None):
+    def __init__(self, name, path, href):
         """
         Create a sample file instance.
 
