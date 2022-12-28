@@ -183,9 +183,9 @@ class IridaImport:
         path = resource['file']
         links = file_dict['links']
         for link in links:
-            if link['href']:
+            if link['rel'] == 'self':
                 href = link['href']
-
+                break
 
         return SampleFile(name, path, href)
 
