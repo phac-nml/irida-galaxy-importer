@@ -595,6 +595,7 @@ class IridaImport:
                                             galaxy_sample_file_name)
                         self.uploaded_files_log.append(
                             {'galaxy_name': galaxy_sample_file_name})
+                sample_file.library_dataset_id = added_to_galaxy[0]['id']
         else:
             try:
                 self.logger.debug(
@@ -608,12 +609,11 @@ class IridaImport:
                                         galaxy_sample_file_name)
                     self.uploaded_files_log.append(
                         {'galaxy_name': galaxy_sample_file_name})
+                sample_file.library_dataset_id = added_to_galaxy[0]['id']
             except:
                 error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
                         ).format(galaxy_sample_file_name, sample_file.path)
                 raise ValueError(error)
-
-        sample_file.library_dataset_id = added_to_galaxy[0]['id']
 
         return added_to_galaxy
 
