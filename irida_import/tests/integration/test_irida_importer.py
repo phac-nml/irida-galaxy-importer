@@ -158,7 +158,6 @@ class IridaImporterTestSuite(unittest.TestCase):
         self.driver.get(tests_integration.galaxy_url)
         history_panel = self.driver.find_element_by_id('current-history-panel')
         initially_succeeded = len(history_panel.find_elements_by_class_name('state-ok'))
-
         self.driver.find_element_by_xpath("//a[span[contains(text(), 'Get Data')]]").click()
         self.driver.find_element_by_xpath("//a[span[contains(text(), 'IRIDA')]]").click()
 
