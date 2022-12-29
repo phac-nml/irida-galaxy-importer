@@ -188,8 +188,9 @@ class IridaImport:
             if link['rel'] == 'self':
                 href = link['href']
                 break
+        upload_sha_256 = resource['uploadSha256']
 
-        return SampleFile(name, path, href)
+        return SampleFile(name, path, href, upload_sha_256)
 
     def get_first_or_make_lib(self, desired_lib_name, email):
         """"
