@@ -8,6 +8,8 @@ import pprint
 import time
 import tempfile
 import shutil
+import sys
+import hashlib
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
@@ -694,13 +696,18 @@ class IridaImport:
                         ).format(sample_file.path)
                     raise ValueError(error)
 
-            # Copies the file into the galaxy library
-            added = self.reg_gi.libraries.upload_file_from_local_path(
-                self.library.id,
-                tmp_file.name,
-                folder_id=folder_id,
-                file_type=file_type
-            )
+            if self.check_file_hash_valid(tmp_file.name, sample_file.upload_sha_256):
+                # Copies the file into the galaxy library
+                added = self.reg_gi.libraries.upload_file_from_local_path(
+                    self.library.id,
+                    tmp_file.name,
+                    folder_id=folder_id,
+                    file_type=file_type
+                )
+            else:
+                error = ("Downloaded file sha256 does not match the original sha256:\nLocal path:{0}"
+                        ).format(sample_file.path)
+                raise ValueError(error)
 
             # closes and removes the temp file
             tmp_file.close()
@@ -709,6 +716,27 @@ class IridaImport:
             shutil.rmtree(tmp_dir)
 
         return added
+
+    def check_file_hash_valid(self, temp_file_path, expected_sha256):
+        """
+        Check if the downloaded file sha256 matches the original uploaded file sha256
+
+        :type temp_file_path: Temporary file
+        :param temp_file_path: the downloaded file path
+        :type expected_sha_256: str
+        :param expected_sha_256: the original uploaded file sha256
+        :return: if the downloaded file sha256 matches the original uploaded file sha256
+        url, id, and name.
+        """
+        BUF_SIZE = 32768 # Read file in 32kb chunks
+        sha256 = hashlib.sha256()
+        with open(temp_file_path, 'rb') as f:
+            while True:
+                data = f.read(BUF_SIZE)
+                if not data:
+                    break
+                sha256.update(data)
+        return sha256 == expected_sha256
 
     def print_summary(self, failed=False):
         """

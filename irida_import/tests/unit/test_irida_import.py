@@ -279,8 +279,8 @@ class TestIridaImport:
         os.path.isfile = Mock(return_value=True)
         imp.unique_file = Mock(return_value=True)
 
-        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta","http://127.0.0.1/api/samples/1/pairs/1/files/1")
-        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta","http://127.0.0.1/api/samples/1/pairs/1/files/2")
+        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta","http://127.0.0.1/api/samples/1/pairs/1/files/1", "92c522b4097744d3556bd7d70ea72fd20c1012eedd9098fc2adcd04daaa1f61d")
+        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta","http://127.0.0.1/api/samples/1/pairs/1/files/2", "ab6bc4912f8f92587f1475bbba59a6cd5603b2a697c22d98e341f09ac063360a")
         samplePair1 = SamplePair(
             'pair1',
             sampleFile1,
@@ -321,8 +321,8 @@ class TestIridaImport:
 
         history = imp.reg_gi.histories.create_history()
 
-        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta", "http://127.0.0.1/api/samples/1/pairs/1/files/1")
-        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta", "http://127.0.0.1/api/samples/1/pairs/1/files/2")
+        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta", "http://127.0.0.1/api/samples/1/pairs/1/files/1", "92c522b4097744d3556bd7d70ea72fd20c1012eedd9098fc2adcd04daaa1f61e")
+        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta", "http://127.0.0.1/api/samples/1/pairs/1/files/2", "92c522b4097744d3556bd7d70ea72fd20c1012eedd9098fc2adcd04daaa1f61f")
         samplePair1 = SamplePair(
             'pair1',
             sampleFile1,
@@ -370,7 +370,7 @@ class TestIridaImport:
         imp.reg_gi.libraries.upload_from_galaxy_filesystem = Mock(
             return_value=single_file_list)
 
-        sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta', "http://127.0.0.1/api/samples/1/pairs/1/files/1")
+        sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta', "http://127.0.0.1/api/samples/1/pairs/1/files/1", "92c522b4097744d3556bd7d70ea72fd20c1012eedd9098fc2adcd04daaa1f61d")
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
         uploaded = imp.link(sample_file, sample_folder_path)
         assert uploaded == single_file_list, 'The correct file must be made'
