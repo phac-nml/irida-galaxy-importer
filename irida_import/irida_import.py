@@ -718,7 +718,7 @@ class IridaImport:
 
         return added
 
-    def check_file_hash_valid(self, temp_file_path, expected_sha256):
+    def check_file_hash_valid(self, temp_file_path, expected_sha_256):
         """
         Check if the downloaded file sha256 matches the original uploaded file sha256
 
@@ -737,7 +737,7 @@ class IridaImport:
                 if not data:
                     break
                 sha256.update(data)
-        return sha256 == expected_sha256
+        return sha256.hexdigest() == expected_sha_256
 
     def print_summary(self, failed=False):
         """
