@@ -129,7 +129,7 @@ class TestIridaImport:
         """
         param_dict = json.loads(setup_json)['param_dict']
         json_params = json.loads(param_dict['json_params'])
-        sample_file = SampleFile('nameish', 'pathish', "http://127.0.0.1/api/samples/1/pairs/1/files/1")
+        sample_file = SampleFile('nameish', 'pathish', "http://127.0.0.1/api/samples/1/pairs/1/files/1", "92c522b4097744d3556bd7d70ea72fd20c1012eedd9098fc2adcd04daaa1f61d")
         imp.get_sample_file = Mock(return_value=sample_file)
 
         samples = imp.get_samples(json_params['_embedded']['samples'],False,False)
