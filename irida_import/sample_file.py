@@ -20,7 +20,7 @@ class SampleFile:
 
     """A representation of a sample file obtained from IRIDA"""
 
-    def __init__(self, name, path, href, upload_sha_256=None):
+    def __init__(self, name, path, href, file_size=None, upload_sha_256=None):
         """
         Create a sample file instance.
 
@@ -30,6 +30,8 @@ class SampleFile:
         :param path: the URI of the sample file
         :type href: str
         :param href: the url of the sample file
+        :type file_size: str
+        :param file_size: the size of the file in bytes
         :type upload_sha_256: str
         :param upload_sha_256: the hash of the uploaded file
         """
@@ -37,6 +39,7 @@ class SampleFile:
         self.path = path
         self.name = name
         self.href = href
+        self.file_size = file_size
         self.upload_sha_256 = upload_sha_256
         self.library_dataset_id = None
         self.verified = False
