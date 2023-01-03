@@ -339,9 +339,6 @@ class IridaImport:
         found = False
         if size == None:
             size = os.path.getsize(sample_file_path)
-        else:
-            # Get the size in non si units
-            size = (size / 1024) * 1000
 
         # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
@@ -355,8 +352,7 @@ class IridaImport:
         if datasets:
             for data_id in datasets:
                 item = self.reg_gi.libraries.show_dataset(self.library.id,data_id)
-                print("ITEM SIZE")
-                print(item['file_size'])
+
                 if item['file_size'] in (size, size + 1) and item['state'] == 'ok':
                     found = item['id']
                     break
@@ -585,58 +581,26 @@ class IridaImport:
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
         file_exists_locally = os.path.isfile(sample_file.path)
 
-        if file_exists_locally:
-            if sample_file.library_dataset_id == None:
+        if sample_file.library_dataset_id == None:
 
-                #grab dataset_id if it does exist, if not will be given False
-                dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name,sample_file.file_size)
+            #grab dataset_id if it does exist, if not will be given False
+            dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name,sample_file.file_size)
 
-                if dataset_id:
-                    print("FILE ALREADY EXISTS")
-                    # Return dataset id of existing file
-                    added_to_galaxy = [{'id': dataset_id}]
-                    self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                        ' Skipped file with Galaxy path: ' +
-                                        galaxy_sample_file_name)
-                    sample_file.verified = True
-                    self.skipped_files_log.append(
-                        {'galaxy_name': galaxy_sample_file_name})
-                else:
-                    print("LINKING FILE")
-                    self.logger.debug(
-                        "  Sample file does not exist so linking it")
-                    added = self.link(
-                        sample_file, sample_folder_id)
-                    if(added):
-                        added_to_galaxy = added
-                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                            ' Imported file with Galaxy path: ' +
-                                            galaxy_sample_file_name)
-                        self.uploaded_files_log.append(
-                            {'galaxy_name': galaxy_sample_file_name})
-                sample_file.library_dataset_id = added_to_galaxy[0]['id']
-        else:
-            try:
-                if sample_file.library_dataset_id == None:
-
-                    #grab dataset_id if it does exist, if not will be given False
-                    dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name,sample_file.file_size)
-
-                    if dataset_id:
-                        print("FILE ALREADY EXISTS")
-                        # Return dataset id of existing file
-                        added_to_galaxy = [{'id': dataset_id}]
-                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                            ' Skipped file with Galaxy path: ' +
-                                            galaxy_sample_file_name)
-                        sample_file.verified = True
-                        self.skipped_files_log.append(
-                            {'galaxy_name': galaxy_sample_file_name})
-                    else:
-                        print("UPLOADING NEW FILE")
+            if dataset_id:
+                # Return dataset id of existing file
+                added_to_galaxy = [{'id': dataset_id}]
+                self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                    ' Skipped file with Galaxy path: ' +
+                                    galaxy_sample_file_name)
+                sample_file.verified = True
+                self.skipped_files_log.append(
+                    {'galaxy_name': galaxy_sample_file_name})
+            else:
+                try:
+                    if file_exists_locally:
                         self.logger.debug(
-                            "  Sample file does not exist so uploading it")
-                        added = self.upload_file_to_galaxy(
+                            "  Sample file does not exist so linking it")
+                        added = self.link(
                             sample_file, sample_folder_id)
                         if(added):
                             added_to_galaxy = added
@@ -645,11 +609,24 @@ class IridaImport:
                                                 galaxy_sample_file_name)
                             self.uploaded_files_log.append(
                                 {'galaxy_name': galaxy_sample_file_name})
-                    sample_file.library_dataset_id = added_to_galaxy[0]['id']
-            except:
-                error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
+                    else:
+                        self.logger.debug(
+                                "  Sample file does not exist so uploading it")
+                        added = self.upload_file_to_galaxy(
+                                sample_file, sample_folder_id)
+                        if(added):
+                            added_to_galaxy = added
+                            self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                                ' Imported file with Galaxy path: ' +
+                                                galaxy_sample_file_name)
+                            self.uploaded_files_log.append(
+                                {'galaxy_name': galaxy_sample_file_name})
+                except:
+                    error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
                         ).format(galaxy_sample_file_name, sample_file.path)
-                raise ValueError(error)
+                    raise ValueError(error)
+
+            sample_file.library_dataset_id = added_to_galaxy[0]['id']
 
         return added_to_galaxy
 
