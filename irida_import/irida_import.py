@@ -180,7 +180,6 @@ class IridaImport:
         :param file_dict: the URL to get the sample file representation
         :return: a sample file with a name and path
         """
-        print(file_dict)
         resource = file_dict
         name = resource['fileName']
         path = resource['file']
