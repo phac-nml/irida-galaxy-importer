@@ -180,6 +180,7 @@ class IridaImport:
         :param file_dict: the URL to get the sample file representation
         :return: a sample file with a name and path
         """
+        print(file_dict)
         resource = file_dict
         name = resource['fileName']
         path = resource['file']
@@ -188,7 +189,8 @@ class IridaImport:
             if link['rel'] == 'self':
                 href = link['href']
                 break
-        upload_sha_256 = resource['uploadSha256']
+        if 'uploadSha256' in resource.keys():
+            upload_sha_256 = resource['uploadSha256']
 
         return SampleFile(name, path, href, upload_sha_256)
 
@@ -697,7 +699,7 @@ class IridaImport:
                         ).format(sample_file.path)
                     raise ValueError(error)
 
-            if self.check_file_hash_valid(tmp_file.name, sample_file.upload_sha_256):
+            if (sample_file.upload_sha_256 == None) or (self.check_file_hash_valid(tmp_file.name, sample_file.upload_sha_256)):
                 # Copies the file into the galaxy library
                 added = self.reg_gi.libraries.upload_file_from_local_path(
                     self.library.id,
