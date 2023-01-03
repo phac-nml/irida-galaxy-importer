@@ -327,7 +327,7 @@ class IridaImport:
         :type galaxy_name: str
         :param galaxy_name: the full path to the sample file as it
         exists in Galaxy
-        :type size: str
+        :type size: long
         :param size: The file size of the file to check against a previous file uploaded to a dataset
         :rtype: Boolean
         :return: Return file unique ID otherwise Boolean False
