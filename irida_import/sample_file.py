@@ -30,7 +30,7 @@ class SampleFile:
         :param path: the URI of the sample file
         :type href: str
         :param href: the url of the sample file
-        :type file_size: str
+        :type file_size: long
         :param file_size: the size of the file in bytes
         :type upload_sha_256: str
         :param upload_sha_256: the hash of the uploaded file
