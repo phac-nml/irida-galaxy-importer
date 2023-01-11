@@ -693,6 +693,9 @@ class IridaImport:
             if file_ext == ".fasta":
                 headers = {'Accept': 'application/fasta'}
             else:
+                # This accept header is used to retrieve both fastq and fast5 files.
+                # A new header type needs to be added to IRIDA to handle fast5 files
+                # separately.
                 headers = {'Accept': 'application/fastq'}
 
             # Open the file for writing.
