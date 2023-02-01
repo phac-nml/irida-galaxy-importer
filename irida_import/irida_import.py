@@ -195,7 +195,13 @@ class IridaImport:
         if 'fileSizeBytes' in resource.keys():
             file_size = resource['fileSizeBytes']
 
-        return SampleFile(name, path, href, file_size, upload_sha_256)
+        return SampleFile(
+            name=name, 
+            path=path, 
+            href=href, 
+            file_size=file_size, 
+            upload_sha_256=upload_sha_256
+        )
 
     def get_first_or_make_lib(self, desired_lib_name, email):
         """"
@@ -328,7 +334,9 @@ class IridaImport:
         :param galaxy_name: the full path to the sample file as it
         exists in Galaxy
         :type size: long
-        :param size: The file size of the file to check against a previous file uploaded to a dataset
+        :param size: The size in bytes of the file to check against a 
+        previously uploaded file. Size will be `None` if api call to 
+        get sample file details does not return a value for the size
         :rtype: Boolean
         :return: Return file unique ID otherwise Boolean False
         """
@@ -336,7 +344,7 @@ class IridaImport:
             "Getting dataset ID for existing file: " +
             galaxy_name)
         found = False
-        if size == None:
+        if size is None:
             size = os.path.getsize(sample_file_path)
 
         # check cache before fetching from galaxy.
@@ -580,10 +588,14 @@ class IridaImport:
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
         file_exists_locally = os.path.isfile(sample_file.path)
 
-        if sample_file.library_dataset_id == None:
+        if sample_file.library_dataset_id is None:
 
             #grab dataset_id if it does exist, if not will be given False
-            dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name,sample_file.file_size)
+            dataset_id = self.existing_file(
+                sample_file_path=sample_file.path, 
+                galaxy_name=galaxy_sample_file_name, 
+                size=sample_file.file_size
+            )
 
             if dataset_id:
                 # Return dataset id of existing file
@@ -636,7 +648,7 @@ class IridaImport:
         :type sample_file: SampleFile
         :param sample_file: the sample file to link
         :type folder_id: ID of folder to link file to
-        :param sample_folder_path: the folder in Galaxy to store the file in
+        :param folder_id: the folder in Galaxy to store the file in
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
@@ -667,7 +679,7 @@ class IridaImport:
         :type sample_file: SampleFile
         :param sample_file: the sample file to upload
         :type folder_id: ID of folder to upload file to
-        :param sample_folder_path: the folder in Galaxy to store the file in
+        :param folder_id: the folder in Galaxy to store the file in
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
@@ -709,11 +721,11 @@ class IridaImport:
                         ).format(sample_file.path)
                     raise ValueError(error)
 
-            if (sample_file.upload_sha_256 == None) or (self.check_file_hash_valid(tmp_file.name, sample_file.upload_sha_256)):
+            if (sample_file.upload_sha_256 is None) or (self.check_file_hash_valid(tmp_file.name, sample_file.upload_sha_256)):
                 # Copies the file into the galaxy library
                 added = self.reg_gi.libraries.upload_file_from_local_path(
-                    self.library.id,
-                    tmp_file.name,
+                    library_id=self.library.id,
+                    file_local_path=tmp_file.name,
                     folder_id=folder_id,
                     file_type=file_type
                 )
