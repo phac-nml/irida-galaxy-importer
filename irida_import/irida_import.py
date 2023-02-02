@@ -72,6 +72,8 @@ class IridaImport:
         :return: a list of Samples with all necessary information
         """
         samples = self.get_sample_meta(samples_dict)
+        content_type_fastq = "application/fastq"
+        content_type_fasta = "application/fasta"
 
         for sample in samples:
 
@@ -87,27 +89,27 @@ class IridaImport:
                     for curr_file in pair['files']:
                         if temp_link in curr_file['links']:
                             if link['rel'] == "pair/forward":
-                                forward = self.get_sample_file(curr_file)
+                                forward = self.get_sample_file(curr_file, content_type_fastq)
                             elif link['rel'] == "pair/reverse":
-                                reverse = self.get_sample_file(curr_file)
+                                reverse = self.get_sample_file(curr_file, content_type_fastq)
 
                 sample.add_pair(SamplePair(pair_name, forward, reverse))
 
             # Add a sample_file object for each single end read
             unpaired_resource = self.make_irida_request(sample.unpaired_path)
             for single in unpaired_resource['resources']:
-                sample.add_file(self.get_sample_file(single['sequenceFile']))
+                sample.add_file(self.get_sample_file(single['sequenceFile'], content_type_fastq))
 
             # Add a sample_file object for each fast5
             if sample.fast5_path and include_fast5:
                 fast5_resource = self.make_irida_request(sample.fast5_path)
                 for fast5 in fast5_resource['resources']:
-                    sample.add_file(self.get_sample_file(fast5['file']))
+                    sample.add_file(self.get_sample_file(fast5['file'], content_type_fastq))
 
             if include_assemblies:
                 assembly_resource = self.make_irida_request(sample.assembly_path)
                 for assembly in assembly_resource['resources']:
-                    sample.add_file(self.get_sample_file(assembly))
+                    sample.add_file(self.get_sample_file(assembly, content_type_fasta))
 
         return samples
 
@@ -172,12 +174,14 @@ class IridaImport:
             samples.append(Sample(sample_name, paired_path, unpaired_path, assembly_path, fast5_path))
         return samples
 
-    def get_sample_file(self, file_dict):
+    def get_sample_file(self, file_dict, content_type):
         """
         From a dictionary, get file information
 
         :type file_dict: dict
         :param file_dict: the URL to get the sample file representation
+        :type content_type: str
+        :param content_type: the content type of the file
         :return: a sample file with a name and path
         """
         resource = file_dict
@@ -200,7 +204,8 @@ class IridaImport:
             path=path, 
             href=href, 
             file_size=file_size, 
-            upload_sha_256=upload_sha_256
+            upload_sha_256=upload_sha_256,
+            content_type=content_type
         )
 
     def get_first_or_make_lib(self, desired_lib_name, email):
@@ -702,13 +707,7 @@ class IridaImport:
             tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
             tmp_file.name = tmp_dir + "/" + sample_file.name
 
-            if file_ext == ".fasta":
-                headers = {'Accept': 'application/fasta'}
-            else:
-                # This accept header is used to retrieve both fastq and fast5 files.
-                # A new header type needs to be added to IRIDA to handle fast5 files
-                # separately.
-                headers = {'Accept': 'application/fastq'}
+            headers=sample_file.content_type
 
             # Open the file for writing.
             with open(tmp_file.name, tmp_file_mode) as f:
