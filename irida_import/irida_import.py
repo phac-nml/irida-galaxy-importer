@@ -707,7 +707,7 @@ class IridaImport:
             tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
             tmp_file.name = tmp_dir + "/" + sample_file.name
 
-            headers=sample_file.content_type
+            headers={'Accept': sample_file.content_type}
 
             # Open the file for writing.
             with open(tmp_file.name, tmp_file_mode) as f:
