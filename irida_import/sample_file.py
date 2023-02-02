@@ -20,7 +20,7 @@ class SampleFile:
 
     """A representation of a sample file obtained from IRIDA"""
 
-    def __init__(self, name, path, href, file_size=None, upload_sha_256=None, content_type=None):
+    def __init__(self, name, path, href, file_size=None, upload_sha_256=None):
         """
         Create a sample file instance.
 
@@ -34,8 +34,6 @@ class SampleFile:
         :param file_size: the size of the file in bytes
         :type upload_sha_256: str
         :param upload_sha_256: the hash of the uploaded file
-        :type content_type: str
-        :param content_type: the content type of the file
         """
 
         self.path = path
@@ -45,7 +43,6 @@ class SampleFile:
         self.upload_sha_256 = upload_sha_256
         self.library_dataset_id = None
         self.verified = False
-        self.content_type = content_type
 
     def __eq__(self, sample_file):
         equal = False
@@ -66,3 +63,13 @@ class SampleFile:
 
     def delete(self, gi, library_id):
         return gi.libraries.delete_library_dataset(library_id, self.library_dataset_id, purged=True)['deleted']
+
+    def get_content_type(self):
+        content_type_fastq = "application/fastq"
+        content_type_fasta = "application/fasta"
+        if 'assemblies' in self.href:
+            return content_type_fasta
+        elif 'fast5' in self.href:
+            return content_type_fastq
+        else:
+            return content_type_fastq
