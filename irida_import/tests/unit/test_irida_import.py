@@ -16,8 +16,6 @@ from ...irida_import import IridaImport
 from ...sample import Sample
 from ...sample_file import SampleFile
 from ...sample_pair import SamplePair
-from unittest import assertRaises
-
 
 class MockConfig:
     def __init__(self):
@@ -195,7 +193,7 @@ class TestIridaImport:
         assert sample_file.name == "test_file.fast5"
         assert sample_file.path == "/path/to/test_file.fast5"
         assert sample_file.href == "http://127.0.0.1/api/samples/1/unknown/1/files/1"
-        with assertRaises(ValueError) as content_type_error:
+        with self.assertRaises(ValueError) as content_type_error:
             sample_file.get_content_type()
             self.assertTrue("Unable to detect type of file and set content type" in content_type_error.exception)
 
