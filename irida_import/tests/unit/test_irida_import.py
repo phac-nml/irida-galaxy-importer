@@ -171,7 +171,7 @@ class TestIridaImport:
         Test if correct sample_file object is created and the content type
         application/fastq is returned for fast5 files.
         """
-        sample_file = SampleFile(name='test_file.fast5', path='/path/to/test_file.fastq', href="http://127.0.0.1/api/samples/1/fast5/1/files/1")
+        sample_file = SampleFile(name='test_file.fast5', path='/path/to/test_file.fast5', href="http://127.0.0.1/api/samples/1/fast5/1/files/1")
         imp.get_sample_file = Mock(return_value=sample_file)
         assert isinstance(sample_file, SampleFile), 'sample_file not an instance of SampleFile'
         # Currently fast5 files are retrieved from IRIDA using an
