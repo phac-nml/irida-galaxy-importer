@@ -705,31 +705,34 @@ class IridaImport:
             tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
             tmp_file.name = tmp_dir + "/" + sample_file.name
 
-            headers={'Accept': sample_file.get_content_type()}
+            try:
+                headers={'Accept': sample_file.get_content_type()}
 
-            # Open the file for writing.
-            with open(tmp_file.name, tmp_file_mode) as f:
-                try:
-                    # Write the content to the file
-                    with self.irida.get(sample_file.href, headers=headers, stream=False) as resp:
-                        f.write(resp.content)
-                except:
-                    error = ("Unable to download file as it was not found:\nLocal path:{0}"
-                        ).format(sample_file.path)
+                # Open the file for writing.
+                with open(tmp_file.name, tmp_file_mode) as f:
+                    try:
+                        # Write the content to the file
+                        with self.irida.get(sample_file.href, headers=headers, stream=False) as resp:
+                            f.write(resp.content)
+                    except:
+                        error = ("Unable to download file as it was not found:\nLocal path:{0}"
+                            ).format(sample_file.path)
+                        raise ValueError(error)
+
+                if (sample_file.upload_sha_256 is None) or (self.check_file_hash_valid(tmp_file.name, sample_file.upload_sha_256)):
+                    # Copies the file into the galaxy library
+                    added = self.reg_gi.libraries.upload_file_from_local_path(
+                        library_id=self.library.id,
+                        file_local_path=tmp_file.name,
+                        folder_id=folder_id,
+                        file_type=file_type
+                    )
+                else:
+                    error = ("Downloaded file sha256 does not match the original sha256:\nLocal path:{0}"
+                            ).format(sample_file.path)
                     raise ValueError(error)
-
-            if (sample_file.upload_sha_256 is None) or (self.check_file_hash_valid(tmp_file.name, sample_file.upload_sha_256)):
-                # Copies the file into the galaxy library
-                added = self.reg_gi.libraries.upload_file_from_local_path(
-                    library_id=self.library.id,
-                    file_local_path=tmp_file.name,
-                    folder_id=folder_id,
-                    file_type=file_type
-                )
-            else:
-                error = ("Downloaded file sha256 does not match the original sha256:\nLocal path:{0}"
-                        ).format(sample_file.path)
-                raise ValueError(error)
+            except ValueError as content_type_error:
+                raise ValueError(content_type_error)
 
             # closes and removes the temp file
             tmp_file.close()

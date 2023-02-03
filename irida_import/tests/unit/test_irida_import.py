@@ -16,6 +16,7 @@ from ...irida_import import IridaImport
 from ...sample import Sample
 from ...sample_file import SampleFile
 from ...sample_pair import SamplePair
+from unittest import assertRaises
 
 
 class MockConfig:
@@ -180,6 +181,23 @@ class TestIridaImport:
         assert sample_file.path == "/path/to/test_file.fast5"
         assert sample_file.href == "http://127.0.0.1/api/samples/1/fast5/1/files/1"
         assert sample_file.get_content_type() == "application/fastq"
+
+    def test_get_content_type_invalid_href(self, imp):
+        """
+        Test if an error is raised when attempting to check if the correct
+        content type is set for a file with an 'invalid' href
+        """
+        sample_file = SampleFile(name='test_file.fast5', path='/path/to/test_file.fast5', href="http://127.0.0.1/api/samples/1/unknowntype/1/files/1")
+        imp.get_sample_file = Mock(return_value=sample_file)
+        assert isinstance(sample_file, SampleFile), 'sample_file not an instance of SampleFile'
+        # Currently fast5 files are retrieved from IRIDA using an
+        # accept header of application/fastq
+        assert sample_file.name == "test_file.fast5"
+        assert sample_file.path == "/path/to/test_file.fast5"
+        assert sample_file.href == "http://127.0.0.1/api/samples/1/unknown/1/files/1"
+        with assertRaises(ValueError) as content_type_error:
+            sample_file.get_content_type()
+            self.assertTrue("Unable to detect type of file and set content type" in content_type_error.exception)
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""

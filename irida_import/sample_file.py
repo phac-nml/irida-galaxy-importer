@@ -69,7 +69,8 @@ class SampleFile:
         content_type_fasta = "application/fasta"
         if 'assemblies' in self.href:
             return content_type_fasta
-        elif 'fast5' in self.href:
+        elif 'fast5' in self.href or 'sequenceFiles' in self.href:
             return content_type_fastq
         else:
-            return content_type_fastq
+            error = ("Unable to detect type of file and set content type. href is:{0}")
+            raise ValueError(error)
