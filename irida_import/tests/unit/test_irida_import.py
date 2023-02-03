@@ -17,7 +17,6 @@ from ...sample import Sample
 from ...sample_file import SampleFile
 from ...sample_pair import SamplePair
 
-
 class MockConfig:
     def __init__(self):
         self.ADMIN_KEY = "09008eb345c9d5a166b0d8f301b1e72c"
@@ -129,7 +128,7 @@ class TestIridaImport:
         """
         param_dict = json.loads(setup_json)['param_dict']
         json_params = json.loads(param_dict['json_params'])
-        sample_file = SampleFile('nameish', 'pathish')
+        sample_file = SampleFile(name='nameish', path='pathish', href="http://127.0.0.1/api/samples/1/pairs/1/files/1")
         imp.get_sample_file = Mock(return_value=sample_file)
 
         samples = imp.get_samples(json_params['_embedded']['samples'],False,False)
@@ -139,6 +138,65 @@ class TestIridaImport:
         for sample in samples:
             assert isinstance(sample, Sample), 'The list must contain samples'
         assert len(samples) == 1, 'Number of samples is incorrect'
+
+    def test_get_fastq_file(self, imp):
+        """
+        Test if correct sample_file object is created and the content type
+        application/fastq is returned for sequence files
+        """
+        sample_file = SampleFile(name='test_file.fastq', path='/path/to/test_file.fastq', href="http://127.0.0.1/api/samples/1/sequenceFiles/1")
+        imp.get_sample_file = Mock(return_value=sample_file)
+        assert isinstance(sample_file, SampleFile), 'sample_file not an instance of SampleFile'
+        assert sample_file.name == "test_file.fastq"
+        assert sample_file.path == "/path/to/test_file.fastq"
+        assert sample_file.href == "http://127.0.0.1/api/samples/1/sequenceFiles/1"
+        assert sample_file.get_content_type() == "application/fastq"
+
+    def test_get_fasta_file(self, imp):
+        """
+        Test if correct sample_file object is created and the content type
+        application/fasta is returned for assemblies
+        """
+        sample_file = SampleFile(name='test_file.fasta', path='/path/to/test_file.fasta', href="http://127.0.0.1/api/samples/54/assemblies/1")
+        imp.get_sample_file = Mock(return_value=sample_file)
+        assert isinstance(sample_file, SampleFile), 'sample_file not an instance of SampleFile'
+        assert sample_file.name == "test_file.fasta"
+        assert sample_file.path == "/path/to/test_file.fasta"
+        assert sample_file.href == "http://127.0.0.1/api/samples/54/assemblies/1"
+        assert sample_file.get_content_type() == "application/fasta"
+
+    def test_get_fast5_file(self, imp):
+        """
+        Test if correct sample_file object is created and the content type
+        application/fastq is returned for fast5 files.
+        """
+        sample_file = SampleFile(name='test_file.fast5', path='/path/to/test_file.fast5', href="http://127.0.0.1/api/samples/1/fast5/1/files/1")
+        imp.get_sample_file = Mock(return_value=sample_file)
+        assert isinstance(sample_file, SampleFile), 'sample_file not an instance of SampleFile'
+        # Currently fast5 files are retrieved from IRIDA using an
+        # accept header of application/fastq
+        assert sample_file.name == "test_file.fast5"
+        assert sample_file.path == "/path/to/test_file.fast5"
+        assert sample_file.href == "http://127.0.0.1/api/samples/1/fast5/1/files/1"
+        assert sample_file.get_content_type() == "application/fastq"
+
+    def test_get_content_type_invalid_href(self, imp):
+        """
+        Test if an error is raised when attempting to check if the correct
+        content type is set for a file with an 'invalid' href
+        """
+        sample_file = SampleFile(name='test_file.fast5', path='/path/to/test_file.fast5', href="http://127.0.0.1/api/samples/1/unknowntype/1/files/1")
+        imp.get_sample_file = Mock(return_value=sample_file)
+        assert isinstance(sample_file, SampleFile), 'sample_file not an instance of SampleFile'
+        # Currently fast5 files are retrieved from IRIDA using an
+        # accept header of application/fastq
+        assert sample_file.name == "test_file.fast5"
+        assert sample_file.path == "/path/to/test_file.fast5"
+        assert sample_file.href == "http://127.0.0.1/api/samples/1/unknowntype/1/files/1"
+        try:
+            sample_file.get_content_type()
+        except ValueError as content_type_error:
+            assert "Unable to detect type of file and set content type" in str(content_type_error)
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""
@@ -279,8 +337,8 @@ class TestIridaImport:
         os.path.isfile = Mock(return_value=True)
         imp.unique_file = Mock(return_value=True)
 
-        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
-        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
+        sampleFile1 = SampleFile(name='file1', path="/imaginary/path/file1.fasta", href="http://127.0.0.1/api/samples/1/pairs/1/files/1")
+        sampleFile2 = SampleFile(name='file2', path="/imaginary/path/file2.fasta", href="http://127.0.0.1/api/samples/1/pairs/1/files/2")
         samplePair1 = SamplePair(
             'pair1',
             sampleFile1,
@@ -321,8 +379,8 @@ class TestIridaImport:
 
         history = imp.reg_gi.histories.create_history()
 
-        sampleFile1 = SampleFile('file1', "/imaginary/path/file1.fasta")
-        sampleFile2 = SampleFile('file2', "/imaginary/path/file2.fasta")
+        sampleFile1 = SampleFile(name='file1', path="/imaginary/path/file1.fasta", href="http://127.0.0.1/api/samples/1/pairs/1/files/1")
+        sampleFile2 = SampleFile(name='file2', path="/imaginary/path/file2.fasta", href="http://127.0.0.1/api/samples/1/pairs/1/files/2")
         samplePair1 = SamplePair(
             'pair1',
             sampleFile1,
@@ -370,7 +428,7 @@ class TestIridaImport:
         imp.reg_gi.libraries.upload_from_galaxy_filesystem = Mock(
             return_value=single_file_list)
 
-        sample_file = SampleFile('file1', 'file:///imaginary/path/file1.fasta')
+        sample_file = SampleFile(name='file1', path='file:///imaginary/path/file1.fasta', href="http://127.0.0.1/api/samples/1/pairs/1/files/1")
         sample_folder_path = '/bobfolder1/bobfolder2/bobfolder3'
         uploaded = imp.link(sample_file, sample_folder_path)
         assert uploaded == single_file_list, 'The correct file must be made'
