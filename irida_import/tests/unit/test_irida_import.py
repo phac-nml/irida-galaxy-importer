@@ -192,7 +192,7 @@ class TestIridaImport:
         # accept header of application/fastq
         assert sample_file.name == "test_file.fast5"
         assert sample_file.path == "/path/to/test_file.fast5"
-        assert sample_file.href == "http://127.0.0.1/api/samples/1/unknown/1/files/1"
+        assert sample_file.href == "http://127.0.0.1/api/samples/1/unknowntype/1/files/1"
         with self.assertRaises(ValueError) as content_type_error:
             sample_file.get_content_type()
             self.assertTrue("Unable to detect type of file and set content type" in content_type_error.exception)
