@@ -25,7 +25,7 @@ def readme():
 
 
 setup(name='irida_import',
-      version='2.0.0',
+      version='2.1.0',
       description='A tool for importing data from IRIDA into Galaxy',
       url='https://github.com/phac-nml/irida-galaxy-importer',
       author='NML Bioinformatics',
