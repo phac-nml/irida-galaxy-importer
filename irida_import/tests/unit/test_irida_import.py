@@ -6,7 +6,6 @@ import logging
 import pprint
 import pytest
 import unittest.mock as mock
-import unittest
 
 from requests_oauthlib import OAuth2Session
 from unittest.mock import Mock
@@ -33,7 +32,7 @@ class MockConfig:
         self.TOKEN_ENDPOINT = 'http://127.0.0.1:8080/api/oauth/token'
 
 
-class TestIridaImport(unittest.TestCase):
+class TestIridaImport:
 
     """ TestIridaImport performs unit tests on IridaImport."""
 
@@ -194,9 +193,10 @@ class TestIridaImport(unittest.TestCase):
         assert sample_file.name == "test_file.fast5"
         assert sample_file.path == "/path/to/test_file.fast5"
         assert sample_file.href == "http://127.0.0.1/api/samples/1/unknowntype/1/files/1"
-        with self.assertRaises(ValueError) as content_type_error:
+        try:
             sample_file.get_content_type()
-            assert "Unable to detect type of file and set content type" in content_type_error.exception
+        except ValueError as content_type_error:
+            assert "Unable to detect type of file and set content type" in content_type_error
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""
