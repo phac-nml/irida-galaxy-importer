@@ -196,7 +196,7 @@ class TestIridaImport:
         try:
             sample_file.get_content_type()
         except ValueError as content_type_error:
-            assert "Unable to detect type of file and set content type" in content_type_error.args[0]['message']
+            assert "Unable to detect type of file and set content type" in str(content_type_error)
 
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""
