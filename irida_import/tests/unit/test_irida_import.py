@@ -140,6 +140,47 @@ class TestIridaImport:
             assert isinstance(sample, Sample), 'The list must contain samples'
         assert len(samples) == 1, 'Number of samples is incorrect'
 
+    def test_get_fastq_file(self, imp):
+        """
+        Test if correct sample_file object is created and the content type
+        application/fastq is returned for sequence files
+        """
+        sample_file = SampleFile(name='test_file.fastq', path='/path/to/test_file.fastq', href="http://127.0.0.1/api/samples/1/sequenceFiles/1")
+        retrieved_sample_file = imp.get_sample_file = Mock(return_value=sample_file)
+        assert isinstance(retrieved_sample_file, SampleFile), 'sample_file not an instance of SampleFile'
+        assert retrieved_sample_file.name == "test_file.fastq"
+        assert retrieved_sample_file.path == "/path/to/test_file.fastq"
+        assert retrieved_sample_file.href == "http://127.0.0.1/api/samples/1/sequenceFiles/1"
+        assert retrieved_sample_file.get_content_type() == "application/fastq"
+
+    def test_get_fasta_file(self, imp):
+        """
+        Test if correct sample_file object is created and the content type
+        application/fasta is returned for assemblies
+        """
+        sample_file = SampleFile(name='test_file.fasta', path='/path/to/test_file.fasta', href="http://127.0.0.1/api/samples/54/assemblies/1")
+        retrieved_sample_file = imp.get_sample_file = Mock(return_value=sample_file)
+        assert isinstance(retrieved_sample_file, SampleFile), 'sample_file not an instance of SampleFile'
+        assert retrieved_sample_file.name == "test_file.fasta"
+        assert retrieved_sample_file.path == "/path/to/test_file.fasta"
+        assert retrieved_sample_file.href == "http://127.0.0.1/api/samples/54/assemblies/1"
+        assert retrieved_sample_file.get_content_type() == "application/fasta"
+
+    def test_get_fast5_file(self, imp):
+        """
+        Test if correct sample_file object is created and the content type
+        application/fastq is returned for fast5 files.
+        """
+        sample_file = SampleFile(name='test_file.fast5', path='/path/to/test_file.fastq', href="http://127.0.0.1/api/samples/1/fast5/1/files/1")
+        retrieved_sample_file = imp.get_sample_file = Mock(return_value=sample_file)
+        assert isinstance(sample_file, SampleFile), 'sample_file not an instance of SampleFile'
+        # Currently fast5 files are retrieved from IRIDA using an
+        # accept header of application/fastq
+        assert retrieved_sample_file.name == "test_file.fast5"
+        assert retrieved_sample_file.path == "/path/to/test_file.fast5"
+        assert retrieved_sample_file.href == "http://127.0.0.1/api/samples/1/fast5/1/files/1"
+        assert retrieved_sample_file.get_content_type() == "application/fastq"
+
     def test_get_first_or_make_lib_empty(self, imp):
         """Test library creation if there are no preexisting libraries"""
         wanted_name = 'boblib'
