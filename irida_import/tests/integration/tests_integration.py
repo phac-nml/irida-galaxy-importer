@@ -82,7 +82,7 @@ def create_test_suite():
     return suite
 
 
-def start(irida_branch="master", db_host="localhost", db_port="3306"):
+def start(irida_branch="main", db_host="localhost", db_port="3306"):
     """
     Start running the integration tests
 

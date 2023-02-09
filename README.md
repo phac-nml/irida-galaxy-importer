@@ -68,7 +68,7 @@ The Galaxy [tools/][galaxy-tools] directory contains tools that come with the Ga
 ```bash
 cd galaxy/tools/
 
-git clone -b master https://github.com/phac-nml/irida-galaxy-importer.git
+git clone -b main https://github.com/phac-nml/irida-galaxy-importer.git
 cd irida-galaxy-importer
 
 # Optional. Checkout specific release from https://github.com/phac-nml/irida-galaxy-importer/releases
@@ -277,9 +277,9 @@ make unittests
 Integration tests can be run with
 
 ```bash
-make integrationtests branch=master
+make integrationtests branch=main
 ```
-This tests against the `master` branch of IRIDA
+This tests against the `main` branch of IRIDA
 
 [galaxy]: https://galaxyproject.org/
 [irida]: https://www.irida.ca/
