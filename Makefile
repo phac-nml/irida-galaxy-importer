@@ -1,5 +1,5 @@
 SHELL=/bin/bash
-IRIDA_VERSION?=master
+IRIDA_VERSION?=main
 
 requirements: clean env
 	source .virtualenv/bin/activate
