@@ -4,8 +4,6 @@ All notable changes to irida-galaxy-importer will be documeted in this file.
 
 ## 2.1.0
 * Added in support for importing IRIDA files that are not available locally (i.e. in the cloud)
-
-## 2.0.1
 * Switched from travisCI tests to Github Actions
 * Switched integration tests to launch irida via gradle
 
