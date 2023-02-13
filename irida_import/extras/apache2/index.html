@@ -27,7 +27,7 @@
 	}).config(function($sceDelegateProvider) {
 		$sceDelegateProvider.resourceUrlWhitelist([
     			'self',
-    			'http://localhost/**'
+    			'http://127.0.0.1/**'
   		]);
 	}).controller('galaxyController', ['$scope', '$http', '$window', '$location','$timeout', galaxyController]);
 
@@ -73,9 +73,9 @@
 			
 		sampleFilePaths = [
 			"http://www.dgfdg.com/sample1file1",		
-			"file://localhost/home/jthiessen/lib_imp_dir/test/test.fastq"
+			"file://127.0.0.1/home/jthiessen/lib_imp_dir/test/test.fastq"
 			];
-		addSample("thisissample1'sname","http://localhost/some_IRIDA_API_path/Projects/1/Samples/1",sampleFilePaths);		
+		addSample("thisissample1'sname","http://127.0.0.1/some_IRIDA_API_path/Projects/1/Samples/1",sampleFilePaths);
 		$timeout(
 			function(){
 				document.getElementById("samplesSubmit").submit();

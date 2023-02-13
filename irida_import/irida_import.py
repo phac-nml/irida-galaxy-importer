@@ -5,9 +5,11 @@ import json
 import logging
 import os.path
 import pprint
-import re
-import sys
 import time
+import tempfile
+import shutil
+import sys
+import hashlib
 
 from bioblend import galaxy
 from bioblend.galaxy.objects import GalaxyInstance
@@ -181,8 +183,28 @@ class IridaImport:
         resource = file_dict
         name = resource['fileName']
         path = resource['file']
+        links = file_dict['links']
+        for link in links:
+            if link['rel'] == 'self':
+                href = link['href']
+                break
+        upload_sha_256 = None
+        file_size = None
 
-        return SampleFile(name, path)
+        if 'uploadSha256' in resource.keys():
+            upload_sha_256 = resource['uploadSha256']
+
+        if 'fileSizeBytes' in resource.keys():
+            file_size = resource['fileSizeBytes']
+
+
+        return SampleFile(
+            name=name, 
+            path=path, 
+            href=href, 
+            file_size=file_size, 
+            upload_sha_256=upload_sha_256,
+        )
 
     def get_first_or_make_lib(self, desired_lib_name, email):
         """"
@@ -305,7 +327,7 @@ class IridaImport:
 
 
 
-    def existing_file(self, sample_file_path, galaxy_name):
+    def existing_file(self, sample_file_path, galaxy_name, size):
         """
         Find out dataset id for an existing file
 
@@ -314,6 +336,10 @@ class IridaImport:
         :type galaxy_name: str
         :param galaxy_name: the full path to the sample file as it
         exists in Galaxy
+        :type size: long
+        :param size: The size in bytes of the file to check against a 
+        previously uploaded file. Size will be `None` if api call to 
+        get sample file details does not return a value for the size
         :rtype: Boolean
         :return: Return file unique ID otherwise Boolean False
         """
@@ -321,7 +347,8 @@ class IridaImport:
             "Getting dataset ID for existing file: " +
             galaxy_name)
         found = False
-        size = os.path.getsize(sample_file_path)
+        if size is None:
+            size = os.path.getsize(sample_file_path)
 
         # check cache before fetching from galaxy.
         # current state of the library should only change between irida_import.py invocation
@@ -335,6 +362,7 @@ class IridaImport:
         if datasets:
             for data_id in datasets:
                 item = self.reg_gi.libraries.show_dataset(self.library.id,data_id)
+
                 if item['file_size'] in (size, size + 1) and item['state'] == 'ok':
                     found = item['id']
                     break
@@ -561,39 +589,58 @@ class IridaImport:
         :return: dataset object or the id of an existing dataset
         """
         galaxy_sample_file_name = sample_folder_path + '/' + sample_file.name
-        if os.path.isfile(sample_file.path):
-            if sample_file.library_dataset_id == None:
-                #grab dataset_id if it does exist, if not will be given False
-                dataset_id = self.existing_file(sample_file.path,galaxy_sample_file_name)
+        file_exists_locally = os.path.isfile(sample_file.path)
 
-                if dataset_id:
-                    # Return dataset id of existing file
-                    added_to_galaxy = [{'id': dataset_id}]
-                    self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                      ' Skipped file with Galaxy path: ' +
-                                      galaxy_sample_file_name)
-                    sample_file.verified = True
-                    self.skipped_files_log.append(
-                        {'galaxy_name': galaxy_sample_file_name})
-                else:
-                    self.logger.debug(
-                        "  Sample file does not exist so uploading/linking it")
-                    added = self.link(
-                        sample_file, sample_folder_id)
-                    if(added):
-                        added_to_galaxy = added
-                        self.print_logged(time.strftime("[%D %H:%M:%S]:") +
-                                          ' Imported file with Galaxy path: ' +
-                                          galaxy_sample_file_name)
-                        self.uploaded_files_log.append(
-                            {'galaxy_name': galaxy_sample_file_name})
+        if sample_file.library_dataset_id is None:
 
-                sample_file.library_dataset_id = added_to_galaxy[0]['id']
+            #grab dataset_id if it does exist, if not will be given False
+            dataset_id = self.existing_file(
+                sample_file_path=sample_file.path, 
+                galaxy_name=galaxy_sample_file_name, 
+                size=sample_file.file_size
+            )
 
-        else:
-            error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
-                     ).format(galaxy_sample_file_name, sample_file.path)
-            raise ValueError(error)
+            if dataset_id:
+                # Return dataset id of existing file
+                added_to_galaxy = [{'id': dataset_id}]
+                self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                    ' Skipped file with Galaxy path: ' +
+                                    galaxy_sample_file_name)
+                sample_file.verified = True
+                self.skipped_files_log.append(
+                    {'galaxy_name': galaxy_sample_file_name})
+            else:
+                try:
+                    if file_exists_locally:
+                        self.logger.debug(
+                            "  Sample file does not exist so linking it")
+                        added = self.link(
+                            sample_file, sample_folder_id)
+                        if(added):
+                            added_to_galaxy = added
+                            self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                                ' Imported file with Galaxy path: ' +
+                                                galaxy_sample_file_name)
+                            self.uploaded_files_log.append(
+                                {'galaxy_name': galaxy_sample_file_name})
+                    else:
+                        self.logger.debug(
+                                "  Sample file does not exist so uploading it")
+                        added = self.upload_file_to_galaxy(
+                                sample_file, sample_folder_id)
+                        if(added):
+                            added_to_galaxy = added
+                            self.print_logged(time.strftime("[%D %H:%M:%S]:") +
+                                                ' Imported file with Galaxy path: ' +
+                                                galaxy_sample_file_name)
+                            self.uploaded_files_log.append(
+                                {'galaxy_name': galaxy_sample_file_name})
+                except:
+                    error = ("File not found:\n Galaxy path:{0}\nLocal path:{1}"
+                        ).format(galaxy_sample_file_name, sample_file.path)
+                    raise ValueError(error)
+
+            sample_file.library_dataset_id = added_to_galaxy[0]['id']
 
         return added_to_galaxy
 
@@ -604,11 +651,11 @@ class IridaImport:
         :type sample_file: SampleFile
         :param sample_file: the sample file to link
         :type folder_id: ID of folder to link file to
-        :param sample_folder_path: the folder in Galaxy to store the file in
+        :param folder_id: the folder in Galaxy to store the file in
         :return: a list containing a single dict with the file's
         url, id, and name.
         """
-        self.logger.debug('      Attempting to upload a file')
+        self.logger.debug('Attempting to link to file')
         added = None
         file_path = sample_file.path
         self.logger.debug(
@@ -627,6 +674,94 @@ class IridaImport:
         )
 
         return added
+
+    def upload_file_to_galaxy(self, sample_file, folder_id):
+        """
+        Upload a sample file to Galaxy
+
+        :type sample_file: SampleFile
+        :param sample_file: the sample file to upload
+        :type folder_id: ID of folder to upload file to
+        :param folder_id: the folder in Galaxy to store the file in
+        :return: a list containing a single dict with the file's
+        url, id, and name.
+        """
+        self.logger.debug('Attempting to upload file')
+        added = None
+        file_path = sample_file.path
+        self.logger.debug(
+            "       Sample file's local path is" + file_path)
+        file_type = 'auto'
+        file_ext = os.path.splitext(file_path)[1]
+
+        # Assume fastq files are fastqsanger:
+        if file_ext == '.fastq':
+            file_type = 'fastqsanger'
+
+        tmp_dir = tempfile.mkdtemp()
+        tmp_file_mode = 'w+b'
+
+        try:
+            tmp_file = tempfile.NamedTemporaryFile(mode=tmp_file_mode, prefix=sample_file.name, dir=tmp_dir)
+            tmp_file.name = tmp_dir + "/" + sample_file.name
+
+            try:
+                headers={'Accept': sample_file.get_content_type()}
+
+                # Open the file for writing.
+                with open(tmp_file.name, tmp_file_mode) as f:
+                    try:
+                        # Write the content to the file
+                        with self.irida.get(sample_file.href, headers=headers, stream=False) as resp:
+                            f.write(resp.content)
+                    except:
+                        error = ("Unable to download file as it was not found:\nLocal path:{0}"
+                            ).format(sample_file.path)
+                        raise ValueError(error)
+
+                if (sample_file.upload_sha_256 is None) or (self.check_file_hash_valid(tmp_file.name, sample_file.upload_sha_256)):
+                    # Copies the file into the galaxy library
+                    added = self.reg_gi.libraries.upload_file_from_local_path(
+                        library_id=self.library.id,
+                        file_local_path=tmp_file.name,
+                        folder_id=folder_id,
+                        file_type=file_type
+                    )
+                else:
+                    error = ("Downloaded file sha256 does not match the original sha256:\nLocal path:{0}"
+                            ).format(sample_file.path)
+                    raise ValueError(error)
+            except ValueError as content_type_error:
+                raise ValueError(content_type_error)
+
+            # closes and removes the temp file
+            tmp_file.close()
+        finally:
+            # Remove the temp directory
+            shutil.rmtree(tmp_dir)
+
+        return added
+
+    def check_file_hash_valid(self, temp_file_path, expected_sha_256):
+        """
+        Check if the downloaded file sha256 matches the original uploaded file sha256
+
+        :type temp_file_path: Temporary file
+        :param temp_file_path: the downloaded file path
+        :type expected_sha_256: str
+        :param expected_sha_256: the original uploaded file sha256
+        :return: if the downloaded file sha256 matches the original uploaded file sha256
+        url, id, and name.
+        """
+        BUF_SIZE = 32768 # Read file in 32kb chunks
+        sha256 = hashlib.sha256()
+        with open(temp_file_path, 'rb') as f:
+            while True:
+                data = f.read(BUF_SIZE)
+                if not data:
+                    break
+                sha256.update(data)
+        return sha256.hexdigest() == expected_sha_256
 
     def print_summary(self, failed=False):
         """

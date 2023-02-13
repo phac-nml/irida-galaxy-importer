@@ -23,8 +23,9 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+
 setup(name='irida_import',
-      version='2.0.0',
+      version='2.1.0',
       description='A tool for importing data from IRIDA into Galaxy',
       url='https://github.com/phac-nml/irida-galaxy-importer',
       author='NML Bioinformatics',
@@ -38,6 +39,19 @@ setup(name='irida_import',
           'requests-oauthlib',
           'simplejson'
       ],
+      extras_require={
+          "TEST": [
+              "pytest",
+              "pytest-cov",
+              "pytest-mock",
+              "mock",
+              "subprocess32",
+              "selenium==4.2.0",
+              "rauth",
+              "argparse",
+              "webdriver-manager",
+          ],
+      },
       zip_safe=False,
       classifiers=[
           'License :: OSI Approved :: Apache Software License',
