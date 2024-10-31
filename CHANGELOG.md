@@ -2,6 +2,9 @@
 
 All notable changes to irida-galaxy-importer will be documeted in this file.
 
+## 2.2.0
+* Removed log-file parameter and un hidden output parameter
+
 ## 2.1.0
 * Added in support for importing IRIDA files that are not available locally (i.e. in the cloud)
 * Switched from travisCI tests to Github Actions
