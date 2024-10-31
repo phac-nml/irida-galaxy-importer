@@ -1,10 +1,9 @@
-<tool add_galaxy_url="False" force_history_refresh="True" id="TOOL_ID" name="IRIDA" tool_type="data_source" version="2.1.0">
+<tool add_galaxy_url="False" force_history_refresh="True" id="TOOL_ID" name="IRIDA" tool_type="data_source" version="2.2.0">
     <description>server</description>
     <command detect_errors="exit_code"><![CDATA[
         PYTHONPATH="$__tool_directory__"
         python -m irida_import.main
         --json_parameter_file "${output}"
-        --log-file $log_file
         --history-id "$__app__.security.encode_id($output.history.id)"
     ]]></command>
     <inputs action="http://127.0.0.1:8080/projects" check_values="False" method="post">
@@ -15,8 +14,7 @@
     </inputs>
     <uihints minwidth="800" />
     <outputs>
-        <data format="auto" hidden="True" name="output" />
-        <data format="txt" label="IRIDA Export" name="log_file" />
+        <data format="auto" name="output" />
     </outputs>
     <options refresh="True" sanitize="False" />
 </tool>
