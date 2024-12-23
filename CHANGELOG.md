@@ -4,6 +4,7 @@ All notable changes to irida-galaxy-importer will be documeted in this file.
 
 ## 2.2.0
 * Removed log-file parameter and un hidden output parameter
+* Updated IRIDA's integration test java version from 11 to 17
 
 ## 2.1.0
 * Added in support for importing IRIDA files that are not available locally (i.e. in the cloud)
